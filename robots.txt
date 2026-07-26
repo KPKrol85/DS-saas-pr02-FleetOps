@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /app
+Disallow: /dashboard
+Disallow: /settings
+Disallow: /admin
+Sitemap: https://saas-pr02-fleetops.netlify.app/sitemap.xml

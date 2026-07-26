@@ -1,0 +1,178 @@
+/* Global Reset & Selection */
+
+* {
+  box-sizing: border-box;
+}
+
+*::selection {
+  background: var(--accent-ghost);
+  color: var(--text);
+}
+
+/* Document Base */
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-kerning: normal;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: clip;
+}
+
+/* Links & Media */
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--accent);
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+/* Form Elements & Focus Styles */
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+}
+
+button:focus,
+input:focus,
+select:focus,
+textarea:focus,
+a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Accessibility */
+
+.skip-link {
+  position: absolute;
+  top: 0;
+  left: -999px;
+  z-index: 999;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--accent);
+  color: #0b0d10;
+}
+
+.skip-link:focus {
+  left: 16px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Typography Base */
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 0;
+  color: var(--text);
+  text-wrap: balance;
+}
+
+h1,
+h2 {
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--ls-tight);
+  line-height: var(--lh-tight);
+}
+
+h3,
+h4,
+h5,
+h6 {
+  font-weight: var(--fw-semibold);
+  line-height: var(--lh-snug);
+}
+
+h3,
+h4 {
+  letter-spacing: var(--ls-compact);
+}
+
+h5,
+h6 {
+  letter-spacing: var(--ls-normal);
+}
+
+h1 {
+  font-size: var(--fs-07);
+}
+
+h2 {
+  font-size: var(--fs-06);
+}
+
+h3 {
+  font-size: var(--fs-05);
+}
+
+h4 {
+  font-size: var(--fs-04);
+}
+
+h5 {
+  font-size: var(--fs-03);
+}
+
+h6 {
+  font-size: var(--fs-02);
+}
+
+p {
+  margin: 0;
+  font-size: var(--fs-02);
+  font-weight: var(--fw-regular);
+  line-height: var(--lh-normal);
+  letter-spacing: var(--ls-normal);
+  color: var(--text-muted);
+  text-wrap: pretty;
+}
+
+/* Lists & Content Defaults */
+
+ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+main {
+  min-height: 60vh;
+}

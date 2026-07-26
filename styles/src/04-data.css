@@ -1,0 +1,269 @@
+/* Tables */
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th,
+.table td {
+  padding: var(--space-3);
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.table th {
+  background: var(--bg-elevated);
+  font-weight: var(--fw-semibold);
+  color: var(--text-muted);
+  font-size: var(--fs-03);
+}
+
+.table td {
+  font-size: var(--fs-02);
+}
+
+.table tr:hover td {
+  background: var(--bg-muted);
+}
+
+.table a:focus-visible,
+.table button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 3px var(--accent-ghost);
+  border-color: transparent;
+}
+
+/* Table Responsiveness */
+
+.table-responsive .table {
+  width: max-content;
+  min-width: 640px;
+  border-collapse: collapse;
+}
+
+.table-responsive th,
+.table-responsive td {
+  white-space: nowrap;
+}
+
+.table-responsive td:first-child,
+.table-responsive th:first-child {
+  white-space: normal;
+  min-width: 160px;
+}
+
+@media (min-width: 1144px) {
+  .table-responsive .table {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .table-responsive th,
+  .table-responsive td {
+    white-space: normal;
+  }
+
+  .table-responsive td:first-child,
+  .table-responsive th:first-child {
+    min-width: 0;
+  }
+}
+
+/* Status Badges */
+
+.badge.status {
+  border: 0;
+  font-weight: var(--fw-semibold);
+  color: #0b0d10;
+  box-shadow: none;
+}
+
+.badge.in-progress {
+  background: #bae6fd;
+}
+
+.badge.delayed {
+  background: #fecdd3;
+}
+
+.badge.delivered {
+  background: #bbf7d0;
+}
+
+.badge.pending {
+  background: #fde68a;
+}
+
+/* Chips */
+
+.chip {
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.chip.active {
+  border-color: var(--accent);
+  background: var(--accent-ghost);
+  color: var(--accent);
+}
+
+/* Dashboard Blocks */
+
+.dashboard-columns {
+  gap: var(--space-3);
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 1024px) {
+  .dashboard-columns {
+    grid-template-columns: 2fr 1fr;
+  }
+}
+
+
+
+/* need to be relocat */
+
+.load-more {
+  display: flex;
+  justify-content: center;
+  margin-top: var(--space-3);
+}
+
+/* Skeleton */
+
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+:root[data-theme="light"] .skeleton {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.12), transparent);
+  animation: sk-shimmer 1.1s infinite;
+}
+
+:root[data-theme="light"] .skeleton::after {
+  background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.08), transparent);
+}
+
+@keyframes sk-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton::after {
+    animation: none;
+  }
+}
+
+.skeleton-table {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-3);
+}
+
+.skeleton-row {
+  display: grid;
+  grid-template-columns: 1.2fr 0.7fr 1fr 0.8fr 0.6fr 0.6fr;
+  gap: var(--space-2);
+}
+
+.skeleton-row--drivers {
+  grid-template-columns: 1.2fr 0.7fr 1fr 0.8fr 0.4fr;
+}
+
+.skeleton-cell {
+  height: var(--space-3);
+}
+
+.skeleton-cell.lg {
+  height: 18px;
+}
+
+.skeleton-cell.sm {
+  height: var(--space-2);
+}
+
+.skeleton-cards {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.skeleton-card {
+  padding: var(--space-3);
+  border-radius: var(--radius-lg);
+}
+
+.skeleton-card .line {
+  height: var(--space-3);
+  margin-top: var(--space-2);
+}
+
+.skeleton-card .line.sm {
+  height: var(--space-2);
+  width: 70%;
+}
+
+.skeleton-card .line.md {
+  width: 85%;
+}
+
+.skeleton-line--vehicle-id {
+  width: 120px;
+  margin-top: 0;
+}
+
+.skeleton-pill--vehicle-status {
+  width: 70px;
+  height: 18px;
+  border-radius: 999px;
+}
+
+.skeleton-line--vehicle-type {
+  width: 160px;
+}
+
+.skeleton-line--vehicle-driver {
+  width: 140px;
+}
+
+.skeleton-line--vehicle-check {
+  width: 150px;
+}
+
+.skeleton-button--vehicle {
+  width: 90px;
+  height: 30px;
+  margin-top: var(--space-3);
+  border-radius: var(--radius);
+}
+
+/* Utility Components */
+
+.label-pill {
+  padding: var(--space-1) var(--space-2);
+  border-radius: 999px;
+  font-size: var(--fs-01);
+  border: 1px solid var(--border);
+}
+
