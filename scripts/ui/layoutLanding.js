@@ -86,6 +86,28 @@ function initLandingShell() {
   const navBackdrop = document.querySelector("[data-nav-close]");
   let navOpen = false;
 
+  // Matches the drawer's own persistent-navigation breakpoint (styles/src/08-header.css `@media (min-width: 1025px)`).
+  const desktopNavQuery = window.matchMedia("(min-width: 1025px)");
+
+  const applyNavAccessibility = () => {
+    if (!navDrawer) return;
+    if (desktopNavQuery.matches) {
+      navDrawer.removeAttribute("role");
+      navDrawer.removeAttribute("aria-modal");
+      navDrawer.removeAttribute("aria-hidden");
+    } else {
+      navDrawer.setAttribute("role", "dialog");
+      navDrawer.setAttribute("aria-modal", "true");
+      navDrawer.setAttribute("aria-hidden", String(!navOpen));
+    }
+  };
+
+  const syncNavUI = () => {
+    document.documentElement.classList.toggle("is-nav-open", navOpen);
+    if (navToggle) navToggle.setAttribute("aria-expanded", String(navOpen));
+    applyNavAccessibility();
+  };
+
   const getDrawerFocusables = () => {
     if (!navDrawer) return [];
     return Array.from(navDrawer.querySelectorAll('a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'));
@@ -113,10 +135,8 @@ function initLandingShell() {
 
   const openNav = () => {
     if (!navToggle || !navDrawer) return;
-    document.documentElement.classList.add("is-nav-open");
-    navToggle.setAttribute("aria-expanded", "true");
-    navDrawer.setAttribute("aria-hidden", "false");
     navOpen = true;
+    syncNavUI();
     window.requestAnimationFrame(() => {
       const focusables = getDrawerFocusables();
       const firstItem = focusables[0];
@@ -126,10 +146,8 @@ function initLandingShell() {
 
   const closeNav = () => {
     if (!navToggle) return;
-    document.documentElement.classList.remove("is-nav-open");
-    navToggle.setAttribute("aria-expanded", "false");
-    if (navDrawer) navDrawer.setAttribute("aria-hidden", "true");
     navOpen = false;
+    syncNavUI();
     navToggle.focus();
   };
 
@@ -168,8 +186,19 @@ function initLandingShell() {
   };
   document.addEventListener("keydown", handleKeydown);
 
+  const handleDesktopNavChange = () => {
+    if (desktopNavQuery.matches) {
+      navOpen = false;
+    }
+    syncNavUI();
+  };
+  desktopNavQuery.addEventListener("change", handleDesktopNavChange);
+
+  syncNavUI();
+
   CleanupRegistry.add(() => {
     document.removeEventListener("keydown", handleKeydown);
+    desktopNavQuery.removeEventListener("change", handleDesktopNavChange);
   });
 
   const siteHeader = document.querySelector(".landing .site-header");

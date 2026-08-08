@@ -61,10 +61,7 @@ function renderAppShell(viewTitle, contentNode) {
 
   const sidebar = dom.h("aside", "sidebar drawer");
   sidebar.setAttribute("id", "appDrawer");
-  sidebar.setAttribute("role", "dialog");
-  sidebar.setAttribute("aria-modal", "true");
   sidebar.setAttribute("aria-label", "Nawigacja aplikacji");
-  sidebar.setAttribute("aria-hidden", "true");
   sidebar.innerHTML = `
     <a class="sidebar__brand" href="#/app" aria-label="FleetOps - Panel" data-scroll-top="app">
       <img class="logo__icon" src="${theme === "dark" ? "assets/logos/logo-white.svg" : "assets/logos/logo-black.svg"}" data-theme-src-light="assets/logos/logo-black.svg" data-theme-src-dark="assets/logos/logo-white.svg" alt="FleetOps logo" />
@@ -225,6 +222,9 @@ function renderAppShell(viewTitle, contentNode) {
   const firstLink = sidebar.querySelector("nav a");
   let isDrawerOpen = false;
 
+  // Matches the sidebar's own persistent-navigation breakpoint (styles/src/06-app.css `@media (min-width: 1025px)`).
+  const desktopNavQuery = window.matchMedia("(min-width: 1025px)");
+
   const getDrawerFocusables = () => Array.from(
     sidebar.querySelectorAll('a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])')
   );
@@ -249,8 +249,20 @@ function renderAppShell(viewTitle, contentNode) {
     }
   };
 
+  const applyDrawerAccessibility = () => {
+    if (desktopNavQuery.matches) {
+      sidebar.removeAttribute("role");
+      sidebar.removeAttribute("aria-modal");
+      sidebar.removeAttribute("aria-hidden");
+    } else {
+      sidebar.setAttribute("role", "dialog");
+      sidebar.setAttribute("aria-modal", "true");
+      sidebar.setAttribute("aria-hidden", String(!isDrawerOpen));
+    }
+  };
+
   const syncDrawerUI = () => {
-    sidebar.setAttribute("aria-hidden", String(!isDrawerOpen));
+    applyDrawerAccessibility();
     drawerBackdrop.classList.toggle("is-visible", isDrawerOpen);
     sidebar.classList.toggle("is-open", isDrawerOpen);
     drawerToggle.setAttribute("aria-expanded", String(isDrawerOpen));
@@ -287,8 +299,19 @@ function renderAppShell(viewTitle, contentNode) {
   };
   document.addEventListener("keydown", handleKeydown);
 
+  const handleDesktopNavChange = () => {
+    if (desktopNavQuery.matches) {
+      isDrawerOpen = false;
+    }
+    syncDrawerUI();
+  };
+  desktopNavQuery.addEventListener("change", handleDesktopNavChange);
+
+  syncDrawerUI();
+
   CleanupRegistry.add(() => {
     document.removeEventListener("keydown", handleKeydown);
+    desktopNavQuery.removeEventListener("change", handleDesktopNavChange);
   });
 }
 

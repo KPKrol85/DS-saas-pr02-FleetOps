@@ -11,7 +11,7 @@ FleetOps is a coherent, self-consistent static project. The layering is delibera
 
 The project's main weakness is not architecture but honesty of the surface. The public pages now have exactly one definition each — their static documents — after the unreachable hash-routed renderer duplicates were removed, but the README still describes those deleted renderers as the source of truth for the header, footer and marketing content.
 
-Three defect groups are worth fixing before this is presented as finished work: accessibility (the primary navigation carries mobile-drawer ARIA state at desktop widths on both the site and the app shell, and the app shell has no `<main>` landmark, so the skip link resolves to nothing on every `#/app` route); content integrity (the contact form confirms a reply that no code path can deliver, contradicting the project's own privacy page, and the public pages carry attributed testimonials and precise trust metrics that nothing supports); and correctness details (queued offline actions are discarded on reconnect, `_redirects` makes `404.html` unreachable, and a one-pixel breakpoint gap at exactly 1024 px leaves the app with no navigation).
+Three defect groups are worth fixing before this is presented as finished work: accessibility (the app shell has no `<main>` landmark, so the skip link resolves to nothing on every `#/app` route); content integrity (the contact form confirms a reply that no code path can deliver, contradicting the project's own privacy page, and the public pages carry attributed testimonials and precise trust metrics that nothing supports); and correctness details (queued offline actions are discarded on reconnect, `_redirects` makes `404.html` unreachable, and a one-pixel breakpoint gap at exactly 1024 px leaves the app with no navigation).
 
 No blocker prevents the project from building or running. Core flows — routing, guard, CRUD, permissions, persistence, theming — are implemented consistently and are covered by the smoke suite. With the P1 items resolved this is a credible portfolio piece; as it stands it should not be presented as final.
 
@@ -65,16 +65,6 @@ No blocker prevents the project from building or running. Core flows — routing
 None detected.
 
 ## 5. P1 — Important issues worth fixing next
-
-### [P1-01] Primary navigation keeps mobile-drawer ARIA state at desktop widths
-
-- **Classification:** Defect
-- **Affected area:** Accessibility, navigation (public site and demo application)
-- **Evidence:** `index.html:108`; `scripts/ui/layoutLanding.js:33,278,291`; `scripts/ui/layoutApp.js:56-59,245`; `styles/src/08-header.css:232,247-249`; `styles/src/06-app.css:457-470`
-- **Current behavior:** Both navigation containers are authored as mobile drawers with `role="dialog"`, `aria-modal="true"` and `aria-hidden="true"`, and the JavaScript only flips `aria-hidden` on drawer open/close. At `min-width: 1025px` the CSS makes both permanently visible — `.site-header__drawer` becomes `position: static` and `.sidebar` becomes `position: sticky; visibility: visible` — while the drawer state remains closed, so `aria-hidden="true"` stays applied. `renderAppShell` re-applies `aria-hidden="true"` on every route render.
-- **Impact:** On desktop the site's main navigation and the application sidebar are visible and keyboard-focusable but excluded from the accessibility tree, and are additionally announced as a modal dialog. On the public pages the footer still offers an equivalent route set, so the loss is partial; inside `#/app` the sidebar is the only navigation, so screen-reader users have no route between application views. Focusable content inside an `aria-hidden` subtree is also an internally inconsistent state for keyboard users.
-- **Recommended direction:** Make the drawer semantics viewport-conditional: apply `role="dialog"`, `aria-modal` and `aria-hidden` only while the container is actually operating as an overlay, and remove them (or never apply them) at the width where the same element renders as static navigation.
-- **Verification criteria:** At a viewport of 1280 px, `#mobileNav` and `#appDrawer` expose no `aria-hidden="true"` and no modal dialog semantics, and every navigation link is reachable in the accessibility tree; at 390 px the closed drawer is still hidden from it.
 
 ### [P1-02] Application shell has no `main` landmark, so the skip link has no target on every `#/app` route
 
@@ -225,7 +215,7 @@ None detected.
 
 **Status:** Needs important fixes
 
-No finding prevents the project from being built, served or navigated, and no critical risk was detected: there are no exposed secrets, no broken asset contract, no data-loss path outside browser-local demo data, and no failure that makes the project substantially unusable. The readiness status is set by eight P1 findings that a reviewer would reasonably expect to be closed before this is presented as finished work — two accessibility defects affecting navigation and landmark structure across the whole application area, two content-integrity issues on public pages, a documentation section that points maintainers at renderers that no longer exist, an unreachable error page, a deterministic layout break at one common viewport width, and an offline queue that silently discards user input.
+No finding prevents the project from being built, served or navigated, and no critical risk was detected: there are no exposed secrets, no broken asset contract, no data-loss path outside browser-local demo data, and no failure that makes the project substantially unusable. The readiness status is set by seven P1 findings that a reviewer would reasonably expect to be closed before this is presented as finished work — one accessibility defect affecting landmark structure across the whole application area, two content-integrity issues on public pages, a documentation section that points maintainers at renderers that no longer exist, an unreachable error page, a deterministic layout break at one common viewport width, and an offline queue that silently discards user input.
 
 None of these requires redesign or migration; each has a contained correction path within the existing architecture. Once they are resolved, the remaining risk is concentrated in verification that this audit could not perform — browser, assistive-technology, cross-browser, build and production checks — rather than in the implementation itself.
 
