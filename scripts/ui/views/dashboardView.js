@@ -1,6 +1,10 @@
+import { FleetSeed } from "../../data/seed.js";
+import { FleetStore } from "../../state/store.js";
+import { CleanupRegistry } from "../../utils/cleanup.js";
+import { dom, escapeHtml, FleetUI } from "../../utils/dom.js";
+
 function dashboardView() {
   const root = dom.h("div");
-  const escapeHtml = window.FleetUI.escapeHtml;
   // ===== KPI =====
   const rangeHeader = dom.h("div", "module-header");
   rangeHeader.innerHTML = `
@@ -80,7 +84,7 @@ function dashboardView() {
     if (action === "alerts") {
       window.location.hash = "#/app";
       window.setTimeout(() => {
-        const behavior = window.FleetUI.getMotionSafeScrollBehavior ? window.FleetUI.getMotionSafeScrollBehavior() : "smooth";
+        const behavior = FleetUI.getMotionSafeScrollBehavior();
         document.getElementById("dashboard-alerts")?.scrollIntoView({ behavior, block: "start" });
       }, 200);
     }
@@ -247,6 +251,8 @@ function dashboardView() {
 
   return root;
 }
+
+export { dashboardView };
 
 window.dashboardView = dashboardView;
 

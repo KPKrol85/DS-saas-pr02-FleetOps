@@ -1,3 +1,5 @@
+import { dom } from "../../utils/dom.js";
+
 const Modal = (() => {
   let backdrop;
   let keydownHandler = null;
@@ -113,5 +115,7 @@ const Modal = (() => {
 
   return { open, close };
 })();
+
+export { Modal };
 
 window.Modal = Modal;

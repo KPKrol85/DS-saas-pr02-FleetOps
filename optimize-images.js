@@ -3,8 +3,11 @@ const path = require("path");
 const sharp = require("sharp");
 
 const rootDir = __dirname;
+// Image sources are development inputs and stay out of the production build.
+// Generated variants live in the Vite public directory so they are copied to
+// `dist/assets/img/` verbatim, without hashing, under their existing URLs.
 const sourceDir = path.join(rootDir, "assets", "img-src");
-const outputDir = path.join(rootDir, "assets", "img");
+const outputDir = path.join(rootDir, "public", "assets", "img");
 
 const requiredSources = [
   "hero/hero-light.jpg",

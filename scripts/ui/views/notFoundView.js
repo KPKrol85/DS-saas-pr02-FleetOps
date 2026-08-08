@@ -1,3 +1,5 @@
+import { dom } from "../../utils/dom.js";
+
 function notFoundView() {
   const root = dom.h("div", "panel not-found-panel");
 
@@ -13,5 +15,7 @@ function notFoundView() {
 
   return root;
 }
+
+export { notFoundView };
 
 window.notFoundView = notFoundView;

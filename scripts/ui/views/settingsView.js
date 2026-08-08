@@ -1,7 +1,11 @@
+import { FleetPermissions } from "../../core/permissions.js";
+import { FleetStore } from "../../state/store.js";
+import { dom, escapeHtml, FleetUI } from "../../utils/dom.js";
+import { Toast } from "../components/toast.js";
+
 function settingsView() {
   const root = dom.h("div");
-  const escapeHtml = window.FleetUI.escapeHtml;
-  const getRoleLabel = window.FleetPermissions?.getRoleLabel || ((role) => role || "Użytkownik");
+  const getRoleLabel = FleetPermissions.getRoleLabel;
   const currentRangeDays = FleetStore.state.preferences.dashboardRangeDays || 30;
   const listModules = ["orders", "fleet", "drivers"];
   const defaultListPageSize = 10;
@@ -121,7 +125,7 @@ function settingsView() {
 
   const accountCard = dom.h("div", "setting-card");
   const user = FleetStore.state.auth.user || { name: "Użytkownik demo", email: "demo@fleetops.app" };
-  const currentUser = FleetStore.state.currentUser || window.FleetPermissions?.defaultUser;
+  const currentUser = FleetStore.state.currentUser || FleetPermissions.defaultUser;
   const safeRoleLabel = escapeHtml(getRoleLabel(currentUser?.role));
 
   accountCard.innerHTML = `
@@ -231,5 +235,7 @@ function settingsView() {
 
   return root;
 }
+
+export { settingsView };
 
 window.settingsView = settingsView;

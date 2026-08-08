@@ -1,10 +1,18 @@
+import { FleetPermissions } from "../core/permissions.js";
+import { FleetStore } from "../state/store.js";
+import { CleanupRegistry } from "../utils/cleanup.js";
+import { dom, FleetUI } from "../utils/dom.js";
+import { format } from "../utils/format.js";
+import { Dropdown } from "./components/dropdown.js";
+import { Toast } from "./components/toast.js";
+
 function renderAppShell(viewTitle, contentNode) {
   const app = document.getElementById("app");
   const { auth, preferences } = FleetStore.state;
-  const currentUser = FleetStore.state.currentUser || window.FleetPermissions?.defaultUser;
-  const demoUsers = window.FleetPermissions?.DemoUsers || [];
-  const getRoleLabel = window.FleetPermissions?.getRoleLabel || ((role) => role || "Użytkownik");
-  const escapeHtml = window.FleetUI.escapeHtml;
+  const currentUser = FleetStore.state.currentUser || FleetPermissions.defaultUser;
+  const demoUsers = FleetPermissions.DemoUsers;
+  const getRoleLabel = FleetPermissions.getRoleLabel;
+  const escapeHtml = FleetUI.escapeHtml;
 
   const theme = preferences.theme || "light";
   document.documentElement.setAttribute("data-theme", theme);
@@ -283,5 +291,7 @@ function renderAppShell(viewTitle, contentNode) {
     document.removeEventListener("keydown", handleKeydown);
   });
 }
+
+export { renderAppShell };
 
 window.renderAppShell = renderAppShell;

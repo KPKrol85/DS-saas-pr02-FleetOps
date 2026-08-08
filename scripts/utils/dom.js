@@ -17,7 +17,16 @@ const mount = (selector, content) => {
   if (typeof content === 'string') target.innerHTML = content; else target.appendChild(content);
 };
 
-window.dom = { h, clear, mount };
+const dom = { h, clear, mount };
+
+window.dom = dom;
+
+// Shared UI namespace. This module owns the object; other UI modules extend it
+// through the exported binding, and it stays published on `window` because it is
+// part of the project's internal runtime contract.
+const FleetUI = {};
+
+window.FleetUI = FleetUI;
 
 const escapeHtml = (value) =>
   String(value ?? "").replace(/[&<>"']/g, (char) => ({
@@ -28,15 +37,14 @@ const escapeHtml = (value) =>
     "'": "&#39;",
   }[char]));
 
-window.FleetUI = window.FleetUI || {};
-window.FleetUI.escapeHtml = escapeHtml;
+FleetUI.escapeHtml = escapeHtml;
 
 const getMotionSafeScrollBehavior = () => {
   if (typeof window.matchMedia !== "function") return "smooth";
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
 };
 
-window.FleetUI.getMotionSafeScrollBehavior = getMotionSafeScrollBehavior;
+FleetUI.getMotionSafeScrollBehavior = getMotionSafeScrollBehavior;
 
 const getNamedFormField = (form, name) => {
   const field = form && form.elements ? form.elements.namedItem(name) : null;
@@ -87,9 +95,9 @@ const setFieldError = (form, name, message) => {
   if (error) error.textContent = message || "";
 };
 
-window.FleetUI.connectFieldErrors = connectFieldErrors;
-window.FleetUI.clearFormErrors = clearFormErrors;
-window.FleetUI.setFieldError = setFieldError;
+FleetUI.connectFieldErrors = connectFieldErrors;
+FleetUI.clearFormErrors = clearFormErrors;
+FleetUI.setFieldError = setFieldError;
 
 // ===== Scroll-to-top binding =====
 function bindLogoScroll(kind, getContainer) {
@@ -140,8 +148,7 @@ function bindLogoScroll(kind, getContainer) {
   return () => cleanups.forEach((fn) => fn());
 }
 
-window.FleetUI = window.FleetUI || {};
-window.FleetUI.bindLogoScroll = bindLogoScroll;
+FleetUI.bindLogoScroll = bindLogoScroll;
 
 // ===== Theme-aware asset swapping =====
 function syncThemeImages(root = document) {
@@ -163,8 +170,7 @@ function syncThemeImages(root = document) {
   });
 }
 
-window.FleetUI = window.FleetUI || {};
-window.FleetUI.syncThemeImages = syncThemeImages;
+FleetUI.syncThemeImages = syncThemeImages;
 
 
 // ===== Empty state =====
@@ -192,5 +198,17 @@ function emptyState({ title = "Brak danych", description = "", actionLabel = "",
   return wrap;
 }
 
-window.FleetUI = window.FleetUI || {};
-window.FleetUI.emptyState = emptyState;
+FleetUI.emptyState = emptyState;
+
+export {
+  dom,
+  FleetUI,
+  escapeHtml,
+  getMotionSafeScrollBehavior,
+  connectFieldErrors,
+  clearFormErrors,
+  setFieldError,
+  bindLogoScroll,
+  syncThemeImages,
+  emptyState,
+};

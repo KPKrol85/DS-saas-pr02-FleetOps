@@ -8,4 +8,6 @@ const Table = {
   },
 };
 
+export { Table };
+
 window.Table = Table;

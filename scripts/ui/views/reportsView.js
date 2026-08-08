@@ -1,6 +1,10 @@
+import { FleetSeed } from "../../data/seed.js";
+import { dom, escapeHtml, FleetUI } from "../../utils/dom.js";
+import { Table } from "../components/table.js";
+import { Toast } from "../components/toast.js";
+
 function reportsView() {
   const root = dom.h("div");
-  const escapeHtml = window.FleetUI.escapeHtml;
   const header = dom.h("div", "module-header");
 
   header.innerHTML = `
@@ -51,5 +55,7 @@ function reportsView() {
 
   return root;
 }
+
+export { reportsView };
 
 window.reportsView = reportsView;

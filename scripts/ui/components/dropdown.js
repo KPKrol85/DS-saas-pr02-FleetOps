@@ -1,3 +1,5 @@
+import { CleanupRegistry } from "../../utils/cleanup.js";
+
 const Dropdown = (() => {
   const activeHandlers = new WeakMap();
   const registeredForCleanup = new WeakSet();
@@ -60,7 +62,7 @@ const Dropdown = (() => {
     activeHandlers.set(menu, { handler, keydownHandler, trigger, timeoutId });
     menu.classList.add("open");
 
-    if (window.CleanupRegistry && !registeredForCleanup.has(menu)) {
+    if (!registeredForCleanup.has(menu)) {
       CleanupRegistry.add(() => detach(menu));
       registeredForCleanup.add(menu);
     }
@@ -68,5 +70,7 @@ const Dropdown = (() => {
 
   return { toggle };
 })();
+
+export { Dropdown };
 
 window.Dropdown = Dropdown;

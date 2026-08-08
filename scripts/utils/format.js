@@ -29,4 +29,6 @@ const format = {
   }
 };
 
+export { format };
+
 window.format = format;

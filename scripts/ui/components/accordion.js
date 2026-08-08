@@ -48,4 +48,6 @@ function syncState(header, content, open) {
   header.setAttribute('aria-expanded', String(open));
 }
 
+export { Accordion };
+
 window.Accordion = Accordion;
