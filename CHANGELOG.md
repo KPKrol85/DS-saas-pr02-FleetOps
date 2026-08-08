@@ -19,6 +19,7 @@ All significant changes to this project are documented in this file.
 - Added a production build pipeline (`build-dist.js`) that emits a `dist/` output with CSS minified through PostCSS and `cssnano` and JavaScript minified through `terser`, and copies `sw.js`, `_headers`, `_redirects`, `robots.txt` and `sitemap.xml`.
 - Added an image generation pipeline (`optimize-images.js`) producing AVIF, WebP and JPG variants from source images with `sharp`.
 - Added static-hosting deployment configuration: security and cache headers in `_headers`, asset passthrough, trailing-slash redirects and index fallback in `_redirects`, plus `robots.txt` and `sitemap.xml`.
+- Added a repository-wide line-ending policy in `.gitattributes` — LF for text sources and documentation, CRLF for Windows batch files, and explicit `binary` marking for image and font assets — and normalized the affected sources once, so checkouts are byte-identical across platforms and diffs no longer carry whole-file line-ending churn.
 
 ### Documentation
 

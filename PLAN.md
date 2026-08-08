@@ -24,10 +24,10 @@
 
 **Goal:** Make the working tree clean and diffs trustworthy before any source change is made.
 
-- [ ] **PH1-01 — Normalize text line endings across the repository** — **Priority:** High
-  - [ ] add a `.gitattributes` normalising line endings for text sources (`.html`, `.css`, `.js`, `.json`, `.md`, `.txt`, `.xml`) and marking `.bat` and binary assets appropriately
-  - [ ] renormalise the currently affected files once (`styles/src/06-app-components.css`, `styles/src/09-pages.css`, `start-local-server.bat`)
-  - [ ] confirm no content change is introduced by the renormalisation
+- [x] **PH1-01 — Normalize text line endings across the repository** — **Priority:** High
+  - [x] add a `.gitattributes` normalising line endings for text sources (`.html`, `.css`, `.js`, `.json`, `.md`, `.txt`, `.xml`) and marking `.bat` and binary assets appropriately
+  - [x] renormalise the currently affected files once (`styles/src/06-app-components.css`, `styles/src/09-pages.css`, `start-local-server.bat`)
+  - [x] confirm no content change is introduced by the renormalisation
   - **Completion condition:** `git diff` reports no changes for files whose content has not been edited
   - **Source:** `AUDIT.md` — P2-03
 

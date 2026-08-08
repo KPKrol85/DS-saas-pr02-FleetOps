@@ -188,16 +188,6 @@ None detected.
 - **Recommended direction:** Separate the mutating image step from the build and test entry points — for example, keep image generation as an explicit standalone command invoked when source images change, or make it skip regeneration when outputs are current.
 - **Verification criteria:** Running the documented build and test commands leaves tracked files unmodified.
 
-### [P2-03] No `.gitattributes`, and two CSS sources currently show whole-file line-ending diffs
-
-- **Classification:** Maintenance risk
-- **Affected area:** Repository hygiene, reviewability
-- **Evidence:** repository root — no `.gitattributes` present; `git diff --stat` reports 1861 insertions and 1861 deletions across `start-local-server.bat`, `styles/src/06-app-components.css` and `styles/src/09-pages.css` with no content change
-- **Current behavior:** Line endings are not normalised, so the working tree presents two of the largest CSS sources as fully rewritten when only their line endings differ from the committed versions.
-- **Impact:** Real changes to these files become unreviewable, and diff-based review of the CSS layer — including any fix for P1-07, which lives in one of the affected files — is unusable until the churn is resolved.
-- **Recommended direction:** Add a `.gitattributes` normalising text line endings and renormalise the affected files once.
-- **Verification criteria:** `git diff` reports no changes for files whose content has not been edited.
-
 ### [P2-04] Collapsed accordion panels remain exposed to assistive technology
 
 - **Classification:** Source-visible risk
