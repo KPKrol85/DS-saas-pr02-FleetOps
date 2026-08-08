@@ -31,19 +31,19 @@
   - **Completion condition:** `git diff` reports no changes for files whose content has not been edited
   - **Source:** `AUDIT.md` — P2-03
 
-- [ ] **PH1-02 — Add `.gitignore` and untrack the committed test artifact** — **Priority:** Medium
-  - [ ] add a `.gitignore` covering `node_modules/`, `dist/`, `test-results/` and Playwright report output
-  - [ ] untrack `test-results/.last-run.json`
-  - [ ] confirm the README statement that no recorded test-run results are committed becomes true
+- [x] **PH1-02 — Add `.gitignore` and untrack the committed test artifact** — **Priority:** Medium
+  - [x] add a `.gitignore` covering `node_modules/`, `dist/`, `test-results/` and Playwright report output
+  - [x] untrack `test-results/.last-run.json`
+  - [x] confirm the README statement that no recorded test-run results are committed becomes true
   - **Completion condition:** `git status` is clean after install, build and test, and no test-run artifact is tracked
   - **Source:** `AUDIT.md` — P2-01
 
-- [ ] **PH1-03 — Stop the documented build and test commands from rewriting tracked images** — **Priority:** Medium
-  - [ ] decouple `optimize:images` from the `build` and `test` package scripts
-  - [ ] keep image generation available as an explicit standalone command, or make it skip regeneration when outputs are current
-  - [ ] define `test` as a check that does not modify tracked files
-  - [ ] update the README workflow section to describe the resulting commands
-  - [ ] optional: add one combined read-only verification script running `qa:css-vars` and `test:smoke`
+- [x] **PH1-03 — Stop the documented build and test commands from rewriting tracked images** — **Priority:** Medium
+  - [x] decouple `optimize:images` from the `build` and `test` package scripts
+  - [x] keep image generation available as an explicit standalone command, or make it skip regeneration when outputs are current
+  - [x] define `test` as a check that does not modify tracked files
+  - [x] update the README workflow section to describe the resulting commands
+  - [x] optional: add one combined read-only verification script running `qa:css-vars` and `test:smoke` — satisfied by `npm test`, which is exactly that combination; no additional script was introduced
   - **Completion condition:** running the documented build and test commands leaves tracked files unmodified
   - **Source:** `AUDIT.md` — P2-02, section 7
 

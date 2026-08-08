@@ -168,26 +168,6 @@ None detected.
 
 ## 6. P2 — Minor refinements
 
-### [P2-01] Repository has no `.gitignore` and already tracks a test-run artifact the README says is absent
-
-- **Classification:** Maintenance risk
-- **Affected area:** Repository hygiene, documentation accuracy
-- **Evidence:** repository root — no `.gitignore` present; `test-results/.last-run.json` (tracked, contains `"status": "passed"`); `README.md:152` and `README.md:390`
-- **Current behavior:** Nothing is ignored. `dist/`, `node_modules/` and Playwright output are untracked but not excluded, and a Playwright run artifact has already been committed. The README states in both languages that the repository contains no recorded test-run results.
-- **Impact:** After `npm ci` and `npm run build`, `git status` is dominated by generated files that can be committed by accident — a leak that has already occurred once. The committed artifact also asserts a passing run whose scope, date and revision are unknown, which is the kind of stale claim a final audit should not have to reason about.
-- **Recommended direction:** Add a `.gitignore` covering `node_modules/`, `dist/` and Playwright output, and untrack the existing artifact so the README statement becomes true.
-- **Verification criteria:** `git status` is clean after a full install, build and test run, and no test-run artifact is tracked.
-
-### [P2-02] `npm run build` and `npm test` overwrite tracked generated images
-
-- **Classification:** Maintenance risk
-- **Affected area:** Build workflow, generated-file ownership
-- **Evidence:** `package.json` — `scripts.build`, `scripts.test`, `scripts.optimize:images`; `optimize-images.js:6-7,53-68`
-- **Current behavior:** `build` runs `optimize:images` before `build-dist.js`. `optimize-images.js` writes AVIF, WebP and JPG output into `assets/img/`, which is tracked in Git, and `test` is an alias for `build`. `build-dist.js` itself is well contained — it writes only into `dist/` — so the mutation comes entirely from the image step.
-- **Impact:** Running the documented build or test command rewrites tracked binary files, producing diff noise unrelated to any source change and making a clean working tree unavailable after a routine verification run. It also prevents `npm test` from being used as a read-only check.
-- **Recommended direction:** Separate the mutating image step from the build and test entry points — for example, keep image generation as an explicit standalone command invoked when source images change, or make it skip regeneration when outputs are current.
-- **Verification criteria:** Running the documented build and test commands leaves tracked files unmodified.
-
 ### [P2-04] Collapsed accordion panels remain exposed to assistive technology
 
 - **Classification:** Source-visible risk
@@ -260,13 +240,6 @@ None detected.
 - **Current evidence:** The policy sets `default-src`, `img-src`, `style-src`, `script-src`, `font-src` and `connect-src`, and framing is separately denied via `X-Frame-Options`. `base-uri`, `form-action` and `object-src` are not set and therefore fall back to permissive defaults rather than to `default-src`.
 - **Potential value:** Closes the residual injection surface a self-only policy is otherwise designed to eliminate, at no functional cost for a static site.
 - **Scope boundary:** Optional hardening. No current implementation depends on the omitted directives.
-
-### Make the smoke suite runnable as a non-mutating check
-
-- **Relevant area:** Package scripts and testing workflow (`package.json` — `scripts.test`, `scripts.test:smoke`).
-- **Current evidence:** `test` aliases the mutating build (see P2-02), so the only read-only automated checks available today are `qa:css-vars` and the separately named `test:smoke`.
-- **Potential value:** A single documented command that runs the CSS gate and the smoke suite without touching tracked files would make pre-release verification repeatable, which matters given how much behaviour the existing suite already covers.
-- **Scope boundary:** Optional workflow improvement; no new dependency or test is required.
 
 ## 8. Current readiness conclusion
 

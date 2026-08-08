@@ -24,6 +24,7 @@ All significant changes to this project are documented in this file.
 - Added an image generation pipeline (`optimize-images.js`) producing AVIF, WebP and JPG variants from source images with `sharp`.
 - Added static-hosting deployment configuration: security and cache headers in `_headers`, asset passthrough, trailing-slash redirects and index fallback in `_redirects`, plus `robots.txt` and `sitemap.xml`.
 - Added a repository-wide line-ending policy in `.gitattributes` — LF for text sources and documentation, CRLF for Windows batch files, and explicit `binary` marking for image and font assets — and normalized the affected sources once, so checkouts are byte-identical across platforms and diffs no longer carry whole-file line-ending churn.
+- Added a root `.gitignore` excluding dependencies (`node_modules/`), generated build output (`dist/`), Playwright artifacts (`test-results/`, `playwright-report/`), local Netlify state, runtime logs and operating-system metadata, and untracked the previously committed Playwright run artifact `test-results/.last-run.json` (kept on disk, now ignored), so generated output can no longer be committed by accident and the README statement that the repository holds no recorded test-run results is true.
 
 ### Documentation
 
