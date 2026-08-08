@@ -26,7 +26,7 @@
     "portfolio"
   ],
   "author": "KP_Code Digital Studio",
-  "license": "UNLICENSED",
+  "license": "SEE LICENSE IN LICENSE",
   "devDependencies": {
     "@playwright/test": "^1.60.0",
     "cssnano": "^7.1.2",

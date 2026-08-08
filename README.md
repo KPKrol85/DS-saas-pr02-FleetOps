@@ -191,7 +191,7 @@ Repozytorium nie zawiera zmierzonych wyników wydajności.
 
 ### Licencja
 
-Projekt jest oznaczony jako `UNLICENSED` w `package.json` i `LICENSE`. Kod jest własnościowy, zastrzeżony dla Kamil Król / KP_Code Digital Studio i udostępniony do celów portfolio, referencyjnych oraz code review.
+Projekt jest objęty Własnościową Licencją Projektu KP_CODE (wersja 1.0). Pełne i wiążące warunki znajdują się w pliku [`LICENSE`](LICENSE), do którego odsyła również pole `license` w `package.json`. Kod jest własnościowy, zastrzeżony dla Kamil Król — KP_Code, i udostępniony do celów portfolio, referencyjnych oraz code review. Licencja projektu nie zastępuje odrębnych licencji materiałów zewnętrznych (bibliotek, zależności, fontów, ikon, grafik).
 
 ## EN
 
@@ -384,4 +384,4 @@ The repository does not contain measured performance scores.
 
 ### License
 
-The project is marked as `UNLICENSED` in `package.json` and `LICENSE`. The code is proprietary, reserved for Kamil Król / KP_Code Digital Studio, and provided for portfolio, reference, and code review purposes.
+The project is covered by the KP_CODE Proprietary Project License (version 1.0). The full and binding terms are in the [`LICENSE`](LICENSE) file, which the `license` field in `package.json` also points to. The code is proprietary, reserved for Kamil Król — KP_Code, and provided for portfolio, reference, and code review purposes. The project license does not replace the separate licenses of third-party materials (libraries, dependencies, fonts, icons, graphics).
