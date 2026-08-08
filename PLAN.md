@@ -63,14 +63,14 @@
 
 **Goal:** Leave exactly one definition of every public page — the static documents that actually render.
 
-- [ ] **PH3-01 — Remove the unreachable public-page renderers and their router cases** — **Priority:** High
-  - [ ] confirm the reachability boundary in `scripts/main.js` (`redirectLegacyPublicHash`, `isDynamicHash`) before deleting anything
-  - [ ] remove `scripts/ui/marketingPages.js` and its `<script>` references in all twelve HTML documents
-  - [ ] remove `renderLanding`, `renderLandingHeader`, `renderLandingFooter` from `scripts/ui/layoutLanding.js`, keeping `initLandingShell`, the theme helpers and `bindLogoScroll`
-  - [ ] remove `renderInfoPage` and the unreachable public route cases from `scripts/router.js`
-  - [ ] remove the dead `.footer-links a` selector in `applyAriaCurrent` (`scripts/router.js:120`) and confirm `aria-current` still resolves against the selectors that exist
-  - [ ] re-run the smoke suite for the public routes and the `#/app` guard
-  - **Completion condition:** no `render*Page`, `renderLanding` or `renderInfoPage` definition remains without a reachable call site, the public pages render unchanged, and the per-page script payload drops by the removed amount
+- [x] **PH3-01 — Remove the unreachable public-page renderers and their router cases** — **Priority:** High
+  - [x] confirm the reachability boundary in `scripts/main.js` (`redirectLegacyPublicHash`, `isDynamicHash`) before deleting anything — `isDynamicHash` admits only `#/login`, `#/app` and `#/app/*`, so `FleetRouter.routeTo` can never receive a public path
+  - [x] remove `scripts/ui/marketingPages.js` and every import of it from the Vite ES module graph — the Vite migration had already replaced the per-document `<script defer>` list with one `<script type="module" src="/scripts/main.js">` entry, so the module was reached through `scripts/router.js` imports rather than through HTML script tags
+  - [x] remove `renderLanding`, `renderLandingHeader`, `renderLandingFooter` and the renderer-only `getLandingThemeAsset` helper from `scripts/ui/layoutLanding.js`, keeping `initLandingShell`, `getLandingTheme`, `initResourcesMenu` and the `bindLogoScroll` call the static documents rely on
+  - [x] remove `renderInfoPage` and the unreachable public route cases from `scripts/router.js`, including the now-dead public entries in `routeLabels` and the unused `FleetUI` import
+  - [x] remove the dead `.footer-links a` selector in `applyAriaCurrent` and confirm `aria-current` still resolves against the selectors that exist — `.footer-links` occurs in no HTML or CSS file; `.site-header__links a`, the home logo and `.sidebar nav a` are preserved, as is the separate `applyStaticAriaCurrent` pass the static documents use
+  - [x] re-run the smoke suite for the public routes and the `#/app` guard — `npm run build` and `npm run test:smoke` (16/16) pass
+  - **Completion condition:** no `render*Page`, `renderLanding` or `renderInfoPage` definition remains without a reachable call site, the public pages render unchanged, and the bundled script payload drops by the removed amount — met: the Vite production bundle fell from 201.30 kB (46.97 kB gzip) to 104.65 kB (27.70 kB gzip)
   - **Source:** `AUDIT.md` — P1-03
 
 ## Phase 4 — Application accessibility and responsive contracts
