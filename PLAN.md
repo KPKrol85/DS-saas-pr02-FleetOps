@@ -51,10 +51,10 @@
 
 **Goal:** Make `npm run qa:css-vars` a gate that passes, so it can guard later CSS work.
 
-- [ ] **PH2-01 — Resolve the undefined `--surface-muted` token** — **Priority:** High
-  - [ ] define `--surface-muted` in both theme blocks in `styles/src/00-settings.css`, or repoint the two declarations at an existing surface token
-  - [ ] apply the fix to `styles/src/06-app-components.css:317` and `:386` (`.setting-card__toggle-control`, `.setting-card__check-control`)
-  - [ ] verify the compact-mode toggle track and settings checkbox render with a visible fill in light and dark themes
+- [x] **PH2-01 — Resolve the undefined `--surface-muted` token** — **Priority:** High
+  - [x] define `--surface-muted` in both theme blocks in `styles/src/00-settings.css`, or repoint the two declarations at an existing surface token — repointed at the existing `--surface-2`, which is already the canonical recessed surface inside a `--surface` card and is defined in both themes; no new token was added
+  - [x] apply the fix to `styles/src/06-app-components.css:317` and `:386` (`.setting-card__toggle-control`, `.setting-card__check-control`)
+  - [x] verify the compact-mode toggle track and settings checkbox render with a visible fill in light and dark themes
   - **Completion condition:** `npm run qa:css-vars` exits 0
   - **Depends on:** `PH1-01`
   - **Source:** `AUDIT.md` — P1-07
