@@ -1,13 +1,22 @@
+import { FleetPermissions } from "../../core/permissions.js";
+import { FleetStore } from "../../state/store.js";
+import { CleanupRegistry } from "../../utils/cleanup.js";
+import { clearFormErrors, connectFieldErrors, dom, escapeHtml, FleetUI, setFieldError } from "../../utils/dom.js";
+import { format } from "../../utils/format.js";
+import { Dropdown } from "../components/dropdown.js";
+import { Modal } from "../components/modal.js";
+import { RecordDrawer } from "../components/recordDrawer.js";
+import { Toast } from "../components/toast.js";
+
 function driversView() {
   const root = dom.h("div");
-  const permissions = window.FleetPermissions || {};
+  const permissions = FleetPermissions;
   const Actions = permissions.Actions || {};
   const can = permissions.can || (() => true);
   const explainDeny = permissions.explainDeny || (() => "");
   const applyDisabledState = permissions.applyDisabledState || ((el) => el && el.setAttribute("aria-disabled", "false"));
   const guard = permissions.guard || (() => true);
   const getPermissionContext = (record) => ({ user: FleetStore.state.currentUser, record });
-  const escapeHtml = window.FleetUI.escapeHtml;
 
   const header = dom.h("div", "module-header");
   header.innerHTML = `
@@ -202,8 +211,6 @@ function driversView() {
     }, 180);
   };
 
-  const clearFormErrors = window.FleetUI.clearFormErrors;
-  const setFieldError = window.FleetUI.setFieldError;
 
   const getDriverFormValues = (form) => {
     const data = new FormData(form);
@@ -266,7 +273,7 @@ function driversView() {
         <button class="button button--primary" type="submit">${isEdit ? "Zapisz zmiany" : "Dodaj kierowcę"}</button>
       </div>
     `;
-    window.FleetUI.connectFieldErrors(form, "drivers-form");
+    connectFieldErrors(form, "drivers-form");
 
     const defaultValues = {
       name: "",
@@ -565,5 +572,7 @@ function driversView() {
 
   return root;
 }
+
+export { driversView };
 
 window.driversView = driversView;

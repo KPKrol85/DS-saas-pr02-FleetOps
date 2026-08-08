@@ -26,8 +26,8 @@ Projekt jest częścią portfolio KP_Code Digital Studio i nie zawiera backendu,
 
 Runtime:
 
-- HTML, CSS i Vanilla JavaScript bez frameworka i bez bundlera.
-- Klasyczne skrypty ładowane przez `<script defer>`.
+- HTML, CSS i Vanilla JavaScript bez frameworka.
+- Kod uruchomieniowy jest grafem modułów ES ładowanym przez pojedyncze wejście `<script type="module" src="/scripts/main.js">`.
 - Hash routing dla części aplikacyjnej.
 - `localStorage` i `sessionStorage` dla lokalnego stanu demo.
 - Service Worker API.
@@ -36,11 +36,9 @@ Runtime:
 Tooling:
 
 - Node.js / npm.
+- Vite jako główne narzędzie developmentu, budowania i podglądu produkcyjnego, skonfigurowane jako aplikacja wielostronicowa (MPA).
 - `sharp` do generowania obrazów AVIF/WebP/JPG z plików źródłowych.
-- PostCSS z `cssnano` do minifikacji CSS.
-- `terser` do minifikacji aktywnych plików JavaScript w buildzie.
 - Playwright do testów smoke.
-- Python `http.server` używany przez skrypty preview.
 
 ### Architektura
 
@@ -49,7 +47,9 @@ Tooling:
 - `scripts/state/store.js` jest centralnym store stanu z subskrypcjami i zapisem do `localStorage`. `scripts/data/seed.js` dostarcza dane początkowe.
 - Widoki aplikacji są w `scripts/ui/views/`, powłoka panelu w `scripts/ui/layoutApp.js`, a wspólne komponenty w `scripts/ui/components/`.
 - Uprawnienia ról demo są zamknięte w `scripts/core/permissions.js`.
-- CSS jest modułowy: `styles/main.css` importuje numerowane pliki z `styles/src/`. Build produkcyjny generuje z nich jeden plik `styles/main.min.css` w katalogu `dist/`.
+- Zależności między modułami są jawne: każdy plik w `scripts/` eksportuje swoje API i importuje to, czego używa, zamiast polegać na kolejności skryptów. Moduły publikują swoje nazwy również na `window` (`FleetStore`, `FleetUI`, `Toast`, `FleetRouter` i pozostałe) — to celowo zachowany kontrakt wewnętrzny, a nie mechanizm ładowania.
+- CSS jest modułowy: `styles/main.css` importuje numerowane pliki z `styles/src/`. Vite przetwarza to wejście przez znacznik `<link>` w HTML i emituje z niego jeden zbundlowany, zminifikowany arkusz z hashem w nazwie w `dist/assets/`.
+- `public/` zawiera pliki statyczne produkcyjne (assety, `sw.js`, `_headers`, `_redirects`, `robots.txt`, `sitemap.xml`). Vite kopiuje je do `dist/` bez zmiany nazw, więc ich adresy produkcyjne pozostają niezmienione.
 
 ### Struktura projektu
 
@@ -72,16 +72,18 @@ Tooling:
 ├── styles/
 │   ├── main.css                # importuje moduły CSS
 │   └── src/                    # tokeny, layout, komponenty, widoki, strony
-├── assets/                     # favicony, font, ikony, logo, obrazy, OG, screenshoty
+├── public/                     # pliki statyczne kopiowane 1:1 do dist/
+│   ├── assets/                 # favicony, font, ikony, logo, obrazy, OG, screenshoty
+│   ├── sw.js                   # service worker
+│   ├── _headers                # nagłówki dla statycznego hostingu
+│   ├── _redirects              # przekierowania i fallback routingu
+│   ├── robots.txt
+│   └── sitemap.xml
+├── assets/img-src/             # źródła obrazów (wejście builda obrazów, poza dist/)
 ├── tests/smoke.spec.js         # testy Playwright
-├── build-dist.js               # build produkcyjny do dist/
+├── vite.config.js              # konfiguracja Vite: wejścia MPA, porty, dist/
 ├── optimize-images.js          # pipeline optymalizacji obrazów
 ├── playwright.config.js        # konfiguracja testów
-├── sw.js                       # service worker
-├── _headers                    # nagłówki dla statycznego hostingu
-├── _redirects                  # przekierowania i fallback routingu
-├── robots.txt
-├── sitemap.xml
 ├── CHANGELOG.md
 └── LICENSE
 ```
@@ -96,45 +98,50 @@ npm ci
 
 ### Development lokalny
 
-Uruchomienie lokalnego serwera preview:
+Uruchomienie serwera developerskiego Vite na plikach źródłowych, bez minifikacji:
 
 ```bash
-npm run preview
+npm run dev
 ```
 
-Domyślny adres preview to:
+Adres serwera developerskiego:
 
 ```text
 http://127.0.0.1:8181
 ```
 
-Alternatywnie dostępny jest plik `start-local-server.bat`, który uruchamia `python -m http.server 8181`.
+Port jest ustawiony jako `strictPort` — jeśli jest zajęty, serwer kończy się czytelnym błędem zamiast po cichu wybierać inny port. Alternatywnie dostępny jest plik `start-local-server.bat`, który uruchamia `npm run dev`.
+
+Service worker nie jest rejestrowany w trybie developerskim, a wcześniej zainstalowany worker jest wyrejestrowywany, żeby nie serwował nieaktualnych modułów. Rejestracja `/sw.js` działa bez zmian w buildzie produkcyjnym.
 
 Projekt należy uruchamiać przez serwer HTTP. Otwarcie plików bezpośrednio z dysku nie odzwierciedla działania ścieżek absolutnych, routingu ani service workera.
 
 ### Dostępne skrypty
 
-- `npm run preview` — serwuje katalog projektu przez `python -m http.server 8181`.
-- `npm run preview:dist` — serwuje katalog `dist/` na porcie 8182.
-- `npm run optimize:images` — generuje warianty obrazów przez `optimize-images.js`.
-- `npm run build` — uruchamia optymalizację obrazów, a następnie `build-dist.js`.
-- `npm run test` — alias dla `npm run build`.
+- `npm run dev` — serwer developerski Vite na `http://127.0.0.1:8181`.
+- `npm run build` — build produkcyjny Vite do katalogu `dist/`.
+- `npm run preview` — podgląd zbudowanego `dist/` na `http://127.0.0.1:8182`.
+- `npm run preview:dist` — alias zgodności dla `npm run preview`.
+- `npm run optimize:images` — generuje warianty obrazów przez `optimize-images.js`; jest to świadoma operacja utrzymaniowa, nieuruchamiana przez build ani testy.
+- `npm run test` — weryfikacja bez zapisu do plików źródłowych: `qa:css-vars` i testy smoke.
 - `npm run test:smoke` — uruchamia testy Playwright.
 - `npm run qa:css-vars` — sprawdza definicje i użycia zmiennych CSS w `styles/src/`.
 
 ### Build produkcyjny
 
-Build produkcyjny uruchamia optymalizację obrazów, tworzy katalog `dist/` od zera, buduje `styles/main.min.css`, podmienia referencje do CSS w HTML, minifikuje aktywne skrypty i kopiuje assety oraz pliki `sw.js`, `_headers`, `_redirects`, `robots.txt` i `sitemap.xml`.
+Build produkcyjny wykonuje Vite. Każdy utrzymywany dokument HTML jest osobnym wejściem builda, więc `dist/` odwzorowuje strukturę wdrożonych adresów (`index.html`, `404.html`, `product/index.html` i pozostałe podstrony). Vite tworzy `dist/` od zera, bunduje i minifikuje CSS oraz JavaScript do plików z hashem w nazwie w `dist/assets/`, a zawartość `public/` kopiuje bez zmiany nazw. Build nie regeneruje obrazów.
 
 ```bash
 npm run build
 ```
 
-Podgląd katalogu `dist/`:
+Podgląd zbudowanego katalogu `dist/`:
 
 ```bash
-npm run preview:dist
+npm run preview
 ```
+
+Podgląd produkcyjny działa pod `http://127.0.0.1:8182` i jest trybem osobnym od `npm run dev`.
 
 Katalog `dist/` jest wyjściem generowanym. Nie należy edytować go ręcznie — zmiany wprowadza się w plikach źródłowych i regeneruje build.
 
@@ -146,7 +153,7 @@ npm run qa:css-vars
 ```
 
 - Testy smoke są w `tests/smoke.spec.js` i uruchamiane przez Playwright.
-- `playwright.config.js` używa projektu `Desktop Chrome`, `baseURL` `http://127.0.0.1:8181`, blokuje service workery w testach i startuje serwer komendą `npm run preview`.
+- `playwright.config.js` używa projektu `Desktop Chrome`, `baseURL` `http://127.0.0.1:8182`, domyślnie blokuje service workery w testach i startuje serwer komendą `npm run build && npm run preview`, więc testy smoke sprawdzają zbudowany artefakt produkcyjny.
 - `scripts/qa/check-css-vars.js` analizuje statycznie pliki w `styles/src/` pod kątem zdefiniowanych i używanych zmiennych CSS.
 
 Repozytorium nie zawiera zapisanych wyników przebiegów testów.
@@ -191,8 +198,8 @@ Projekt zawiera:
 
 ### PWA i obsługa offline
 
-- `assets/favicon/site.webmanifest` definiuje `name`, `short_name`, `start_url` `/`, `scope` `/`, `display` `standalone`, ikony 192/512 (w tym warianty maskable), screenshoty oraz skróty do dashboardu, floty i zleceń.
-- `scripts/main.js` rejestruje `/sw.js` po zdarzeniu `load`, gdy przeglądarka wspiera Service Worker API.
+- `public/assets/favicon/site.webmanifest` definiuje `name`, `short_name`, `start_url` `/`, `scope` `/`, `display` `standalone`, ikony 192/512 (w tym warianty maskable), screenshoty oraz skróty do dashboardu, floty i zleceń.
+- `scripts/main.js` rejestruje `/sw.js` po zdarzeniu `load`, gdy przeglądarka wspiera Service Worker API. Rejestracja jest pomijana w trybie developerskim Vite.
 - `sw.js` używa wersjonowanego cache (`fleetops-v1.10`), precache’uje powłokę aplikacji i publiczne trasy, a przy aktywacji usuwa starsze cache z prefiksem `fleetops-`.
 - Nawigacje działają w strategii network-first z fallbackiem do cache, a assety statyczne w strategii stale-while-revalidate.
 - Wersjonowanie cache w `sw.js` jest utrzymywane ręcznie.
@@ -205,10 +212,10 @@ W projekcie widoczne są następujące mechanizmy wydajnościowe:
 - preload fontu w HTML;
 - obrazy hero w wariantach AVIF, WebP i JPG;
 - jawne wymiary obrazu hero oraz `fetchpriority="high"` dla głównej grafiki;
-- build CSS do jednego minifikowanego pliku `styles/main.min.css`;
-- minifikacja aktywnych skryptów JavaScript w buildzie produkcyjnym;
+- build CSS do jednego zbundlowanego, zminifikowanego arkusza z hashem w nazwie;
+- bundling i minifikacja JavaScriptu przez Vite w buildzie produkcyjnym;
 - cache assetów statycznych przez service worker i nagłówki `_headers`;
-- wykluczenie `assets/img-src/` z katalogu `dist/`.
+- wykluczenie źródeł obrazów `assets/img-src/` z katalogu `dist/`.
 
 Repozytorium nie zawiera zmierzonych wyników wydajności.
 
@@ -230,8 +237,9 @@ Repozytorium nie zawiera zmierzonych wyników wydajności.
 - Uprawnienia ról demo są w `scripts/core/permissions.js`.
 - Widoki aplikacji są w `scripts/ui/views/`, a wspólne komponenty UI w `scripts/ui/components/`.
 - Style źródłowe są modułowe w `styles/src/`, a `styles/main.css` tylko je importuje.
-- Pipeline obrazów jest zaimplementowany w `optimize-images.js`; pliki źródłowe leżą w `assets/img-src/`, a warianty wynikowe w `assets/img/`.
-- Katalog `dist/`, `styles/main.min.css` i zminifikowane skrypty są generowane przez `build-dist.js` i nie powinny być edytowane ręcznie.
+- Pipeline obrazów jest zaimplementowany w `optimize-images.js`; pliki źródłowe leżą w `assets/img-src/`, a warianty wynikowe w `public/assets/img/`. Uruchamia się go świadomie przez `npm run optimize:images`.
+- Konfiguracja builda — wejścia MPA, porty developmentu i podglądu, katalog wyjściowy — jest w `vite.config.js`.
+- Katalog `dist/` jest generowany przez Vite i nie powinien być edytowany ręcznie.
 - Istotne zmiany projektu są opisywane w [`CHANGELOG.md`](CHANGELOG.md).
 
 ### Licencja
@@ -264,8 +272,8 @@ The project is part of the KP_Code Digital Studio portfolio and does not include
 
 Runtime:
 
-- HTML, CSS, and Vanilla JavaScript with no framework and no bundler.
-- Classic scripts loaded through `<script defer>`.
+- HTML, CSS, and Vanilla JavaScript with no framework.
+- Runtime code is an ES module graph loaded from a single `<script type="module" src="/scripts/main.js">` entry.
 - Hash routing for the application area.
 - `localStorage` and `sessionStorage` for local demo state.
 - Service Worker API.
@@ -274,11 +282,9 @@ Runtime:
 Tooling:
 
 - Node.js / npm.
+- Vite as the primary development, build, and production preview tool, configured as a multi-page application (MPA).
 - `sharp` for generating AVIF/WebP/JPG images from source files.
-- PostCSS with `cssnano` for CSS minification.
-- `terser` for minifying active JavaScript files during the build.
 - Playwright for smoke tests.
-- Python `http.server` used by preview scripts.
 
 ### Architecture
 
@@ -287,7 +293,9 @@ Tooling:
 - `scripts/state/store.js` is the central state store with subscriptions and `localStorage` persistence. `scripts/data/seed.js` provides the initial data.
 - Application views live in `scripts/ui/views/`, the dashboard shell in `scripts/ui/layoutApp.js`, and shared components in `scripts/ui/components/`.
 - Demo role permissions are contained in `scripts/core/permissions.js`.
-- CSS is modular: `styles/main.css` imports the numbered files from `styles/src/`. The production build generates a single `styles/main.min.css` from them in the `dist/` directory.
+- Module dependencies are explicit: every file in `scripts/` exports its API and imports what it uses, instead of relying on script order. Modules also publish their names on `window` (`FleetStore`, `FleetUI`, `Toast`, `FleetRouter`, and the rest) — a deliberately preserved internal contract, not a loading mechanism.
+- CSS is modular: `styles/main.css` imports the numbered files from `styles/src/`. Vite processes that entry through the HTML `<link>` tag and emits a single bundled, minified, content-hashed stylesheet into `dist/assets/`.
+- `public/` holds the production-static files (assets, `sw.js`, `_headers`, `_redirects`, `robots.txt`, `sitemap.xml`). Vite copies them into `dist/` verbatim, so their production URLs are unchanged.
 
 ### Project Structure
 
@@ -310,16 +318,18 @@ Tooling:
 ├── styles/
 │   ├── main.css                # imports CSS modules
 │   └── src/                    # tokens, layout, components, views, pages
-├── assets/                     # favicons, font, icons, logos, images, OG, screenshots
+├── public/                     # static files copied verbatim into dist/
+│   ├── assets/                 # favicons, font, icons, logos, images, OG, screenshots
+│   ├── sw.js                   # service worker
+│   ├── _headers                # static hosting headers
+│   ├── _redirects              # redirects and routing fallback
+│   ├── robots.txt
+│   └── sitemap.xml
+├── assets/img-src/             # image sources (build input, excluded from dist/)
 ├── tests/smoke.spec.js         # Playwright tests
-├── build-dist.js               # production build into dist/
+├── vite.config.js              # Vite configuration: MPA entries, ports, dist/
 ├── optimize-images.js          # image optimization pipeline
 ├── playwright.config.js        # test configuration
-├── sw.js                       # service worker
-├── _headers                    # static hosting headers
-├── _redirects                  # redirects and routing fallback
-├── robots.txt
-├── sitemap.xml
 ├── CHANGELOG.md
 └── LICENSE
 ```
@@ -334,45 +344,50 @@ npm ci
 
 ### Local Development
 
-Run the local preview server:
+Run the Vite development server against the unminified source files:
 
 ```bash
-npm run preview
+npm run dev
 ```
 
-The default preview URL is:
+The development server URL is:
 
 ```text
 http://127.0.0.1:8181
 ```
 
-Alternatively, `start-local-server.bat` starts `python -m http.server 8181`.
+The port is configured with `strictPort`, so an occupied port fails with a clear error instead of silently selecting another one. Alternatively, `start-local-server.bat` starts `npm run dev`.
+
+The service worker is not registered during development, and any previously installed worker is unregistered so it cannot serve stale modules. Production registration of `/sw.js` is unchanged.
 
 The project must be served over HTTP. Opening files directly from disk does not reflect absolute paths, routing, or service worker behavior.
 
 ### Available Scripts
 
-- `npm run preview` — serves the project directory through `python -m http.server 8181`.
-- `npm run preview:dist` — serves the `dist/` directory on port 8182.
-- `npm run optimize:images` — generates image variants through `optimize-images.js`.
-- `npm run build` — runs image optimization and then `build-dist.js`.
-- `npm run test` — alias for `npm run build`.
+- `npm run dev` — Vite development server on `http://127.0.0.1:8181`.
+- `npm run build` — Vite production build into `dist/`.
+- `npm run preview` — serves the built `dist/` on `http://127.0.0.1:8182`.
+- `npm run preview:dist` — compatibility alias for `npm run preview`.
+- `npm run optimize:images` — generates image variants through `optimize-images.js`; a deliberate maintenance operation that is never triggered by the build or the tests.
+- `npm run test` — verification that does not rewrite source files: `qa:css-vars` plus the smoke tests.
 - `npm run test:smoke` — runs the Playwright tests.
 - `npm run qa:css-vars` — checks CSS custom property definitions and usages in `styles/src/`.
 
 ### Production Build
 
-The production build runs image optimization, recreates the `dist/` directory from scratch, builds `styles/main.min.css`, rewrites CSS references in HTML, minifies active scripts, and copies assets plus `sw.js`, `_headers`, `_redirects`, `robots.txt`, and `sitemap.xml`.
+The production build is performed by Vite. Every maintained HTML document is its own build entry, so `dist/` mirrors the deployed URL structure (`index.html`, `404.html`, `product/index.html`, and the remaining subpages). Vite recreates `dist/` from scratch, bundles and minifies CSS and JavaScript into content-hashed files under `dist/assets/`, and copies the contents of `public/` verbatim. The build does not regenerate images.
 
 ```bash
 npm run build
 ```
 
-Preview the `dist/` directory:
+Preview the built `dist/` directory:
 
 ```bash
-npm run preview:dist
+npm run preview
 ```
+
+The production preview runs on `http://127.0.0.1:8182` and is a separate workflow from `npm run dev`.
 
 The `dist/` directory is generated output. It should not be edited manually — changes are made in the source files and the build is regenerated.
 
@@ -384,7 +399,7 @@ npm run qa:css-vars
 ```
 
 - Smoke tests live in `tests/smoke.spec.js` and run through Playwright.
-- `playwright.config.js` uses the `Desktop Chrome` project, `baseURL` `http://127.0.0.1:8181`, blocks service workers during tests, and starts the server with `npm run preview`.
+- `playwright.config.js` uses the `Desktop Chrome` project, `baseURL` `http://127.0.0.1:8182`, blocks service workers during tests by default, and starts the server with `npm run build && npm run preview`, so the smoke suite exercises the built production artifact.
 - `scripts/qa/check-css-vars.js` statically analyzes the files in `styles/src/` for defined and used CSS custom properties.
 
 The repository does not contain recorded test run results.
@@ -429,8 +444,8 @@ The project includes:
 
 ### PWA and Offline Support
 
-- `assets/favicon/site.webmanifest` defines `name`, `short_name`, `start_url` `/`, `scope` `/`, `display` `standalone`, 192/512 icons (including maskable variants), screenshots, and shortcuts to the dashboard, fleet, and orders.
-- `scripts/main.js` registers `/sw.js` after the `load` event when the browser supports the Service Worker API.
+- `public/assets/favicon/site.webmanifest` defines `name`, `short_name`, `start_url` `/`, `scope` `/`, `display` `standalone`, 192/512 icons (including maskable variants), screenshots, and shortcuts to the dashboard, fleet, and orders.
+- `scripts/main.js` registers `/sw.js` after the `load` event when the browser supports the Service Worker API. Registration is skipped in the Vite development mode.
 - `sw.js` uses a versioned cache (`fleetops-v1.10`), precaches the app shell and public routes, and deletes older `fleetops-` caches on activation.
 - Navigations use a network-first strategy with a cache fallback, and static assets use stale-while-revalidate.
 - Cache versioning in `sw.js` is maintained manually.
@@ -443,10 +458,10 @@ The project contains the following performance-related mechanisms:
 - font preload in HTML;
 - hero images in AVIF, WebP, and JPG variants;
 - explicit hero image dimensions and `fetchpriority="high"` for the primary image;
-- CSS build into one minified `styles/main.min.css` file;
-- minification of active JavaScript files in the production build;
+- CSS built into a single bundled, minified, content-hashed stylesheet;
+- JavaScript bundling and minification through Vite in the production build;
 - static asset caching through the service worker and `_headers`;
-- exclusion of `assets/img-src/` from the `dist/` directory.
+- exclusion of the `assets/img-src/` image sources from the `dist/` directory.
 
 The repository does not contain measured performance scores.
 
@@ -468,8 +483,9 @@ The repository does not contain measured performance scores.
 - Demo role permissions live in `scripts/core/permissions.js`.
 - Application views live in `scripts/ui/views/`, and shared UI components in `scripts/ui/components/`.
 - Source styles are modular in `styles/src/`, while `styles/main.css` only imports them.
-- The image pipeline is implemented in `optimize-images.js`; source files live in `assets/img-src/` and generated variants in `assets/img/`.
-- The `dist/` directory, `styles/main.min.css`, and the minified scripts are generated by `build-dist.js` and should not be edited manually.
+- The image pipeline is implemented in `optimize-images.js`; source files live in `assets/img-src/`, and the resulting variants in `public/assets/img/`. It is run deliberately through `npm run optimize:images`.
+- Build configuration — MPA entries, development and preview ports, output directory — lives in `vite.config.js`.
+- The `dist/` directory is generated by Vite and should not be edited manually.
 - Significant project changes are recorded in [`CHANGELOG.md`](CHANGELOG.md).
 
 ### License

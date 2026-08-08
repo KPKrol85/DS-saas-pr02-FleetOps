@@ -1,3 +1,5 @@
+import { Toast } from "../ui/components/toast.js";
+
 const Roles = {
   ADMIN: "admin",
   DISPATCHER: "dispatcher",
@@ -44,9 +46,12 @@ const DemoUsers = [
 
 const defaultUser = DemoUsers[0];
 
+// `FleetStore` is read lazily through `window` on purpose: the store imports
+// this module for its default user, so a static import here would create a
+// module cycle. The lookup only happens at call time, never at module init.
 const resolveUser = (context = {}) =>
   context.user ||
-  (window.FleetStore && FleetStore.state && FleetStore.state.currentUser) ||
+  (window.FleetStore && window.FleetStore.state && window.FleetStore.state.currentUser) ||
   defaultUser;
 
 const isOwner = (record, user) => record && user && record.createdBy && record.createdBy === user.id;
@@ -105,11 +110,9 @@ const applyDisabledState = (el, allowed, message) => {
 const guard = (action, context = {}) => {
   if (can(action, context)) return true;
   const message = explainDeny(action, context);
-  if (window.Toast && typeof Toast.show === "function") {
-    Toast.show(`Brak uprawnień: ${message}`, "warning", { assertive: true });
-  }
-  if (window.FleetStore && typeof FleetStore.addActivity === "function") {
-    FleetStore.addActivity({
+  Toast.show(`Brak uprawnień: ${message}`, "warning", { assertive: true });
+  if (window.FleetStore && typeof window.FleetStore.addActivity === "function") {
+    window.FleetStore.addActivity({
       title: "Odmowa uprawnień",
       detail: message,
       time: new Date().toISOString(),
@@ -118,7 +121,7 @@ const guard = (action, context = {}) => {
   return false;
 };
 
-window.FleetPermissions = {
+const FleetPermissions = {
   Roles,
   Actions,
   roleLabels,
@@ -130,3 +133,7 @@ window.FleetPermissions = {
   applyDisabledState,
   guard,
 };
+
+export { FleetPermissions };
+
+window.FleetPermissions = FleetPermissions;

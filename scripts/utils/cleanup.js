@@ -1,5 +1,5 @@
 // Registry for cleaning up global listeners/timers between route changes
-(function () {
+const CleanupRegistry = (() => {
   const cleanups = [];
 
   const add = (fn) => {
@@ -22,9 +22,13 @@
     cleanups.length = 0;
   };
 
-  window.CleanupRegistry = {
+  return {
     add, // register cleanup callback
     runAll, // execute and drain current cleanups
     reset, // drop any remaining callbacks without running
   };
 })();
+
+export { CleanupRegistry };
+
+window.CleanupRegistry = CleanupRegistry;

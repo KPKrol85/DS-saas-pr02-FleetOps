@@ -1,3 +1,30 @@
+import { FleetStore } from "./state/store.js";
+import { Toast } from "./ui/components/toast.js";
+import { renderAppShell } from "./ui/layoutApp.js";
+import { renderLanding } from "./ui/layoutLanding.js";
+import {
+  renderAboutPage,
+  renderCareersPage,
+  renderContactPage,
+  renderCookiesPage,
+  renderFeaturesPage,
+  renderPricingPage,
+  renderPrivacyPage,
+  renderProductPage,
+  renderSecurityPage,
+  renderTermsPage,
+} from "./ui/marketingPages.js";
+import { dashboardView } from "./ui/views/dashboardView.js";
+import { driversView } from "./ui/views/driversView.js";
+import { fleetView } from "./ui/views/fleetView.js";
+import { notFoundView } from "./ui/views/notFoundView.js";
+import { ordersView } from "./ui/views/ordersView.js";
+import { reportsView } from "./ui/views/reportsView.js";
+import { settingsView } from "./ui/views/settingsView.js";
+import { CleanupRegistry } from "./utils/cleanup.js";
+import { FleetUI } from "./utils/dom.js";
+import { FleetStorage } from "./utils/storage.js";
+
 function renderInfoPage({ title, body }) {
   const app = document.getElementById("app");
   app.innerHTML = `
@@ -217,7 +244,7 @@ function routeTo(hash) {
   let renderedPath = path;
   let renderedLabel = routeLabels[path];
 
-  if (window.CleanupRegistry) CleanupRegistry.runAll();
+  CleanupRegistry.runAll();
 
   if (requiresAuth && !FleetStore.state.auth.isAuthenticated) {
     const targetHash = hash || window.location.hash || "#/app";
@@ -307,4 +334,8 @@ function routeTo(hash) {
   scrollRouteToTop(renderedPath);
 }
 
-window.FleetRouter = { routeTo };
+const FleetRouter = { routeTo };
+
+export { FleetRouter, routeTo };
+
+window.FleetRouter = FleetRouter;

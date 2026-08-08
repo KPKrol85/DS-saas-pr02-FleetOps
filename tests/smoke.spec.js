@@ -214,7 +214,6 @@ test.describe("service worker navigation cache", () => {
   test.use({ serviceWorkers: "allow" });
 
   test("serves cached static public routes by their own documents while offline", async ({ page, context }) => {
-    const baseUrl = "http://localhost:8181";
     const routes = [
       { path: "/features/", title: "Funkcje FleetOps | FleetOps", heading: "Funkcje FleetOps" },
       { path: "/pricing/", title: "Cennik FleetOps | FleetOps", heading: "Cennik FleetOps" },
@@ -223,13 +222,13 @@ test.describe("service worker navigation cache", () => {
       { path: "/privacy/", title: "Polityka prywatności | FleetOps", heading: "Polityka prywatności" },
     ];
 
-    await page.goto(`${baseUrl}/`);
+    await page.goto("/");
     await waitForServiceWorkerControl(page);
     await context.setOffline(true);
 
     try {
       for (const route of routes) {
-        await page.goto(`${baseUrl}${route.path}`, { waitUntil: "domcontentloaded" });
+        await page.goto(route.path, { waitUntil: "domcontentloaded" });
         await expect(page).toHaveTitle(route.title);
         await expect(page.getByRole("heading", { name: route.heading, level: 1 })).toBeVisible();
         await expect(page.locator(".landing-home")).toHaveCount(0);

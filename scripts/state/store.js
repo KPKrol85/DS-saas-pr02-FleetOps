@@ -1,3 +1,9 @@
+import { FleetPermissions } from "../core/permissions.js";
+import { FleetSeed } from "../data/seed.js";
+import { Toast } from "../ui/components/toast.js";
+import { FleetUI } from "../utils/dom.js";
+import { FleetStorage } from "../utils/storage.js";
+
 const defaultPreferences = {
   theme: FleetStorage.get("fleet-theme", "light"),
   compact: FleetStorage.get("fleet-compact", false),
@@ -16,7 +22,7 @@ const defaultOfflineQueue = (() => {
 })();
 const defaultCurrentUser = FleetStorage.get(
   CURRENT_USER_STORAGE_KEY,
-  window.FleetPermissions?.defaultUser || { id: "u_admin_1", role: "admin", displayName: "Admin Demo" }
+  FleetPermissions.defaultUser
 );
 
 const nowIso = () => new Date().toISOString();
@@ -34,18 +40,13 @@ const normalizeDomain = (data) => ({
   fleet: ensureIds(cloneList(data.fleet || []), "VH"),
   drivers: ensureIds(cloneList(data.drivers || []), "DRV"),
 });
-const buildDomainFromSeed = () => {
-  if (!window.FleetSeed) return { orders: [], fleet: [], drivers: [] };
-  return normalizeDomain({
+const buildDomainFromSeed = () =>
+  normalizeDomain({
     orders: FleetSeed.orders || [],
     fleet: FleetSeed.vehicles || [],
     drivers: FleetSeed.drivers || [],
   });
-};
-const buildActivityFromSeed = () => {
-  if (!window.FleetSeed) return [];
-  return cloneList(FleetSeed.activities || []);
-};
+const buildActivityFromSeed = () => cloneList(FleetSeed.activities || []);
 const generateId = (prefix) => {
   if (window.crypto?.randomUUID) return `${prefix}-${window.crypto.randomUUID()}`;
   const rand = Math.random().toString(36).slice(2, 10);
@@ -242,13 +243,13 @@ const Store = {
     const next = this.state.preferences.theme === "light" ? "dark" : "light";
     this.setState({ preferences: { ...this.state.preferences, theme: next } });
     document.documentElement.setAttribute("data-theme", next);
-    if (window.FleetUI && FleetUI.syncThemeImages) FleetUI.syncThemeImages();
+    FleetUI.syncThemeImages();
   },
 
   setTheme(theme) {
     this.setState({ preferences: { ...this.state.preferences, theme } });
     document.documentElement.setAttribute("data-theme", theme);
-    if (window.FleetUI && FleetUI.syncThemeImages) FleetUI.syncThemeImages();
+    FleetUI.syncThemeImages();
   },
 
   setCompact(compact) {
@@ -339,7 +340,7 @@ const Store = {
 
     document.documentElement.setAttribute("data-theme", "light");
     delete document.body.dataset.compact;
-    if (window.FleetUI && FleetUI.syncThemeImages) FleetUI.syncThemeImages();
+    FleetUI.syncThemeImages();
 
     this.resetDomainData();
   },
@@ -350,9 +351,7 @@ const Store = {
     this.setState({ offline: next });
     if (next.isOnline && offline.queue && offline.queue.length) {
       this.clearOfflineQueue();
-      if (window.Toast && typeof Toast.show === "function") {
-        Toast.show("Połączenie przywrócone", "success");
-      }
+      Toast.show("Połączenie przywrócone", "success");
     }
   },
 
@@ -377,13 +376,13 @@ const Store = {
   ensureOnline(actionLabel) {
     if (typeof navigator !== "undefined" && navigator.onLine === false) {
       this.enqueueOfflineAction(actionLabel);
-      if (window.Toast && typeof Toast.show === "function") {
-        Toast.show("Tryb offline - akcja dodana do kolejki", "warning");
-      }
+      Toast.show("Tryb offline - akcja dodana do kolejki", "warning");
       return false;
     }
     return true;
   },
 };
+
+export { Store as FleetStore };
 
 window.FleetStore = Store;

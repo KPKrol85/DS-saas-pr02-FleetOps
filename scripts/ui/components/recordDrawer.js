@@ -1,3 +1,6 @@
+import { CleanupRegistry } from "../../utils/cleanup.js";
+import { dom } from "../../utils/dom.js";
+
 const RecordDrawer = (() => {
   let root = null;
   let panel = null;
@@ -76,7 +79,7 @@ const RecordDrawer = (() => {
   };
 
   const registerCleanup = () => {
-    if (cleanupRegistered || !window.CleanupRegistry) return;
+    if (cleanupRegistered) return;
 
     cleanupRegistered = true;
     CleanupRegistry.add(() => {
@@ -209,5 +212,7 @@ const RecordDrawer = (() => {
 
   return { open, close, createDetailList };
 })();
+
+export { RecordDrawer };
 
 window.RecordDrawer = RecordDrawer;

@@ -1,3 +1,8 @@
+import { FleetStore } from "../state/store.js";
+import { CleanupRegistry } from "../utils/cleanup.js";
+import { FleetUI } from "../utils/dom.js";
+import { Accordion } from "./components/accordion.js";
+
 function getLandingTheme() {
   const { preferences } = FleetStore.state;
   const theme = preferences.theme || "light";
@@ -609,11 +614,21 @@ ${renderLandingFooter(themeAsset)}
   initLandingShell();
 }
 
-window.FleetUI = window.FleetUI || {};
-window.FleetUI.getLandingTheme = getLandingTheme;
-window.FleetUI.getLandingThemeAsset = getLandingThemeAsset;
-window.FleetUI.renderLandingHeader = renderLandingHeader;
-window.FleetUI.renderLandingFooter = renderLandingFooter;
-window.FleetUI.initResourcesMenu = initResourcesMenu;
-window.FleetUI.initLandingShell = initLandingShell;
+FleetUI.getLandingTheme = getLandingTheme;
+FleetUI.getLandingThemeAsset = getLandingThemeAsset;
+FleetUI.renderLandingHeader = renderLandingHeader;
+FleetUI.renderLandingFooter = renderLandingFooter;
+FleetUI.initResourcesMenu = initResourcesMenu;
+FleetUI.initLandingShell = initLandingShell;
+
+export {
+  getLandingTheme,
+  getLandingThemeAsset,
+  renderLandingHeader,
+  renderLandingFooter,
+  initResourcesMenu,
+  initLandingShell,
+  renderLanding,
+};
+
 window.renderLanding = renderLanding;

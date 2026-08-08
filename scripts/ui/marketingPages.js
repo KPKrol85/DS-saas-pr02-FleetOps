@@ -1,3 +1,14 @@
+import { CleanupRegistry } from "../utils/cleanup.js";
+import { FleetUI } from "../utils/dom.js";
+import { Toast } from "./components/toast.js";
+import {
+  getLandingTheme,
+  getLandingThemeAsset,
+  initLandingShell,
+  renderLandingFooter,
+  renderLandingHeader,
+} from "./layoutLanding.js";
+
 function setPageMeta(title, description) {
   const normalizedTitle = title.includes("|") ? title : `${title} | FleetOps`;
   document.title = normalizedTitle;
@@ -16,13 +27,13 @@ function renderMarketingShell({ title, description, eyebrow, lead, body }) {
   const app = document.getElementById("app");
   if (!app) return;
 
-  const theme = FleetUI.getLandingTheme();
-  const themeAsset = FleetUI.getLandingThemeAsset(theme);
+  const theme = getLandingTheme();
+  const themeAsset = getLandingThemeAsset(theme);
   setPageMeta(title, description);
 
   app.innerHTML = `
     <div class="landing marketing">
-${FleetUI.renderLandingHeader(themeAsset)}
+${renderLandingHeader(themeAsset)}
 
       <main class="container section" id="main-content">
         <div class="page-hero">
@@ -36,11 +47,11 @@ ${renderPageHeroMark(themeAsset)}
         ${body}
       </main>
 
-${FleetUI.renderLandingFooter(themeAsset)}
+${renderLandingFooter(themeAsset)}
     </div>
   `;
 
-  FleetUI.initLandingShell();
+  initLandingShell();
 }
 
 function renderProductPage() {
@@ -878,9 +889,7 @@ function renderPrivacyPage() {
       if (!target) return;
 
       event.preventDefault();
-      const behavior = window.FleetUI?.getMotionSafeScrollBehavior
-        ? FleetUI.getMotionSafeScrollBehavior()
-        : "smooth";
+      const behavior = FleetUI.getMotionSafeScrollBehavior();
 
       target.scrollIntoView({ behavior, block: "start" });
       target.focus({ preventScroll: true });
@@ -890,9 +899,7 @@ function renderPrivacyPage() {
     return () => link.removeEventListener("click", handleClick);
   });
 
-  if (window.CleanupRegistry && typeof CleanupRegistry.add === "function") {
-    CleanupRegistry.add(() => cleanups.forEach((cleanup) => cleanup()));
-  }
+  CleanupRegistry.add(() => cleanups.forEach((cleanup) => cleanup()));
 }
 
 function renderTermsPage() {
@@ -1105,9 +1112,7 @@ function renderTermsPage() {
       if (!target) return;
 
       event.preventDefault();
-      const behavior = window.FleetUI?.getMotionSafeScrollBehavior
-        ? FleetUI.getMotionSafeScrollBehavior()
-        : "smooth";
+      const behavior = FleetUI.getMotionSafeScrollBehavior();
 
       target.scrollIntoView({ behavior, block: "start" });
       target.focus({ preventScroll: true });
@@ -1117,9 +1122,7 @@ function renderTermsPage() {
     return () => link.removeEventListener("click", handleClick);
   });
 
-  if (window.CleanupRegistry && typeof CleanupRegistry.add === "function") {
-    CleanupRegistry.add(() => cleanups.forEach((cleanup) => cleanup()));
-  }
+  CleanupRegistry.add(() => cleanups.forEach((cleanup) => cleanup()));
 }
 
 function renderCookiesPage() {
@@ -1336,9 +1339,7 @@ function renderCookiesPage() {
       if (!target) return;
 
       event.preventDefault();
-      const behavior = window.FleetUI?.getMotionSafeScrollBehavior
-        ? FleetUI.getMotionSafeScrollBehavior()
-        : "smooth";
+      const behavior = FleetUI.getMotionSafeScrollBehavior();
 
       target.scrollIntoView({ behavior, block: "start" });
       target.focus({ preventScroll: true });
@@ -1348,10 +1349,21 @@ function renderCookiesPage() {
     return () => link.removeEventListener("click", handleClick);
   });
 
-  if (window.CleanupRegistry && typeof CleanupRegistry.add === "function") {
-    CleanupRegistry.add(() => cleanups.forEach((cleanup) => cleanup()));
-  }
+  CleanupRegistry.add(() => cleanups.forEach((cleanup) => cleanup()));
 }
+
+export {
+  renderProductPage,
+  renderFeaturesPage,
+  renderPricingPage,
+  renderSecurityPage,
+  renderCareersPage,
+  renderAboutPage,
+  renderContactPage,
+  renderPrivacyPage,
+  renderTermsPage,
+  renderCookiesPage,
+};
 
 window.renderProductPage = renderProductPage;
 window.renderFeaturesPage = renderFeaturesPage;

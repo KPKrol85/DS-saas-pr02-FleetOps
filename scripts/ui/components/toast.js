@@ -1,3 +1,5 @@
+import { dom } from "../../utils/dom.js";
+
 const Toast = (() => {
   let container;
   let statusRegion;
@@ -49,5 +51,7 @@ const Toast = (() => {
   };
   return { show };
 })();
+
+export { Toast };
 
 window.Toast = Toast;

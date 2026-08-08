@@ -1,3 +1,16 @@
+/**
+ * FleetOps runtime entry point.
+ *
+ * Every maintained HTML document loads this single module. It owns the
+ * bootstrap sequence that the previous ordered `<script defer>` list performed
+ * implicitly; module imports below make that order explicit.
+ */
+import { FleetRouter } from "./router.js";
+import { FleetStore } from "./state/store.js";
+import { Toast } from "./ui/components/toast.js";
+import { initLandingShell } from "./ui/layoutLanding.js";
+import { getMotionSafeScrollBehavior } from "./utils/dom.js";
+
 (function init() {
   const publicHashRedirects = {
     "#/": "/",
@@ -88,9 +101,7 @@
         if (!target) return;
 
         event.preventDefault();
-        const behavior = window.FleetUI?.getMotionSafeScrollBehavior
-          ? FleetUI.getMotionSafeScrollBehavior()
-          : "smooth";
+        const behavior = getMotionSafeScrollBehavior();
 
         target.scrollIntoView({ behavior, block: "start" });
         target.focus({ preventScroll: true });
@@ -99,9 +110,7 @@
   };
 
   const initStaticPublicPage = () => {
-    if (window.FleetUI?.initLandingShell) {
-      FleetUI.initLandingShell();
-    }
+    initLandingShell();
     applyStaticAriaCurrent();
     bindStaticContactForm();
     bindStaticLegalNav();
@@ -117,12 +126,8 @@
     return false;
   };
 
-  if (window.FleetStore?.initDomain) {
-    FleetStore.initDomain();
-  }
-  if (window.FleetStore?.initActivity) {
-    FleetStore.initActivity();
-  }
+  FleetStore.initDomain();
+  FleetStore.initActivity();
 
   const savedTheme = FleetStore.state.preferences.theme;
   if (!savedTheme) {
@@ -135,14 +140,23 @@
   }
 
   const syncOnlineStatus = () => {
-    if (window.FleetStore?.setOnlineStatus) {
-      const isOnline = typeof navigator !== "undefined" ? navigator.onLine : true;
-      FleetStore.setOnlineStatus(isOnline);
-    }
+    const isOnline = typeof navigator !== "undefined" ? navigator.onLine : true;
+    FleetStore.setOnlineStatus(isOnline);
   };
 
   const registerServiceWorker = () => {
     if (typeof navigator === "undefined" || !("serviceWorker" in navigator)) return;
+
+    // The service worker caches `.js`/`.css` responses, which would serve stale
+    // modules back to the Vite dev server. Production registration is unchanged;
+    // during development any previously installed worker is removed instead.
+    if (import.meta.env.DEV) {
+      navigator.serviceWorker
+        .getRegistrations()
+        .then((registrations) => registrations.forEach((registration) => registration.unregister()))
+        .catch(() => {});
+      return;
+    }
 
     const register = () => {
       navigator.serviceWorker.register("/sw.js").catch((error) => {

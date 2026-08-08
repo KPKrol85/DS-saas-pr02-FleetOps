@@ -4,6 +4,10 @@ All significant changes to this project are documented in this file.
 
 ## [Unreleased]
 
+### Changed
+
+- Migrated the project to Vite as the single development, module, build and production-preview tool. `vite.config.js` declares every maintained HTML document as a build entry, so the multi-page public structure, the hash-routed demo application and all production URLs are unchanged; development runs on `127.0.0.1:8181` and the production preview of `dist/` on `127.0.0.1:8182`, both with strict port handling. Active runtime JavaScript moved from 25 ordered `<script defer>` tags to a Vite-managed ES module graph behind a single `/scripts/main.js` module entry, with explicit imports replacing the implicit load order (the `window.*` namespaces remain as the project's internal contract). Production-static files moved to `public/` (`assets/`, `sw.js`, `_headers`, `_redirects`, `robots.txt`, `sitemap.xml`) so Vite copies them to `dist/` verbatim under their existing paths, while `assets/img-src/` stays an out-of-build source input and `optimize-images.js` now writes to `public/assets/img/`. Retired `build-dist.js`, `postcss.config.js` and the `cssnano`, `postcss`, `postcss-cli` and `terser` dependencies, together with the Python `http.server` preview workflow; CSS and JavaScript bundling and minification are now owned by Vite. Reworked the npm contract to `dev`, `build`, `preview` (`preview:dist` kept as an alias) and turned `npm test` from a build alias into `qa:css-vars` plus the smoke suite, so no normal command regenerates image assets. The service worker keeps its `/sw.js` production registration and is skipped during development, and Playwright now runs the existing smoke suite against the built production preview.
+
 ### Added
 
 - Added the standalone FleetOps static frontend implementation, covering public marketing and legal pages (`product`, `features`, `pricing`, `about`, `contact`, `security`, `careers`, `privacy`, `terms`, `cookies`, `404.html`) and a hash-routed demo application under `#/app`, `#/app/orders`, `#/app/fleet`, `#/app/drivers`, `#/app/reports` and `#/app/settings`.

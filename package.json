@@ -8,12 +8,13 @@
     "doc": "doc"
   },
   "scripts": {
-    "build": "npm run optimize:images && node build-dist.js",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "preview:dist": "vite preview",
     "optimize:images": "node optimize-images.js",
-    "preview": "python -m http.server 8181",
-    "preview:dist": "python -m http.server 8182 --directory dist",
     "qa:css-vars": "node scripts/qa/check-css-vars.js",
-    "test": "npm run build",
+    "test": "npm run qa:css-vars && npm run test:smoke",
     "test:smoke": "playwright test"
   },
   "keywords": [
@@ -29,10 +30,7 @@
   "license": "SEE LICENSE IN LICENSE",
   "devDependencies": {
     "@playwright/test": "^1.60.0",
-    "cssnano": "^7.1.2",
-    "postcss": "^8.5.6",
-    "postcss-cli": "^11.0.1",
     "sharp": "^0.34.5",
-    "terser": "^5.44.1"
+    "vite": "^7.3.6"
   }
 }
