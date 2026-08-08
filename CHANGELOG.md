@@ -11,6 +11,7 @@ All significant changes to this project are documented in this file.
 
 ### Fixed
 
+- Fixed the public site's `#mobileNav` and the application's `#appDrawer` announcing themselves as a modal dialog and being hidden from the accessibility tree at desktop widths. Both containers now derive `role="dialog"`, `aria-modal` and `aria-hidden` from a `matchMedia` check against the same breakpoint their own CSS uses to switch into persistent navigation (`min-width: 1025px`), applying the overlay attributes only while genuinely acting as an overlay and removing them once the container is desktop-persistent. State stays correct through route re-renders (`renderAppShell` no longer reintroduces a hardcoded `aria-hidden="true"`) and through live resizes between mobile and desktop without a page reload, with the `matchMedia` listener cleaned up per render so it cannot accumulate. Existing open/close, focus trap, focus return, Escape and backdrop behaviour is unchanged.
 - Fixed the settings toggle track and settings checkbox rendering without their intended fill. Both controls referenced an undefined `--surface-muted` custom property, so the `background` declaration was invalid at computed-value time and the controls fell back to a transparent background in both themes. They now use the existing `--surface-2` token — the design system's recessed surface inside a `--surface` card, already defined for the light and dark themes — rather than introducing a redundant alias. This also restores `npm run qa:css-vars` to a passing gate.
 
 ### Added

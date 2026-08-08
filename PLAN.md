@@ -77,11 +77,11 @@
 
 **Goal:** Make the demo application's navigation, landmarks and breakpoints correct at every supported width.
 
-- [ ] **PH4-01 — Make drawer semantics viewport-conditional** — **Priority:** High
-  - [ ] apply `role="dialog"`, `aria-modal` and `aria-hidden` to `#mobileNav` and `#appDrawer` only while the container operates as an overlay
-  - [ ] stop `renderAppShell` from re-applying `aria-hidden="true"` on every route render at desktop widths (`scripts/ui/layoutApp.js:56-59,245`)
-  - [ ] align the drawer state handling in `scripts/ui/layoutLanding.js` with the same rule
-  - **Completion condition:** at 1280 px neither navigation container exposes `aria-hidden="true"` or modal dialog semantics and every navigation link is in the accessibility tree; at 390 px the closed drawer remains hidden from it
+- [x] **PH4-01 — Make drawer semantics viewport-conditional** — **Priority:** High
+  - [x] apply `role="dialog"`, `aria-modal` and `aria-hidden` to `#mobileNav` and `#appDrawer` only while the container operates as an overlay — both containers now derive these attributes from a `matchMedia("(min-width: 1025px)")` check matching each container's own persistent-navigation CSS breakpoint (`styles/src/08-header.css:232`, `styles/src/06-app.css:457`), removing the attributes entirely once the container is desktop-persistent
+  - [x] stop `renderAppShell` from re-applying `aria-hidden="true"` on every route render at desktop widths — `applyDrawerAccessibility` is invoked once on every render and on every viewport change, so it always reflects the current mode rather than a hardcoded template default (`scripts/ui/layoutApp.js`)
+  - [x] align the drawer state handling in `scripts/ui/layoutLanding.js` with the same rule — `applyNavAccessibility`/`syncNavUI` apply the identical viewport-conditional contract to `#mobileNav`, synchronized on open/close and on a `matchMedia` `change` listener cleaned up per render via `CleanupRegistry`
+  - **Completion condition:** at 1280 px neither navigation container exposes `aria-hidden="true"` or modal dialog semantics and every navigation link is in the accessibility tree; at 390 px the closed drawer remains hidden from it — verified manually and by the added Playwright test `tests/smoke.spec.js` ("drawer ARIA semantics are viewport-conditional and survive route renders and resizes")
   - **Source:** `AUDIT.md` — P1-01
 
 - [ ] **PH4-02 — Emit a `main` landmark inside the application shell** — **Priority:** High

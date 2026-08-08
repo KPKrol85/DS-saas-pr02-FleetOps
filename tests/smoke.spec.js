@@ -637,3 +637,55 @@ test("orders CRUD flow escapes user-entered HTML-like text", async ({ page }) =>
   await page.locator(".modal").getByRole("button", { name: "Usuń" }).click();
   await expect(page.locator("tr.order-row").filter({ hasText: editedClient })).toHaveCount(0);
 });
+
+test("drawer ARIA semantics are viewport-conditional and survive route renders and resizes", async ({ page }) => {
+  await loginAsDemo(page);
+
+  const appDrawer = page.locator("#appDrawer");
+  await expect(appDrawer).not.toHaveAttribute("role", "dialog");
+  await expect(appDrawer).not.toHaveAttribute("aria-modal", "true");
+  await expect(appDrawer).not.toHaveAttribute("aria-hidden", "true");
+  await expect(appDrawer.locator('nav a[data-route="/app/orders"]')).toBeVisible();
+
+  await page.locator('.sidebar nav a[data-route="/app/orders"]').click();
+  await expect(page.getByRole("heading", { name: "Zlecenia", level: 1 })).toBeVisible();
+  await expect(appDrawer).not.toHaveAttribute("aria-hidden", "true");
+  await expect(appDrawer).not.toHaveAttribute("role", "dialog");
+
+  await page.setViewportSize({ width: 390, height: 800 });
+  await expect(appDrawer).toHaveAttribute("role", "dialog");
+  await expect(appDrawer).toHaveAttribute("aria-modal", "true");
+  await expect(appDrawer).toHaveAttribute("aria-hidden", "true");
+
+  await page.locator("#drawerToggle").click();
+  await expect(appDrawer).toHaveAttribute("aria-hidden", "false");
+  await page.keyboard.press("Escape");
+  await expect(appDrawer).toHaveAttribute("aria-hidden", "true");
+
+  await page.locator("#drawerToggle").click();
+  await expect(appDrawer).toHaveAttribute("aria-hidden", "false");
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await expect(appDrawer).not.toHaveAttribute("aria-hidden", "true");
+  await expect(appDrawer).not.toHaveAttribute("role", "dialog");
+  await expect(appDrawer).not.toHaveAttribute("aria-modal", "true");
+
+  await openFresh(page, "/");
+  const mobileNav = page.locator("#mobileNav");
+  await expect(mobileNav).not.toHaveAttribute("role", "dialog");
+  await expect(mobileNav).not.toHaveAttribute("aria-modal", "true");
+  await expect(mobileNav).not.toHaveAttribute("aria-hidden", "true");
+  await expect(mobileNav.locator('.site-header__link[href="/pricing/"]')).toBeVisible();
+
+  await page.setViewportSize({ width: 390, height: 800 });
+  await expect(mobileNav).toHaveAttribute("role", "dialog");
+  await expect(mobileNav).toHaveAttribute("aria-modal", "true");
+  await expect(mobileNav).toHaveAttribute("aria-hidden", "true");
+
+  await page.locator("#navToggle").click();
+  await expect(mobileNav).toHaveAttribute("aria-hidden", "false");
+
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await expect(mobileNav).not.toHaveAttribute("aria-hidden", "true");
+  await expect(mobileNav).not.toHaveAttribute("role", "dialog");
+  await expect(mobileNav).not.toHaveAttribute("aria-modal", "true");
+});
