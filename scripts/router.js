@@ -1,19 +1,6 @@
 import { FleetStore } from "./state/store.js";
 import { Toast } from "./ui/components/toast.js";
 import { renderAppShell } from "./ui/layoutApp.js";
-import { renderLanding } from "./ui/layoutLanding.js";
-import {
-  renderAboutPage,
-  renderCareersPage,
-  renderContactPage,
-  renderCookiesPage,
-  renderFeaturesPage,
-  renderPricingPage,
-  renderPrivacyPage,
-  renderProductPage,
-  renderSecurityPage,
-  renderTermsPage,
-} from "./ui/marketingPages.js";
 import { dashboardView } from "./ui/views/dashboardView.js";
 import { driversView } from "./ui/views/driversView.js";
 import { fleetView } from "./ui/views/fleetView.js";
@@ -22,35 +9,7 @@ import { ordersView } from "./ui/views/ordersView.js";
 import { reportsView } from "./ui/views/reportsView.js";
 import { settingsView } from "./ui/views/settingsView.js";
 import { CleanupRegistry } from "./utils/cleanup.js";
-import { FleetUI } from "./utils/dom.js";
 import { FleetStorage } from "./utils/storage.js";
-
-function renderInfoPage({ title, body }) {
-  const app = document.getElementById("app");
-  app.innerHTML = `
-    <div class="landing">
-      <header class="container site-header">
-        <a class="site-header__brand logo" href="/" aria-label="FleetOps — Strona główna" data-scroll-top="home">
-          <img class="site-header__logo logo__icon" src="assets/logos/logo-black.svg" alt="FleetOps logo" width="44" height="44" />
-          <span>FleetOps</span>
-        </a>
-        <div class="site-header__actions">
-          <a class="button button--ghost site-header__action" href="/#/login">Zaloguj się</a>
-        </div>
-      </header>
-      <main class="container section" id="main-content">
-        <div class="hero-card">
-          <p class="tag">Informacja</p>
-          <h1>${title}</h1>
-          <div class="grid">${body}</div>
-        </div>
-      </main>
-    </div>
-  `;
-
-  const cleanup = FleetUI.bindLogoScroll("home");
-  CleanupRegistry.add(cleanup);
-}
 
 function renderLogin() {
   const app = document.getElementById("app");
@@ -144,22 +103,10 @@ function applyAriaCurrent() {
   }
 
   updateGroup(document.querySelectorAll(".sidebar nav a"));
-  updateGroup(document.querySelectorAll(".footer-links a"));
 }
 
 const routeLabels = {
-  "/": "Strona główna",
   "/login": "Logowanie",
-  "/about": "O nas",
-  "/contact": "Kontakt",
-  "/product": "Produkt FleetOps",
-  "/features": "Funkcje FleetOps",
-  "/pricing": "Cennik FleetOps",
-  "/security": "Bezpieczeństwo",
-  "/careers": "Kariera",
-  "/privacy": "Polityka prywatności",
-  "/terms": "Regulamin",
-  "/cookies": "Polityka cookies",
   "/app": "Przegląd",
   "/app/orders": "Zlecenia",
   "/app/fleet": "Flota",
@@ -241,7 +188,7 @@ function routeTo(hash) {
   const returnToKey = "auth:returnTo";
   const path = hash.replace("#", "") || "/";
   const requiresAuth = path.startsWith("/app");
-  let renderedPath = path;
+  const renderedPath = path;
   let renderedLabel = routeLabels[path];
 
   CleanupRegistry.runAll();
@@ -262,41 +209,8 @@ function routeTo(hash) {
   }
 
   switch (path) {
-    case "/":
-      renderLanding();
-      break;
     case "/login":
       renderLogin();
-      break;
-    case "/about":
-      renderAboutPage();
-      break;
-    case "/contact":
-      renderContactPage();
-      break;
-    case "/product":
-      renderProductPage();
-      break;
-    case "/features":
-      renderFeaturesPage();
-      break;
-    case "/pricing":
-      renderPricingPage();
-      break;
-    case "/security":
-      renderSecurityPage();
-      break;
-    case "/careers":
-      renderCareersPage();
-      break;
-    case "/privacy":
-      renderPrivacyPage();
-      break;
-    case "/terms":
-      renderTermsPage();
-      break;
-    case "/cookies":
-      renderCookiesPage();
       break;
     case "/app":
       renderAppShell("Przegląd", dashboardView());
@@ -321,10 +235,10 @@ function routeTo(hash) {
         renderedLabel = "Nie znaleziono";
         renderAppShell("Nie znaleziono", notFoundView());
       } else {
-        window.location.hash = "#/";
-        renderedPath = "/";
-        renderedLabel = routeLabels["/"];
-        renderLanding();
+        // Public pages are static documents, not hash routes: anything that is
+        // neither `/login` nor an `/app` route belongs to the public site.
+        window.location.replace("/");
+        return;
       }
   }
 
