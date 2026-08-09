@@ -22,7 +22,13 @@
   display: flex;
 }
 
-@media (min-width: 1024px) {
+/* One boundary for the whole application shell: below it the shell is the
+   mobile/tablet drawer mode, from it the sidebar is a persistent grid item.
+   1025px is the boundary the sidebar (`:461`), the landing drawer
+   (styles/src/08-header.css) and the viewport-conditional drawer semantics in
+   scripts/ui/layoutApp.js already use, so the grid, the mobile top bar and the
+   sidebar must switch together here. */
+@media (min-width: 1025px) {
   .app-shell {
     display: grid;
     grid-template-columns: 240px 1fr;
@@ -64,7 +70,7 @@
   }
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 1025px) {
   .app-main {
     padding-top: 0;
   }
@@ -146,7 +152,7 @@ body.drawer-open {
   overflow: hidden;
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 1025px) {
   .app-topbar {
     display: none;
   }
@@ -338,12 +344,14 @@ body.drawer-open {
   }
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 1025px) {
   .topbar {
     position: sticky;
     top: 0;
     z-index: 10;
   }
+  /* The route topbar's theme toggle replaces the mobile top bar's own toggle,
+     so it appears at the same boundary where `.app-topbar` is withdrawn. */
   .topbar-actions > .theme-toggle {
     display: inline-flex;
   }

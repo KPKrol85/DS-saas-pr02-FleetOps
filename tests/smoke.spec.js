@@ -103,6 +103,19 @@ async function expectPageTop(page) {
   expect(state.routeTop).toBeLessThanOrEqual(120);
 }
 
+// Media queries evaluate against the layout viewport, which excludes the
+// classic scrollbar Chromium reserves, so a requested viewport width is not the
+// width the shell breakpoints see. Compensate and return the layout width so a
+// boundary test can assert it is measuring the width it claims to.
+async function setShellLayoutWidth(page, width, height = 800) {
+  await page.setViewportSize({ width, height });
+  const gap = await page.evaluate(() => window.innerWidth - document.documentElement.clientWidth);
+  if (gap > 0) {
+    await page.setViewportSize({ width: width + gap, height });
+  }
+  return page.evaluate(() => document.documentElement.clientWidth);
+}
+
 async function expectCrudErrorsLinked(page, scenario) {
   await page.locator(`.sidebar nav a[data-route="${scenario.route}"]`).click();
   await expect(page.getByRole("heading", { name: scenario.heading, level: 1 })).toBeVisible();
@@ -669,6 +682,60 @@ test("app shell exposes one main landmark that the skip link focuses", async ({ 
     await page.keyboard.press("Enter");
     await expect(mainContent).toBeFocused();
   }
+});
+
+test("application shell switches navigation mode at one boundary between 1024 px and 1025 px", async ({ page }) => {
+  await loginAsDemo(page);
+
+  const appDrawer = page.locator("#appDrawer");
+  const drawerToggle = page.locator("#drawerToggle");
+  const appMain = page.locator(".app-main");
+  const drawerOrdersLink = appDrawer.locator('nav a[data-route="/app/orders"]');
+  const sidebarColumn = 240;
+
+  for (const width of [1023, 1024]) {
+    expect(await setShellLayoutWidth(page, width)).toBe(width);
+
+    // Drawer mode: the toggle is the only navigation affordance, the sidebar
+    // stays an overlay and keeps its PH4-01 modal semantics.
+    await expect(drawerToggle).toBeVisible();
+    await expect(appDrawer).toBeHidden();
+    await expect(appDrawer).toHaveAttribute("role", "dialog");
+    await expect(appDrawer).toHaveAttribute("aria-modal", "true");
+    await expect(appDrawer).toHaveAttribute("aria-hidden", "true");
+
+    // The two-column grid must not be active, so content keeps the full width.
+    const mainBox = await appMain.boundingBox();
+    expect(Math.round(mainBox.x)).toBe(0);
+    expect(Math.round(mainBox.width)).toBe(width);
+
+    await drawerToggle.click();
+    await expect(appDrawer).toBeVisible();
+    await expect(drawerOrdersLink).toBeVisible();
+    await expect(appDrawer).toHaveAttribute("aria-hidden", "false");
+    await page.keyboard.press("Escape");
+    await expect(appDrawer).toHaveAttribute("aria-hidden", "true");
+  }
+
+  expect(await setShellLayoutWidth(page, 1025)).toBe(1025);
+
+  // Desktop mode: the mobile top bar is withdrawn and the persistent sidebar is
+  // the single navigation affordance, without PH4-01 overlay semantics.
+  await expect(drawerToggle).toBeHidden();
+  await expect(appDrawer).toBeVisible();
+  await expect(drawerOrdersLink).toBeVisible();
+  await expect(appDrawer).not.toHaveAttribute("role", "dialog");
+  await expect(appDrawer).not.toHaveAttribute("aria-modal", "true");
+  await expect(appDrawer).not.toHaveAttribute("aria-hidden", "true");
+
+  // The sidebar is a static grid item, so content occupies the second column.
+  // The drawer's transform transition settles after the resize.
+  await expect.poll(async () => Math.round((await appDrawer.boundingBox()).x)).toBe(0);
+  const sidebarBox = await appDrawer.boundingBox();
+  const desktopMainBox = await appMain.boundingBox();
+  expect(Math.round(sidebarBox.width)).toBe(sidebarColumn);
+  expect(Math.round(desktopMainBox.x)).toBe(sidebarColumn);
+  expect(Math.round(desktopMainBox.width)).toBe(1025 - sidebarColumn);
 });
 
 test("drawer ARIA semantics are viewport-conditional and survive route renders and resizes", async ({ page }) => {

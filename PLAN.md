@@ -92,11 +92,11 @@
   - **Completion condition:** on `#/app`, `#/app/orders` and the in-app not-found route a single `main#main-content` exists and the skip link moves focus into it — met, verified by the added Playwright test `tests/smoke.spec.js` ("app shell exposes one main landmark that the skip link focuses")
   - **Source:** `AUDIT.md` — P1-02
 
-- [ ] **PH4-03 — Use one breakpoint boundary for the whole application shell** — **Priority:** High
-  - [ ] reconcile the mixed `1024px` and `1025px` boundaries in `styles/src/06-app.css` (`:25`, `:145`, `:337`, `:457`)
-  - [ ] ensure the sidebar becomes static at exactly the width where the mobile top bar and `#drawerToggle` are withdrawn
-  - [ ] confirm `.app-main` occupies the content column at every width where the two-column grid is active
-  - **Completion condition:** at 1023 px, 1024 px and 1025 px the application exposes exactly one usable navigation affordance and the content is never confined to the sidebar column
+- [x] **PH4-03 — Use one breakpoint boundary for the whole application shell** — **Priority:** High
+  - [x] reconcile the mixed `1024px` and `1025px` boundaries in `styles/src/06-app.css` (`:25`, `:145`, `:337`, `:457`) — the four application-shell queries moved to `min-width: 1025px`, the boundary the sidebar (`:461`), the public-site drawer (`styles/src/08-header.css:232`) and the PH4-01 `matchMedia` checks already use: the `.app-shell` grid, the `.app-main` top padding that clears the fixed mobile top bar, the withdrawal of `.app-topbar` and the drawer backdrop, and the sticky route `.topbar` with its desktop theme toggle (which replaces the mobile top bar's own toggle, so both toggles were briefly visible at 1024 px otherwise). The content-level `1024px` queries (`.settings-grid`, and those in the other stylesheets) are not shell contracts and were left untouched
+  - [x] ensure the sidebar becomes static at exactly the width where the mobile top bar and `#drawerToggle` are withdrawn — both now happen at 1025 px; no JavaScript threshold was added, `scripts/ui/layoutApp.js:234` already mirrored 1025 px
+  - [x] confirm `.app-main` occupies the content column at every width where the two-column grid is active — measured in the browser rather than inferred from the source: at 1023 px and 1024 px `.app-main` starts at x=0 with the full viewport width, and at 1025 px the sidebar occupies the 240 px column at x=0 and `.app-main` starts at x=240 with the remaining 785 px
+  - **Completion condition:** at 1023 px, 1024 px and 1025 px the application exposes exactly one usable navigation affordance and the content is never confined to the sidebar column — met, verified by the added Playwright test `tests/smoke.spec.js` ("application shell switches navigation mode at one boundary between 1024 px and 1025 px"), which at 1023 px and 1024 px asserts a visible `#drawerToggle`, a hidden overlay sidebar that opens to reachable route links, and full-width content, and at 1025 px a hidden `#drawerToggle` with a visible persistent sidebar; `npm run qa:css-vars` passes
   - **Source:** `AUDIT.md` — P1-09
 
 - [ ] **PH4-04 — Make the collapsed accordion state authoritative** — **Priority:** Medium
