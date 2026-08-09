@@ -789,3 +789,27 @@ test("drawer ARIA semantics are viewport-conditional and survive route renders a
   await expect(mobileNav).not.toHaveAttribute("role", "dialog");
   await expect(mobileNav).not.toHaveAttribute("aria-modal", "true");
 });
+
+test("collapsed FAQ accordion panels are hidden from the accessibility tree and stay in sync with aria-expanded", async ({ page }) => {
+  await openFresh(page);
+
+  const item = page.locator("#faq .accordion-item").first();
+  const header = item.locator(".accordion-header");
+  const panel = item.locator(".accordion-content");
+
+  await expect(header).toHaveAttribute("aria-expanded", "false");
+  await expect(panel).toHaveAttribute("hidden", "");
+  await expect(panel).not.toBeVisible();
+
+  await header.click();
+  await expect(header).toHaveAttribute("aria-expanded", "true");
+  await expect(panel).not.toHaveAttribute("hidden", "");
+  await expect(panel).toBeVisible();
+
+  await header.click();
+  await expect(header).toHaveAttribute("aria-expanded", "false");
+  await expect(panel).not.toBeVisible();
+  await expect
+    .poll(async () => panel.evaluate((el) => el.hidden))
+    .toBe(true);
+});

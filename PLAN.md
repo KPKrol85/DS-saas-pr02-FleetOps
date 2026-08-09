@@ -99,10 +99,10 @@
   - **Completion condition:** at 1023 px, 1024 px and 1025 px the application exposes exactly one usable navigation affordance and the content is never confined to the sidebar column — met, verified by the added Playwright test `tests/smoke.spec.js` ("application shell switches navigation mode at one boundary between 1024 px and 1025 px"), which at 1023 px and 1024 px asserts a visible `#drawerToggle`, a hidden overlay sidebar that opens to reachable route links, and full-width content, and at 1025 px a hidden `#drawerToggle` with a visible persistent sidebar; `npm run qa:css-vars` passes
   - **Source:** `AUDIT.md` — P1-09
 
-- [ ] **PH4-04 — Make the collapsed accordion state authoritative** — **Priority:** Medium
-  - [ ] hide the collapsed panel from the accessibility tree in addition to the `max-height` transition (`styles/src/03-components.css:444-452`, `scripts/ui/components/accordion.js:45-49`)
-  - [ ] preserve the existing open/close animation and `aria-expanded` synchronisation
-  - **Completion condition:** a collapsed accordion panel's content is absent from the accessibility tree
+- [x] **PH4-04 — Make the collapsed accordion state authoritative** — **Priority:** Medium
+  - [x] hide the collapsed panel from the accessibility tree in addition to the `max-height` transition (`styles/src/03-components.css:444-452`, `scripts/ui/components/accordion.js:45-49`) — `syncState` now toggles the native `hidden` attribute: applied immediately for the initial render, and for user-triggered collapses only after the `max-height` transition's `transitionend` fires (with a duration-0 fallback for `prefers-reduced-motion`), so the panel stays in the accessibility tree for the full closing animation and drops out only once it is visually gone; opening removes `hidden` and forces a reflow before restoring `max-height` so the open transition still plays
+  - [x] preserve the existing open/close animation and `aria-expanded` synchronisation — both unchanged; `header.setAttribute('aria-expanded', ...)` and the `max-height` transition timing are untouched
+  - **Completion condition:** a collapsed accordion panel's content is absent from the accessibility tree — met, verified by the added Playwright test `tests/smoke.spec.js` ("collapsed FAQ accordion panels are hidden from the accessibility tree and stay in sync with aria-expanded"), which asserts the `hidden` attribute and `aria-expanded` stay synchronized through the initial, open and close states
   - **Source:** `AUDIT.md` — P2-04
 
 ## Phase 5 — Demo behaviour honesty and data safety
