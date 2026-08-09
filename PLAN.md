@@ -200,12 +200,12 @@
   - **Completion condition:** every key written by the implementation appears in the README list and the documented reset scope matches `resetDemo` — met; PL and EN sections were checked line by line and describe the same ten `localStorage` keys, the same `sessionStorage` distinction, the same reset scope and the same preserved state. Documentation only — no runtime source, tests, build configuration or generated output modified
   - **Source:** `AUDIT.md` — P2-07
 
-- [ ] **PH8-03 — Run the verification the audit could not perform** — **Priority:** Medium
-  - [ ] install dependencies and execute `npm run test:smoke` against the current implementation
-  - [ ] execute `npm run qa:css-vars` and confirm exit 0
-  - [ ] execute the production build and confirm `dist/` output is complete and the tracked working tree stays clean
-  - [ ] record only outcomes actually observed; do not restate unexecuted checks as passing
-  - **Completion condition:** the CSS gate, the smoke suite and the build have each been executed once against the post-fix implementation
+- [x] **PH8-03 — Run the verification the audit could not perform** — **Priority:** Medium
+  - [x] install dependencies and execute `npm run test:smoke` against the current implementation — `npm ci` exited 0 (36 packages) in a clean worktree. The first smoke run did not pass: it exposed a real runtime defect in `scripts/ui/components/accordion.js`, where a collapse that follows an open too quickly produces no `max-height` transition at all, so the `transitionend` the component waited on never fired and the collapsed panel kept `hidden === false` while already reporting `aria-expanded="false"`. The collapse lifecycle was corrected first and the recorded run is the post-fix one: 26 tests, 26 passed, 0 failed, none reported skipped, 29.1 s, exit 0
+  - [x] execute `npm run qa:css-vars` and confirm exit 0 — exit 0 with `OK: 971 var() usage(s), 77 custom property definition(s), 11 source CSS file(s)`
+  - [x] execute the production build and confirm `dist/` output is complete and the tracked working tree stays clean — `npm run build` (Vite 7.3.6) exited 0 with 38 modules transformed. `dist/` carries all twelve HTML entries declared in `vite.config.js` (`index.html`, `404.html` and the route directories `product`, `features`, `pricing`, `about`, `contact`, `security`, `careers`, `privacy`, `terms`, `cookies`), the hashed `assets/main-CSzjV4WE.css` and `assets/main-BtTdtoUf.js`, and the `publicDir` passthroughs `sw.js`, `_headers`, `_redirects`, `robots.txt` and `sitemap.xml`. After the full verification the tracked tree held only the intended source and documentation changes — `dist/`, `node_modules/` and `test-results/` stay ignored — and `git diff --check` was clean
+  - [x] record only outcomes actually observed; do not restate unexecuted checks as passing — every result above comes from a command executed in this worktree. The narrow two-test reproduction (the preceding drawer ARIA test plus the accordion test) failed before the fix and passed after it, and a five-repeat probe of the same pair passed 10/10
+  - **Completion condition:** the CSS gate, the smoke suite and the build have each been executed once against the post-fix implementation — met; final verification completed after correcting the accordion collapse lifecycle the first smoke run exposed
   - **Depends on:** `PH1-02`, `PH1-03`, `PH2-01`
 
 ## Deferred work
