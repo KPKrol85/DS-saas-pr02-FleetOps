@@ -166,9 +166,9 @@ Repozytorium zawiera konfigurację dla statycznego hostingu:
 - `_headers` definiuje nagłówki bezpieczeństwa, CSP oraz cache dla `/assets/*` i plików HTML.
 - `_redirects` obsługuje slash redirects dla publicznych podstron oraz ścieżki assetów. Nie zawiera fallbacku typu SPA: publiczne podstrony są realnymi dokumentami, a aplikacja demonstracyjna działa w hashu, więc nieznane adresy nie są przepisywane na `/index.html` i trafiają do obsługi strony błędu `404.html`.
 - `robots.txt` i `sitemap.xml` wskazują kanoniczną domenę `https://saas-pr02-fleetops.netlify.app/`.
-- Publiczny formularz kontaktowy w `contact/index.html` jest wykrywany przez Netlify Forms podczas wdrożenia na podstawie statycznego HTML: `name="fleetops-contact"`, `method="POST"`, `data-netlify="true"` oraz ukryte pole `form-name`. Włączenie wykrywania formularzy i konfiguracja powiadomień o zgłoszeniach należą do konta Netlify i nie są częścią repozytorium.
+- Publiczny formularz kontaktowy w `contact/index.html` jest wykrywany przez Netlify Forms podczas wdrożenia na podstawie statycznego HTML: `name="fleetops-contact"`, `method="POST"`, `data-netlify="true"` oraz ukryte pole `form-name`. Wykrywanie formularzy oraz powiadomienia o zgłoszeniach są ustawieniami konta Netlify, nie repozytorium — zostały skonfigurowane i zweryfikowane dla środowiska produkcyjnego: dostawca wykrywa formularz `fleetops-contact` i przyjmuje zgłoszenia, a powiadomienia trafiają na wewnętrzny adres operacyjny, który nie jest częścią dokumentacji projektu ani treści strony.
 
-Publikowanym artefaktem builda jest katalog `dist/`. Repozytorium zawiera konfigurację wdrożenia, ale nie zawiera potwierdzenia aktywnego środowiska produkcyjnego.
+Publikowanym artefaktem builda jest katalog `dist/`. Wdrożenie produkcyjne wykonywane jest ręcznie przez Netlify CLI — repozytorium nie zawiera integracji CI ani automatycznego wdrożenia z Gita.
 
 ### Dostępność
 
@@ -420,9 +420,9 @@ The repository contains static hosting configuration:
 - `_headers` defines security headers, CSP, and cache rules for `/assets/*` and HTML files.
 - `_redirects` handles slash redirects for public subpages and asset paths. It contains no SPA-style fallback: the public subpages are real documents and the demo application runs in the hash, so unknown addresses are not rewritten to `/index.html` and are left to the `404.html` error-page handling.
 - `robots.txt` and `sitemap.xml` point to the canonical domain `https://saas-pr02-fleetops.netlify.app/`.
-- The public contact form in `contact/index.html` is detected by Netlify Forms at deploy time from the static HTML: `name="fleetops-contact"`, `method="POST"`, `data-netlify="true"`, and the hidden `form-name` field. Enabling form detection and configuring submission notifications belong to the Netlify account and are not part of the repository.
+- The public contact form in `contact/index.html` is detected by Netlify Forms at deploy time from the static HTML: `name="fleetops-contact"`, `method="POST"`, `data-netlify="true"`, and the hidden `form-name` field. Form detection and submission notifications are Netlify account settings rather than repository content — both have been configured and verified for the production environment: the provider detects the `fleetops-contact` form and accepts submissions, and notifications go to an internal operational address that is not part of the project documentation or the site content.
 
-The publishable build artifact is the `dist/` directory. The repository contains deployment configuration but no confirmation of an active production environment.
+The publishable build artifact is the `dist/` directory. The production deployment is performed manually through the Netlify CLI — the repository contains no CI integration and no Git-connected automatic deployment.
 
 ### Accessibility
 
