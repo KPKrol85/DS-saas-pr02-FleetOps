@@ -42,9 +42,9 @@ Tooling:
 
 ### Architektura
 
-- Publiczne podstrony są osobnymi dokumentami `index.html` w katalogach tras. Wspólny header i footer są renderowane w `scripts/ui/layoutLanding.js`, a treść podstron marketingowych w `scripts/ui/marketingPages.js`.
+- Publiczne podstrony są osobnymi statycznymi dokumentami `index.html` w katalogach tras, a każdy dokument zawiera własny header, footer i treść strony. `scripts/main.js` inicjalizuje wspólne zachowanie stron publicznych na tym istniejącym markupie, a `scripts/ui/layoutLanding.js` odpowiada za wspólne interakcje warstwy publicznej (motyw, nawigacja mobilna, menu zasobów, stan scrolla headera, akordeony), a nie za renderowanie dokumentu.
 - Panel demo działa w `index.html`. `scripts/router.js` obsługuje hash routing, guard tras `#/app`, zapamiętanie żądanej trasy oraz reset scrolla i `aria-current`.
-- `scripts/state/store.js` jest centralnym store stanu z subskrypcjami i zapisem do `localStorage`. `scripts/data/seed.js` dostarcza dane początkowe.
+- `scripts/state/store.js` jest centralnym store stanu z zapisem do `localStorage`. Udostępnia też API nasłuchu zmian (`FleetStore.onChange`), z którego obecnie nie korzysta żaden moduł uruchomieniowy. `scripts/data/seed.js` dostarcza dane początkowe.
 - Widoki aplikacji są w `scripts/ui/views/`, powłoka panelu w `scripts/ui/layoutApp.js`, a wspólne komponenty w `scripts/ui/components/`.
 - Uprawnienia ról demo są zamknięte w `scripts/core/permissions.js`.
 - Zależności między modułami są jawne: każdy plik w `scripts/` eksportuje swoje API i importuje to, czego używa, zamiast polegać na kolejności skryptów. Moduły publikują swoje nazwy również na `window` (`FleetStore`, `FleetUI`, `Toast`, `FleetRouter` i pozostałe) — to celowo zachowany kontrakt wewnętrzny, a nie mechanizm ładowania.
@@ -289,9 +289,9 @@ Tooling:
 
 ### Architecture
 
-- Public subpages are separate `index.html` documents in route directories. The shared header and footer are rendered in `scripts/ui/layoutLanding.js`, and marketing subpage content in `scripts/ui/marketingPages.js`.
+- Public subpages are separate static `index.html` documents in route directories, and each document owns its own header, footer, and page content. `scripts/main.js` initializes the shared public-page behavior on that existing markup, and `scripts/ui/layoutLanding.js` owns the shared public-layer interactions (theme, mobile navigation, resources menu, header scroll state, accordions) rather than rendering the document.
 - The demo dashboard runs in `index.html`. `scripts/router.js` handles hash routing, the `#/app` route guard, storing the requested route, and scroll and `aria-current` updates.
-- `scripts/state/store.js` is the central state store with subscriptions and `localStorage` persistence. `scripts/data/seed.js` provides the initial data.
+- `scripts/state/store.js` is the central state store with `localStorage` persistence. It also exposes a change-listener API (`FleetStore.onChange`) that currently has no runtime subscriber. `scripts/data/seed.js` provides the initial data.
 - Application views live in `scripts/ui/views/`, the dashboard shell in `scripts/ui/layoutApp.js`, and shared components in `scripts/ui/components/`.
 - Demo role permissions are contained in `scripts/core/permissions.js`.
 - Module dependencies are explicit: every file in `scripts/` exports its API and imports what it uses, instead of relying on script order. Modules also publish their names on `window` (`FleetStore`, `FleetUI`, `Toast`, `FleetRouter`, and the rest) — a deliberately preserved internal contract, not a loading mechanism.
