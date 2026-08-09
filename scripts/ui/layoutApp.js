@@ -94,7 +94,10 @@ function renderAppShell(viewTitle, contentNode) {
   topbar.innerHTML = `
     <div class="topbar-left">
       <h1 class="topbar__title">${safeViewTitle}</h1>
-      <div class="search"><input aria-label="Szukaj" type="search" placeholder="Szukaj..." /></div>
+      <!-- Global search is not a FleetOps feature. The control stays visible as demo
+           chrome but is natively disabled with an explanatory title, the same honest
+           treatment the orders CSV export uses. -->
+      <div class="search"><input aria-label="Szukaj" type="search" placeholder="Szukaj..." title="Wyszukiwanie globalne jest niedostępne w wersji demo" disabled /></div>
     </div>
     <div class="topbar-actions">
       <label class="role-switcher">
@@ -112,7 +115,8 @@ function renderAppShell(viewTitle, contentNode) {
           <path d="M20 12.5A7.5 7.5 0 1 1 11.5 4a6 6 0 0 0 8.5 8.5Z" fill="currentColor"></path>
         </svg>
       </button>
-      <button class="button button--ghost topbar__notification-button" aria-label="Otwórz alerty" type="button">Alerty</button>
+      <!-- No alerts panel exists; the label no longer promises to open one. -->
+      <button class="button button--ghost topbar__notification-button" aria-label="Alerty" type="button" title="Alerty są niedostępne w wersji demo" disabled>Alerty</button>
       <div class="dropdown topbar__user-menu">
         <button class="button button--ghost avatar" id="userMenuBtn" type="button" aria-label="Menu użytkownika" aria-expanded="false" aria-controls="userMenu">${initials}</button>
         <div class="dropdown-menu topbar__user-menu-panel" id="userMenu">

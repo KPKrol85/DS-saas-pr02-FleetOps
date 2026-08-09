@@ -561,6 +561,29 @@ test("orders CSV export stays demo-disabled while reports JSON export works", as
   expect(download.suggestedFilename()).toBe("fleetops-reports.json");
 });
 
+test("app topbar search and alerts are demo-disabled while the adjacent controls stay operable", async ({ page }) => {
+  await loginAsDemo(page);
+
+  const search = page.locator(".topbar .search input");
+  await expect(search).toBeDisabled();
+  await expect(search).toHaveAttribute("title", "Wyszukiwanie globalne jest niedostępne w wersji demo");
+
+  const alerts = page.getByRole("button", { name: "Alerty" });
+  await expect(alerts).toBeDisabled();
+  await expect(alerts).toHaveAttribute("title", "Alerty są niedostępne w wersji demo");
+
+  const roleSwitcher = page.locator("#roleSwitcher");
+  await expect(roleSwitcher).toBeEnabled();
+  await roleSwitcher.selectOption("u_drv_1");
+  await expect(page.locator("#fleetops-toast-status")).toContainText("Rola zmieniona: Kierowca");
+
+  const userMenuBtn = page.locator("#userMenuBtn");
+  await expect(userMenuBtn).toBeEnabled();
+  await userMenuBtn.click();
+  await expect(userMenuBtn).toHaveAttribute("aria-expanded", "true");
+  await expect(page.locator("#logoutBtn")).toBeVisible();
+});
+
 test("settings table preferences update persisted list and dense state", async ({ page, context }) => {
   await loginAsDemo(page);
   await page.locator('.sidebar nav a[data-route="/app/settings"]').click();

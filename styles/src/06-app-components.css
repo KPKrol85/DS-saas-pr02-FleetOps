@@ -757,6 +757,14 @@ html[data-theme="dark"] .setting-card:has(input, select, textarea, button, a):fo
   color: var(--text);
 }
 
+/* The bare search input is outside the `.input` disabled rule in
+   03-components.css, so it needs the same affordance locally. Pointer events stay
+   on so the explanatory `title` remains hoverable. */
+.search input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .role-switcher {
   display: inline-flex;
   align-items: center;
