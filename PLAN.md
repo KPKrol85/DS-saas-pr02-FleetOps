@@ -151,9 +151,9 @@
   - **Completion condition:** no public page presents a quotation attributed to a named organisation or a numeric performance figure without a visible indication that the content is illustrative
   - **Source:** `AUDIT.md` — P1-10
 
-- [ ] **PH6-03 — Correct the dropped Polish diacritics on the product page** — **Priority:** Low
-  - [ ] fix the three strings at `product/index.html:127,148,173`
-  - **Completion condition:** no public page contains Polish words with dropped diacritics
+- [x] **PH6-03 — Correct the dropped Polish diacritics on the product page** — **Priority:** Low
+  - [x] fix the three strings at `product/index.html:127,148,173` — only two remained: the first reported string was already resolved by PH6-02, which replaced the `Wskazniki zaufania` panel tag with `Przykładowe wskaźniki demo` (`product/index.html:127`, still in place and not reintroduced). The other two were corrected in place, text only: `Jak to dziala` → `Jak to działa` (`product/index.html:149`) and `Raporty KPI i eksporty pomagaja zamykac petle operacyjna.` → `Raporty KPI i eksporty pomagają zamykać pętlę operacyjną.` (`product/index.html:174`). Wording, meaning, punctuation, markup and classes are unchanged, the characters are written as UTF-8 like the rest of the file rather than as HTML entities, and no other copy was touched
+  - **Completion condition:** no public page contains Polish words with dropped diacritics — met for the reported strings, verified by a repository search over the maintained source (excluding generated `dist/`): `Jak to dziala`, `pomagaja zamykac petle operacyjna` and `Wskazniki zaufania` return no hits in any public document, and `README.md` never contained them; the only remaining `Wskazniki zaufania` occurrence is the historical PH6-02 record in `CHANGELOG.md`. No behaviour, JavaScript or CSS changed, so no test run applies to this copy-only correction
   - **Source:** `AUDIT.md` — P2-08
 
 ## Phase 7 — Deployment routing and error document
