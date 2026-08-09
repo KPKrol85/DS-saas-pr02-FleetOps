@@ -86,8 +86,10 @@ import { getMotionSafeScrollBehavior } from "./utils/dom.js";
         Toast.show("Uzupełnij wymagane pola.", "warning", { assertive: true });
         return;
       }
-      form.reset();
-      Toast.show("Dziękujemy! Wkrótce się odezwiemy.", "success");
+      // The form is a UI demonstration with no transport, so the confirmation
+      // states that nothing was sent and the entered values are kept for the
+      // user to copy into a real message instead of being cleared.
+      Toast.show("Formularz demonstracyjny - dane nie zostały wysłane. Kontakt: kontakt@kp-code.pl lub +48 533 537 091.");
     });
   };
 

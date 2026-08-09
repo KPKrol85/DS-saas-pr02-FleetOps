@@ -105,7 +105,7 @@
           <div class="page-hero__content">
             <p class="tag">Kontakt</p>
             <h1 class="page-hero__title">Kontakt</h1>
-            <p class="page-hero__lead">Opisz potrzeby swojej floty, a wrócimy z konkretną odpowiedzią dotyczącą demo, wdrożenia lub zakresu funkcji.</p>
+            <p class="page-hero__lead">Formularz na tej stronie jest demonstracyjny i nie wysyła danych. W sprawie demo, wdrożenia lub zakresu funkcji skorzystaj z adresu e-mail lub telefonu.</p>
           </div>
 
           <div class="page-hero__mark" aria-hidden="true" role="presentation">
@@ -117,7 +117,13 @@
         <div class="grid grid--contact">
           <div class="contact-form">
             <h2 class="contact-form__title">Formularz kontaktowy</h2>
-            <p class="contact-form__lead">Zostaw dane, a odezwiemy się w ciągu 1 dnia roboczego.</p>
+            <p class="contact-form__lead">Formularz pokazuje wyłącznie działanie interfejsu: walidację pól i komunikat po zatwierdzeniu.</p>
+            <p class="contact-form__note">
+              Formularz demonstracyjny — wpisane dane nie są wysyłane ani zapisywane jako zapytanie kontaktowe i nikt ich nie otrzymuje. Aby nawiązać kontakt, skorzystaj z adresu
+              <a class="contact-form__note-link" href="mailto:kontakt@kp-code.pl">kontakt@kp-code.pl</a>
+              lub telefonu
+              <a class="contact-form__note-link" href="tel:+48533537091">+48 533 537 091</a>.
+            </p>
             <form id="contactForm" class="contact-form__body">
               <label class="form-control">
                 <span class="label">Imię i nazwisko</span>
@@ -141,13 +147,13 @@
                 <textarea class="input" name="message" rows="4" required minlength="10" placeholder="Opisz wyzwania operacyjne lub cele..."></textarea>
               </label>
               <div class="form-control">
-                <span class="label">Zgoda</span>
-                <label class="checkbox-control" for="contactConsent">
-                  <input id="contactConsent" name="consent" type="checkbox" required />
-                  <span>Zgadzam się na kontakt w sprawie FleetOps. Formularz jest częścią demonstracyjnego projektu portfolio.</span>
+                <span class="label">Potwierdzenie</span>
+                <label class="checkbox-control" for="contactDemoAck">
+                  <input id="contactDemoAck" name="demoAck" type="checkbox" required />
+                  <span>Rozumiem, że to formularz demonstracyjny i wpisane dane nie zostaną nikomu wysłane.</span>
                 </label>
               </div>
-              <button class="button button--primary" type="submit">Wyślij zapytanie</button>
+              <button class="button button--primary" type="submit">Sprawdź formularz demo</button>
             </form>
           </div>
           <div class="contact-panel">
@@ -179,7 +185,7 @@
             </address>
             <div class="contact-panel__note">
               <p class="contact-panel__note-text">
-                Chcesz omówić podobny panel SaaS, stronę firmową lub wdrożenie dla branży transportowej? Napisz kilka zdań o potrzebach, a wrócimy z propozycją zakresu i kierunku realizacji.
+                Chcesz omówić podobny panel SaaS, stronę firmową lub wdrożenie dla branży transportowej? Napisz kilka zdań o potrzebach na powyższy adres e-mail, a wrócimy z propozycją zakresu i kierunku realizacji.
                 <span class="contact-panel__studio">
                   Kontakt obsługuje <a class="contact-panel__studio-link" href="/about/">KP_Code Digital Studio</a>.
                 </span>
@@ -200,21 +206,21 @@
         </div>
         <div class="accordion" id="faq">
           <div class="accordion-item">
-            <button class="accordion-header">Jak szybko odpowiadacie na wiadomość?<span aria-hidden="true">▾</span></button>
+            <button class="accordion-header">Jak nawiązać kontakt w sprawie projektu?<span aria-hidden="true">▾</span></button>
             <div class="accordion-content">
-              <p class="accordion-text">Najczęściej odpowiadamy w ciągu 1 dnia roboczego. W pilnych sprawach warto opisać zakres potrzeby już w pierwszej wiadomości.</p>
+              <p class="accordion-text">Przez adres kontakt@kp-code.pl lub numer +48 533 537 091. Formularz na tej stronie jest demonstracyjny i nie przekazuje wpisanych danych, więc nie zastępuje wiadomości e-mail ani telefonu.</p>
             </div>
           </div>
           <div class="accordion-item">
             <button class="accordion-header">Czy formularz dotyczy prawdziwego wdrożenia FleetOps?<span aria-hidden="true">▾</span></button>
             <div class="accordion-content">
-              <p class="accordion-text">FleetOps jest projektem demonstracyjnym, ale formularz może służyć do kontaktu w sprawie podobnego panelu, strony firmowej lub rozwiązania SaaS.</p>
+              <p class="accordion-text">FleetOps jest projektem demonstracyjnym i formularz również — pokazuje wyłącznie działanie interfejsu. W sprawie podobnego panelu, strony firmowej lub rozwiązania SaaS napisz na adres kontakt@kp-code.pl.</p>
             </div>
           </div>
           <div class="accordion-item">
             <button class="accordion-header">Czy można omówić podobny panel dla własnej firmy?<span aria-hidden="true">▾</span></button>
             <div class="accordion-content">
-              <p class="accordion-text">Tak. Możesz opisać branżę, cele i najważniejsze funkcje, a kontakt wróci z propozycją kierunku, zakresu i możliwego sposobu realizacji.</p>
+              <p class="accordion-text">Tak. Wystarczy opisać w wiadomości e-mail branżę, cele i najważniejsze funkcje, a kontakt wróci z propozycją kierunku, zakresu i możliwego sposobu realizacji.</p>
             </div>
           </div>
           <div class="accordion-item">
@@ -224,7 +230,7 @@
             </div>
           </div>
           <div class="accordion-item">
-            <button class="accordion-header">Jakie informacje warto wysłać w formularzu?<span aria-hidden="true">▾</span></button>
+            <button class="accordion-header">Jakie informacje warto podać w wiadomości?<span aria-hidden="true">▾</span></button>
             <div class="accordion-content">
               <p class="accordion-text">Najlepiej podać typ firmy, wielkość floty, główny problem operacyjny, oczekiwane funkcje oraz informację, czy chodzi o stronę, panel SaaS czy pełniejsze wdrożenie.</p>
             </div>

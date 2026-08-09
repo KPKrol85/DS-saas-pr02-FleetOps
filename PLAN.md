@@ -135,12 +135,12 @@
 
 **Goal:** Make every public claim one the project can support, and make the contact surfaces agree with each other.
 
-- [ ] **PH6-01 — Align the contact form, its confirmation and the privacy page on one truth** — **Priority:** High
-  - [ ] state on the form itself that the submission is not transmitted (`contact/index.html:120,147,150`)
-  - [ ] replace the success wording in `bindStaticContactForm` with a demo-accurate confirmation (`scripts/main.js:65-79`)
-  - [ ] remove the one-working-day response commitment from the form copy and the FAQ
-  - [ ] reconcile the privacy page description of the form with the chosen behaviour (`privacy/index.html:193`)
-  - **Completion condition:** the contact page, the success message and the privacy page make the same statement about whether a submission is transmitted, and no response-time commitment remains that the implementation cannot honour
+- [x] **PH6-01 — Align the contact form, its confirmation and the privacy page on one truth** — **Priority:** High
+  - [x] state on the form itself that the submission is not transmitted (`contact/index.html:120,147,150`) — confirmed `#contactForm` has no `action`, `method`, Netlify attribute, `fetch`/`XHR` call or any other transport, so a `.contact-form__note` disclosure now sits above the fields: the form is demonstrational, the entered data is not sent, stored as a contact request or received by anyone, and genuine contact goes through `kontakt@kp-code.pl` or `+48 533 537 091`
+  - [x] replace the success wording in `bindStaticContactForm` with a demo-accurate confirmation (`scripts/main.js:65-79`) — the post-submit toast is now the neutral default tone (no `success` treatment, no `✓` badge) reading "Formularz demonstracyjny - dane nie zostały wysłane. Kontakt: kontakt@kp-code.pl lub +48 533 537 091."; the automatic `form.reset()` was removed because nothing is transmitted and the typed values stay available for a real e-mail
+  - [x] remove the one-working-day response commitment from the form copy and the FAQ — the form lead ("Zostaw dane, a odezwiemy się w ciągu 1 dnia roboczego.") and the FAQ item "Jak szybko odpowiadacie na wiadomość?" were rewritten with no replacement SLA; the hero lead, the contact-panel note and the two remaining form-referencing FAQ items now point at the e-mail and telephone channels instead of the form
+  - [x] reconcile the privacy page description of the form with the chosen behaviour (`privacy/index.html:193`) — section 4 states that the form is a demonstrational interface element whose values stay in the browser and reach no backend, mail service or other recipient, and section 3 no longer lists form input among the data the project processes; the statements about e-mail correspondence are unchanged
+  - **Completion condition:** the contact page, the success message and the privacy page make the same statement about whether a submission is transmitted, and no response-time commitment remains that the implementation cannot honour — met, verified by the added Playwright test ("public contact form discloses that it is a demo and its submit transmits nothing", `tests/smoke.spec.js`), which reads the pre-submit disclosure, completes and activates the form, asserts the confirmation states the data was not sent and promises no reply, and confirms the page does not navigate, the typed values survive and the e-mail and telephone links remain; a repository search finds no remaining `1 dnia roboczego` or `odezwiemy się` in the contact flow, and `npm run qa:css-vars` passes
   - **Source:** `AUDIT.md` — P1-05
 
 - [ ] **PH6-02 — Remove or explicitly mark the unsupported testimonials and trust metrics** — **Priority:** High

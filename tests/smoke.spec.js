@@ -934,3 +934,43 @@ test("collapsed FAQ accordion panels are hidden from the accessibility tree and 
     .poll(async () => panel.evaluate((el) => el.hidden))
     .toBe(true);
 });
+
+test("public contact form discloses that it is a demo and its submit transmits nothing", async ({ page }) => {
+  await openFresh(page, "/contact/");
+
+  // The disclosure is readable before the demo action is activated.
+  const note = page.locator(".contact-form__note");
+  await expect(note).toBeVisible();
+  await expect(note).toContainText("Formularz demonstracyjny");
+  await expect(note).toContainText("nie są wysyłane");
+  await expect(note.locator('a[href="mailto:kontakt@kp-code.pl"]')).toBeVisible();
+
+  const form = page.locator("#contactForm");
+  const name = form.getByLabel("Imię i nazwisko");
+  const email = form.getByLabel("E-mail służbowy");
+  const message = form.getByLabel("Wiadomość");
+
+  await name.fill("Jan Kowalski");
+  await email.fill("jan.kowalski@firma.pl");
+  await form.getByLabel("Wielkość floty").selectOption("16-60");
+  await message.fill("Opis potrzeb operacyjnych floty na potrzeby testu formularza.");
+  await form.locator("#contactDemoAck").check();
+
+  await form.getByRole("button", { name: "Sprawdź formularz demo" }).click();
+
+  const statusRegion = page.locator("#fleetops-toast-status");
+  await expect(statusRegion).toContainText("Formularz demonstracyjny");
+  await expect(statusRegion).toContainText("dane nie zostały wysłane");
+  const confirmation = (await statusRegion.textContent()) || "";
+  expect(confirmation).not.toMatch(/dziękujemy|odezw|odpowie|w ciągu/i);
+
+  // A prevented submit neither navigates nor discards what the user typed.
+  await expect(page).toHaveURL(/\/contact\/$/);
+  await expect(name).toHaveValue("Jan Kowalski");
+  await expect(email).toHaveValue("jan.kowalski@firma.pl");
+  await expect(message).toHaveValue("Opis potrzeb operacyjnych floty na potrzeby testu formularza.");
+
+  // The genuine contact channels stay available alongside the demo form.
+  await expect(page.locator('.contact-panel__link[href="mailto:kontakt@kp-code.pl"]')).toBeVisible();
+  await expect(page.locator('.contact-panel__link[href="tel:+48533537091"]')).toBeVisible();
+});
