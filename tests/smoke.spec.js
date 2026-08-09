@@ -974,3 +974,38 @@ test("public contact form discloses that it is a demo and its submit transmits n
   await expect(page.locator('.contact-panel__link[href="mailto:kontakt@kp-code.pl"]')).toBeVisible();
   await expect(page.locator('.contact-panel__link[href="tel:+48533537091"]')).toBeVisible();
 });
+
+test("public pages present scenario cards and metric figures as illustrative demo content", async ({ page }) => {
+  await openFresh(page, "/");
+
+  // No fictional customer endorsement survives on the landing page.
+  const landingText = await page.locator("body").innerText();
+  expect(landingText).not.toMatch(/CargoNord|FreshLine|AeroParts/);
+  expect(landingText).not.toMatch(/Operatorzy o FleetOps/);
+  await expect(page.locator("blockquote")).toHaveCount(0);
+
+  // The section reads as demonstrational scenarios rather than customer quotes.
+  await expect(page.getByRole("heading", { name: "Co pokazuje demo FleetOps", level: 2 })).toBeVisible();
+  const scenarioLead = page.locator(".section-header__lead", { hasText: "przykładowe scenariusze operacyjne" });
+  await expect(scenarioLead).toBeVisible();
+  await expect(scenarioLead).toContainText("nie są opinie klientów");
+  await expect(page.locator(".grid--scenarios .card--scenario")).toHaveCount(3);
+
+  await openFresh(page, "/product/");
+
+  const panel = page.locator(".marketing-hero__panel");
+  await expect(panel.locator(".tag")).toHaveText("Przykładowe wskaźniki demo");
+
+  // The disclaimer sits with the figures and is visible public copy.
+  const note = page.locator(".marketing-hero__stats-note");
+  await expect(note).toBeVisible();
+  await expect(note).toContainText("ilustracyjne");
+  await expect(note).toContainText("Nie są to zmierzone wyniki działania FleetOps");
+  await expect(note).toContainText("zobowiązanie SLA");
+
+  // The retained numeric cards still demonstrate the layout.
+  await expect(panel.locator(".marketing-hero__stat-value")).toHaveCount(3);
+  await expect(panel.getByText("96.8%")).toBeVisible();
+  await expect(panel.getByText("99.6%")).toBeVisible();
+  await expect(panel.getByText("12 min")).toBeVisible();
+});

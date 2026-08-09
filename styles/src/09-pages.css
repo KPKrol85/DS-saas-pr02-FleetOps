@@ -207,6 +207,13 @@
   line-height: var(--lh-tight);
 }
 
+.marketing-hero__stats-note {
+  margin: var(--space-3) 0 0;
+  color: var(--text-muted);
+  font-size: var(--fs-01);
+  line-height: var(--lh-relaxed);
+}
+
 @media (min-width: 480px) {
   .marketing-hero {
     padding: 0;
