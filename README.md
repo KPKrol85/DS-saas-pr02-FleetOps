@@ -223,9 +223,14 @@ Repozytorium nie zawiera zmierzonych wyników wydajności.
 ### Dane i trwałość stanu
 
 - Dane początkowe są statyczne i pochodzą z `scripts/data/seed.js`.
-- Stan demo jest zapisywany w `localStorage` pod kluczami `fleet-domain-v1`, `fleet-activity-v1`, `fleet-list-prefs-v1` i `fleet-current-user`, przez opakowanie w `scripts/utils/storage.js`.
-- `sessionStorage` przechowuje wyłącznie żądaną trasę powrotu (`auth:returnTo`) używaną przez guard w `scripts/router.js`.
-- Reset danych demo usuwa klucze domenowe, aktywność i preferencje list.
+- Stan demo jest zapisywany w `localStorage` przez opakowanie w `scripts/utils/storage.js`. Implementacja zapisuje dziesięć kluczy: dziewięć z nich zapisuje `Store.persist()` w `scripts/state/store.js`, dziesiąty zapisuje `scripts/router.js`.
+- Preferencje interfejsu: `fleet-theme`, `fleet-compact`, `fleet-dashboard-range`, `fleet-filters`, `fleet-list-prefs-v1`.
+- Lokalny stan tożsamości demo: `fleet-auth`, `fleet-current-user`.
+- Dane demo: `fleet-domain-v1`, `fleet-activity-v1`.
+- Routing: `fleet-last-route` — zapisywany przez `scripts/router.js` przy każdym wejściu na trasę `/app*` i usuwany przy wylogowaniu; żaden moduł uruchomieniowy obecnie go nie odczytuje.
+- `sessionStorage` przechowuje wyłącznie żądaną trasę powrotu (`auth:returnTo`) używaną przez guard w `scripts/router.js`; wpis jest tymczasowy i jest usuwany zaraz po zalogowaniu.
+- Reset danych demo (`FleetStore.resetDemo()`) przywraca dane domenowe i historię aktywności do stanu z `scripts/data/seed.js` oraz ustawia preferencje na wartości domyślne: motyw jasny, tryb kompaktowy wyłączony, zakres dashboardu 30 dni, domyślne filtry i preferencje list. Stan logowania demo i aktualny użytkownik są zachowywane, a `fleet-last-route` pozostaje poza zakresem resetu.
+- Klucze `fleet-offline-queue` i `fleet-intended-route` nie są przez implementację zapisywane — występują wyłącznie w kodzie usuwającym nieaktualne dane z przeglądarki.
 - Raporty można wyeksportować lokalnie do pliku `fleetops-reports.json`.
 - Projekt nie ma kont użytkowników, backendu, bazy danych ani synchronizacji między urządzeniami. Dane istnieją tylko w przeglądarce.
 
@@ -470,9 +475,14 @@ The repository does not contain measured performance scores.
 ### Data and State Persistence
 
 - Initial data is static and comes from `scripts/data/seed.js`.
-- Demo state is persisted in `localStorage` under the keys `fleet-domain-v1`, `fleet-activity-v1`, `fleet-list-prefs-v1`, and `fleet-current-user`, through the wrapper in `scripts/utils/storage.js`.
-- `sessionStorage` only holds the requested return route (`auth:returnTo`) used by the guard in `scripts/router.js`.
-- The demo data reset removes the domain, activity, and list preference keys.
+- Demo state is persisted in `localStorage` through the wrapper in `scripts/utils/storage.js`. The implementation writes ten keys: nine of them from `Store.persist()` in `scripts/state/store.js`, and the tenth from `scripts/router.js`.
+- Interface preferences: `fleet-theme`, `fleet-compact`, `fleet-dashboard-range`, `fleet-filters`, `fleet-list-prefs-v1`.
+- Local demo identity state: `fleet-auth`, `fleet-current-user`.
+- Demo data: `fleet-domain-v1`, `fleet-activity-v1`.
+- Routing: `fleet-last-route` — written by `scripts/router.js` on every entry into an `/app*` route and removed on logout; no runtime module currently reads it back.
+- `sessionStorage` only holds the requested return route (`auth:returnTo`) used by the guard in `scripts/router.js`; the entry is temporary and is removed immediately after login.
+- The demo data reset (`FleetStore.resetDemo()`) restores the domain data and the activity history to the state from `scripts/data/seed.js` and returns preferences to their defaults: light theme, compact mode off, a 30-day dashboard range, default filters and list preferences. The demo login state and the current demo user are preserved, and `fleet-last-route` stays outside the reset scope.
+- The keys `fleet-offline-queue` and `fleet-intended-route` are not written by the implementation — they appear only in code that removes stale data from the browser.
 - Reports can be exported locally to a `fleetops-reports.json` file.
 - The project has no user accounts, backend, database, or cross-device synchronization. Data exists only in the browser.
 

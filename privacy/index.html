@@ -203,10 +203,10 @@
             <section class="legal-doc__section" id="privacy-local-storage" tabindex="-1">
               <h3>5. Dane lokalne, localStorage i preferencje</h3>
               <p>
-                FleetOps działa głównie po stronie przeglądarki. Mechanizm localStorage może zapisywać lokalnie dane przykładowe oraz preferencje interfejsu, takie jak motyw, tryb kompaktowy, zakres dashboardu, status logowania testowego, filtry, preferencje list, aktualny użytkownik demonstracyjny, dane domenowe, aktywność oraz kolejka działań offline.
+                FleetOps działa głównie po stronie przeglądarki. Mechanizm localStorage może zapisywać lokalnie preferencje interfejsu, takie jak motyw, tryb kompaktowy, zakres dashboardu, filtry oraz preferencje list, a także status logowania testowego wraz z aktualnym użytkownikiem demonstracyjnym, dane przykładowe i historię aktywności oraz ostatnio odwiedzoną trasę panelu demonstracyjnego.
               </p>
               <p>
-                Dane zapisane w localStorage pozostają w przeglądarce użytkownika i mogą zostać usunięte z poziomu ustawień przeglądarki albo przez funkcję resetu danych w panelu FleetOps. Usunięcie tych danych przywraca projekt do stanu początkowego lub usuwa lokalne zmiany testowe.
+                Dane zapisane w localStorage pozostają w przeglądarce użytkownika. Można je usunąć z poziomu ustawień przeglądarki, co kasuje wszystkie dane lokalne projektu. Funkcja resetu danych demo w panelu FleetOps ma węższy zakres: przywraca dane przykładowe i historię aktywności do stanu początkowego oraz ustawia preferencje interfejsu na wartości domyślne, natomiast status logowania testowego, aktualny użytkownik demonstracyjny i zapamiętana ostatnia trasa panelu pozostają zachowane.
               </p>
               <p>
                 Router może używać sessionStorage do tymczasowego zapamiętania ścieżki powrotu po logowaniu testowym. Taki zapis ma charakter techniczny, krótkotrwały i jest związany z działaniem nawigacji w przeglądarce.
