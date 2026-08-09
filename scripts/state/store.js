@@ -15,11 +15,9 @@ const DOMAIN_STORAGE_KEY = "fleet-domain-v1";
 const ACTIVITY_STORAGE_KEY = "fleet-activity-v1";
 const LIST_PREFS_STORAGE_KEY = "fleet-list-prefs-v1";
 const CURRENT_USER_STORAGE_KEY = "fleet-current-user";
-const OFFLINE_QUEUE_KEY = "fleet-offline-queue";
-const defaultOfflineQueue = (() => {
-  const stored = FleetStorage.get(OFFLINE_QUEUE_KEY, []);
-  return Array.isArray(stored) ? stored : [];
-})();
+// Legacy key from the discarded offline-queue prototype (see AUDIT.md P1-06); purged so no stale demo data lingers.
+const LEGACY_OFFLINE_QUEUE_KEY = "fleet-offline-queue";
+FleetStorage.remove(LEGACY_OFFLINE_QUEUE_KEY);
 const defaultCurrentUser = FleetStorage.get(
   CURRENT_USER_STORAGE_KEY,
   FleetPermissions.defaultUser
@@ -78,7 +76,6 @@ const Store = {
     activity: [],
     offline: {
       isOnline: typeof navigator !== "undefined" ? navigator.onLine : true,
-      queue: defaultOfflineQueue,
     },
   },
   listeners: [],
@@ -134,7 +131,7 @@ const Store = {
   },
 
   addOrder(payload = {}) {
-    if (!this.ensureOnline("order:create")) return false;
+    if (!this.ensureOnline()) return false;
     const now = nowIso();
     const createdBy = payload.createdBy || this.state.currentUser?.id || "u_admin_1";
     const order = {
@@ -150,7 +147,7 @@ const Store = {
   },
 
   updateOrder(id, patch = {}) {
-    if (!this.ensureOnline("order:update")) return false;
+    if (!this.ensureOnline()) return false;
     const now = nowIso();
     this.updateDomainList("orders", (list) =>
       list.map((item) =>
@@ -163,7 +160,7 @@ const Store = {
   },
 
   deleteOrder(id) {
-    if (!this.ensureOnline("order:delete")) return false;
+    if (!this.ensureOnline()) return false;
     this.updateDomainList("orders", (list) => list.filter((item) => item.id !== id));
     return true;
   },
@@ -179,7 +176,7 @@ const Store = {
   },
 
   addVehicle(payload = {}) {
-    if (!this.ensureOnline("fleet:create")) return false;
+    if (!this.ensureOnline()) return false;
     const now = nowIso();
     const createdBy = payload.createdBy || this.state.currentUser?.id || "u_admin_1";
     const vehicle = {
@@ -195,7 +192,7 @@ const Store = {
   },
 
   updateVehicle(id, patch = {}) {
-    if (!this.ensureOnline("fleet:update")) return false;
+    if (!this.ensureOnline()) return false;
     const now = nowIso();
     this.updateDomainList("fleet", (list) =>
       list.map((item) => (item.id === id ? { ...item, ...patch, updatedAt: now } : item))
@@ -204,13 +201,13 @@ const Store = {
   },
 
   deleteVehicle(id) {
-    if (!this.ensureOnline("fleet:delete")) return false;
+    if (!this.ensureOnline()) return false;
     this.updateDomainList("fleet", (list) => list.filter((item) => item.id !== id));
     return true;
   },
 
   addDriver(payload = {}) {
-    if (!this.ensureOnline("driver:create")) return false;
+    if (!this.ensureOnline()) return false;
     const now = nowIso();
     const createdBy = payload.createdBy || this.state.currentUser?.id || "u_admin_1";
     const driver = {
@@ -225,7 +222,7 @@ const Store = {
   },
 
   updateDriver(id, patch = {}) {
-    if (!this.ensureOnline("driver:update")) return false;
+    if (!this.ensureOnline()) return false;
     const now = nowIso();
     this.updateDomainList("drivers", (list) =>
       list.map((item) => (item.id === id ? { ...item, ...patch, updatedAt: now } : item))
@@ -234,7 +231,7 @@ const Store = {
   },
 
   deleteDriver(id) {
-    if (!this.ensureOnline("driver:delete")) return false;
+    if (!this.ensureOnline()) return false;
     this.updateDomainList("drivers", (list) => list.filter((item) => item.id !== id));
     return true;
   },
@@ -323,7 +320,6 @@ const Store = {
     FleetStorage.remove(DOMAIN_STORAGE_KEY);
     FleetStorage.remove(ACTIVITY_STORAGE_KEY);
     FleetStorage.remove(LIST_PREFS_STORAGE_KEY);
-    FleetStorage.remove(OFFLINE_QUEUE_KEY);
 
     this.setState({
       auth: preservedAuth,
@@ -334,7 +330,6 @@ const Store = {
       activity: buildActivityFromSeed(),
       offline: {
         isOnline: typeof navigator !== "undefined" ? navigator.onLine : true,
-        queue: [],
       },
     });
 
@@ -346,37 +341,22 @@ const Store = {
   },
 
   setOnlineStatus(isOnline) {
-    const offline = this.state.offline || { isOnline: true, queue: [] };
+    const offline = this.state.offline || { isOnline: true };
+    const wasOffline = offline.isOnline === false;
     const next = { ...offline, isOnline: Boolean(isOnline) };
     this.setState({ offline: next });
-    if (next.isOnline && offline.queue && offline.queue.length) {
-      this.clearOfflineQueue();
+    if (next.isOnline && wasOffline) {
       Toast.show("Połączenie przywrócone", "success");
     }
   },
 
-  enqueueOfflineAction(actionLabel) {
-    const offline = this.state.offline || { isOnline: true, queue: [] };
-    const entry = {
-      id: generateId("OFF"),
-      action: actionLabel || "action",
-      time: nowIso(),
-    };
-    const nextQueue = [...(offline.queue || []), entry];
-    this.setState({ offline: { ...offline, queue: nextQueue } });
-    FleetStorage.set(OFFLINE_QUEUE_KEY, nextQueue);
-  },
-
-  clearOfflineQueue() {
-    const offline = this.state.offline || { isOnline: true, queue: [] };
-    this.setState({ offline: { ...offline, queue: [] } });
-    FleetStorage.set(OFFLINE_QUEUE_KEY, []);
-  },
-
-  ensureOnline(actionLabel) {
+  ensureOnline() {
     if (typeof navigator !== "undefined" && navigator.onLine === false) {
-      this.enqueueOfflineAction(actionLabel);
-      Toast.show("Tryb offline - akcja dodana do kolejki", "warning");
+      Toast.show(
+        "Tryb offline - zmiana nie została zapisana. Powtórz akcję po przywróceniu połączenia.",
+        "warning",
+        { assertive: true }
+      );
       return false;
     }
     return true;

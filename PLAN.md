@@ -109,13 +109,13 @@
 
 **Goal:** Ensure every enabled control in the demo does what it says, and no user input is lost silently.
 
-- [ ] **PH5-01 — Stop presenting discarded offline actions as queued work** — **Priority:** High
-  - [ ] decide between replaying queued actions and rejecting them plainly, given the browser-local demo scope
-  - [ ] if rejecting: change the `ensureOnline` message to state the action was not saved and must be repeated (`scripts/state/store.js:377-386`)
-  - [ ] stop `setOnlineStatus` from presenting the reconnect as a completed sync while it clears the queue (`scripts/state/store.js:347-357`)
-  - [ ] if replaying: persist the action payload in `enqueueOfflineAction` and apply the queue on reconnect
-  - [ ] align the README offline description with the chosen behaviour
-  - **Completion condition:** after creating a record offline and returning online, either the record exists or the user was told explicitly that it was not saved; no message implies deferred processing that does not occur
+- [x] **PH5-01 — Stop presenting discarded offline actions as queued work** — **Priority:** High
+  - [x] decide between replaying queued actions and rejecting them plainly, given the browser-local demo scope — chosen: reject offline mutations plainly; FleetOps stays a browser-local demo with no replay, synchronization or conflict handling
+  - [x] if rejecting: change the `ensureOnline` message to state the action was not saved and must be repeated (`scripts/state/store.js:377-386`) — `ensureOnline` (`scripts/state/store.js`) now shows "Tryb offline - zmiana nie została zapisana. Powtórz akcję po przywróceniu połączenia." and returns `false` without applying the mutation
+  - [x] stop `setOnlineStatus` from presenting the reconnect as a completed sync while it clears the queue (`scripts/state/store.js:347-357`) — `setOnlineStatus` no longer clears or references any queue; it only toggles `isOnline` and shows "Połączenie przywrócone" when transitioning from offline back to online
+  - [ ] if replaying: persist the action payload in `enqueueOfflineAction` and apply the queue on reconnect — not implemented; the rejection path was chosen instead, so `enqueueOfflineAction`, `clearOfflineQueue`, the `offline.queue` state and the `fleet-offline-queue` storage key were removed as unreachable once mutations reject outright
+  - [x] align the README offline description with the chosen behaviour — the README feature list and PWA/offline sections (PL and EN) now describe offline mutations as rejected with an explicit message, not queued, and the storage-key list drops `fleet-offline-queue`
+  - **Completion condition:** met — verified by the added Playwright test ("offline mutations are rejected with an explicit not-saved message and reconnect does not imply sync", `tests/smoke.spec.js`), which attempts a driver creation offline, confirms the explicit not-saved toast and that the driver does not appear, then reconnects and confirms the reconnect toast makes no synchronization claim and the rejected record still never appears
   - **Source:** `AUDIT.md` — P1-06
 
 - [ ] **PH5-02 — Give the application top bar controls behaviour or an honest disabled state** — **Priority:** Medium

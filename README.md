@@ -19,7 +19,7 @@ Projekt jest częścią portfolio KP_Code Digital Studio i nie zawiera backendu,
 - Ustawienia interfejsu: motyw jasny/ciemny, tryb kompaktowy, zakres dashboardu, preferencje list i reset danych demo.
 - Eksport raportów do pliku JSON. Eksport CSV zleceń jest celowo wyłączony w wersji demo.
 - Responsywna nawigacja, dropdowny, modale, drawer szczegółów rekordu, toasty i akordeony.
-- Wskaźnik statusu online/offline oraz lokalna kolejka akcji wykonanych w trybie offline.
+- Wskaźnik statusu online/offline; operacje na zleceniach, flocie i kierowcach są w trybie offline odrzucane z jasnym komunikatem, a nie kolejkowane.
 - Service worker dla nawigacji publicznych tras i assetów statycznych.
 
 ### Stack technologiczny
@@ -203,6 +203,7 @@ Projekt zawiera:
 - `sw.js` używa wersjonowanego cache (`fleetops-v1.10`), precache’uje powłokę aplikacji i publiczne trasy, a przy aktywacji usuwa starsze cache z prefiksem `fleetops-`.
 - Nawigacje działają w strategii network-first z fallbackiem do cache, a assety statyczne w strategii stale-while-revalidate.
 - Wersjonowanie cache w `sw.js` jest utrzymywane ręcznie.
+- Poza cache'em tras i assetów, tryb offline nie jest w żaden sposób symulowany dla zapisu danych: próba dodania, edycji lub usunięcia zlecenia, pojazdu lub kierowcy w trybie offline jest odrzucana, a użytkownik widzi komunikat, że zmiana nie została zapisana i trzeba ją powtórzyć po przywróceniu połączenia (`scripts/state/store.js`).
 
 ### Wydajność
 
@@ -222,7 +223,7 @@ Repozytorium nie zawiera zmierzonych wyników wydajności.
 ### Dane i trwałość stanu
 
 - Dane początkowe są statyczne i pochodzą z `scripts/data/seed.js`.
-- Stan demo jest zapisywany w `localStorage` pod kluczami `fleet-domain-v1`, `fleet-activity-v1`, `fleet-list-prefs-v1`, `fleet-current-user` i `fleet-offline-queue`, przez opakowanie w `scripts/utils/storage.js`.
+- Stan demo jest zapisywany w `localStorage` pod kluczami `fleet-domain-v1`, `fleet-activity-v1`, `fleet-list-prefs-v1` i `fleet-current-user`, przez opakowanie w `scripts/utils/storage.js`.
 - `sessionStorage` przechowuje wyłącznie żądaną trasę powrotu (`auth:returnTo`) używaną przez guard w `scripts/router.js`.
 - Reset danych demo usuwa klucze domenowe, aktywność i preferencje list.
 - Raporty można wyeksportować lokalnie do pliku `fleetops-reports.json`.
@@ -233,7 +234,7 @@ Repozytorium nie zawiera zmierzonych wyników wydajności.
 - Logika startowa i rejestracja service workera są w `scripts/main.js`.
 - Routing, ochrona tras demo i reset scrolla są w `scripts/router.js`.
 - Dane demo są w `scripts/data/seed.js`.
-- Lokalny store, preferencje, dane domenowe i kolejka offline są w `scripts/state/store.js`.
+- Lokalny store, preferencje, dane domenowe i status online/offline są w `scripts/state/store.js`.
 - Uprawnienia ról demo są w `scripts/core/permissions.js`.
 - Widoki aplikacji są w `scripts/ui/views/`, a wspólne komponenty UI w `scripts/ui/components/`.
 - Style źródłowe są modułowe w `styles/src/`, a `styles/main.css` tylko je importuje.
@@ -265,7 +266,7 @@ The project is part of the KP_Code Digital Studio portfolio and does not include
 - Interface settings: light/dark theme, compact mode, dashboard range, list preferences, and demo data reset.
 - JSON report export. Orders CSV export is intentionally disabled in the demo version.
 - Responsive navigation, dropdowns, modals, record detail drawer, toasts, and accordions.
-- Online/offline status indicator and a local queue of actions performed while offline.
+- Online/offline status indicator; mutations on orders, fleet, and drivers are rejected with a clear message while offline instead of being queued.
 - Service worker for public route navigation and static assets.
 
 ### Tech Stack
@@ -449,6 +450,7 @@ The project includes:
 - `sw.js` uses a versioned cache (`fleetops-v1.10`), precaches the app shell and public routes, and deletes older `fleetops-` caches on activation.
 - Navigations use a network-first strategy with a cache fallback, and static assets use stale-while-revalidate.
 - Cache versioning in `sw.js` is maintained manually.
+- Beyond route and asset caching, offline mode is not simulated for data writes in any way: attempting to create, edit, or delete an order, vehicle, or driver while offline is rejected, and the user sees a message that the change was not saved and must be repeated after connectivity returns (`scripts/state/store.js`).
 
 ### Performance
 
@@ -468,7 +470,7 @@ The repository does not contain measured performance scores.
 ### Data and State Persistence
 
 - Initial data is static and comes from `scripts/data/seed.js`.
-- Demo state is persisted in `localStorage` under the keys `fleet-domain-v1`, `fleet-activity-v1`, `fleet-list-prefs-v1`, `fleet-current-user`, and `fleet-offline-queue`, through the wrapper in `scripts/utils/storage.js`.
+- Demo state is persisted in `localStorage` under the keys `fleet-domain-v1`, `fleet-activity-v1`, `fleet-list-prefs-v1`, and `fleet-current-user`, through the wrapper in `scripts/utils/storage.js`.
 - `sessionStorage` only holds the requested return route (`auth:returnTo`) used by the guard in `scripts/router.js`.
 - The demo data reset removes the domain, activity, and list preference keys.
 - Reports can be exported locally to a `fleetops-reports.json` file.
@@ -479,7 +481,7 @@ The repository does not contain measured performance scores.
 - Startup logic and service worker registration live in `scripts/main.js`.
 - Routing, demo route protection, and scroll reset live in `scripts/router.js`.
 - Demo data lives in `scripts/data/seed.js`.
-- Local store, preferences, domain data, and the offline queue live in `scripts/state/store.js`.
+- Local store, preferences, domain data, and online/offline status live in `scripts/state/store.js`.
 - Demo role permissions live in `scripts/core/permissions.js`.
 - Application views live in `scripts/ui/views/`, and shared UI components in `scripts/ui/components/`.
 - Source styles are modular in `styles/src/`, while `styles/main.css` only imports them.

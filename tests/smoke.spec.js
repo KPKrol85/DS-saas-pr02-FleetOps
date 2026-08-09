@@ -347,6 +347,42 @@ test("toast feedback exposes stable polite and assertive live regions", async ({
   await expect(alertRegion).toContainText("Brak uprawnień:");
 });
 
+test("offline mutations are rejected with an explicit not-saved message and reconnect does not imply sync", async ({ page, context }) => {
+  await loginAsDemo(page);
+  await page.locator('.sidebar nav a[data-route="/app/drivers"]').click();
+  await expect(page.getByRole("heading", { name: "Kierowcy", level: 1 })).toBeVisible();
+
+  const driverName = "Offline Rejection Test";
+  const alertRegion = page.locator("#fleetops-toast-alert");
+  const statusRegion = page.locator("#fleetops-toast-status");
+
+  await context.setOffline(true);
+
+  await page.getByRole("button", { name: "Dodaj kierowcę" }).click();
+  const addDriverDialog = page.getByRole("dialog", { name: "Dodaj kierowcę" });
+  await expect(addDriverDialog).toBeVisible();
+  await addDriverDialog.getByLabel("Imię i nazwisko").fill(driverName);
+  await addDriverDialog.getByLabel("Telefon").fill("+48 600 900 999");
+  await addDriverDialog.getByRole("button", { name: "Dodaj kierowcę" }).click();
+
+  await expect(alertRegion).toContainText("nie została zapisana");
+  await expect(alertRegion).toContainText("Powtórz akcję po przywróceniu połączenia");
+
+  // The record is rejected outright, not queued: the form stays open on failure.
+  await expect(addDriverDialog).toBeVisible();
+  await page.getByRole("button", { name: "Anuluj" }).click();
+  await expect(page.locator("tr.driver-row").filter({ hasText: driverName })).toHaveCount(0);
+
+  await context.setOffline(false);
+
+  await expect(statusRegion).toHaveText("Połączenie przywrócone");
+  const alertTextAfterReconnect = (await alertRegion.textContent()) || "";
+  expect(alertTextAfterReconnect).not.toMatch(/zsynchronizow|przetworzon|kolejk/i);
+
+  // Reconnect never replays the rejected mutation.
+  await expect(page.locator("tr.driver-row").filter({ hasText: driverName })).toHaveCount(0);
+});
+
 test("dropdowns use disclosure semantics and close with Escape", async ({ page }) => {
   const ariaMenuSelector = '[role="menu"], [aria-haspopup="menu"], [role="menuitem"]';
 
