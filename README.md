@@ -201,7 +201,7 @@ Projekt zawiera:
 - `public/assets/favicon/site.webmanifest` definiuje `name`, `short_name`, `start_url` `/`, `scope` `/`, `display` `standalone`, ikony 192/512 (w tym warianty maskable), screenshoty oraz skróty do dashboardu, floty i zleceń.
 - `scripts/main.js` rejestruje `/sw.js` po zdarzeniu `load`, gdy przeglądarka wspiera Service Worker API. Rejestracja jest pomijana w trybie developerskim Vite.
 - `sw.js` używa wersjonowanego cache (`fleetops-v1.10`), precache’uje powłokę aplikacji i publiczne trasy, a przy aktywacji usuwa starsze cache z prefiksem `fleetops-`.
-- Nawigacje działają w strategii network-first z fallbackiem do cache, a assety statyczne w strategii stale-while-revalidate.
+- Nawigacje działają w strategii network-first: spełniona odpowiedź HTTP jest zwracana do przeglądarki bez zmian, również gdy jest to odpowiedź błędu (np. `404`) lub przekierowanie, i taka odpowiedź nie trafia do cache. Fallback do cache uruchamia się dopiero wtedy, gdy samo żądanie sieciowe zostanie odrzucone; przy braku wpisu w cache zwracany jest błąd sieci. Assety statyczne działają w strategii stale-while-revalidate.
 - Wersjonowanie cache w `sw.js` jest utrzymywane ręcznie.
 - Poza cache'em tras i assetów, tryb offline nie jest w żaden sposób symulowany dla zapisu danych: próba dodania, edycji lub usunięcia zlecenia, pojazdu lub kierowcy w trybie offline jest odrzucana, a użytkownik widzi komunikat, że zmiana nie została zapisana i trzeba ją powtórzyć po przywróceniu połączenia (`scripts/state/store.js`).
 
@@ -448,7 +448,7 @@ The project includes:
 - `public/assets/favicon/site.webmanifest` defines `name`, `short_name`, `start_url` `/`, `scope` `/`, `display` `standalone`, 192/512 icons (including maskable variants), screenshots, and shortcuts to the dashboard, fleet, and orders.
 - `scripts/main.js` registers `/sw.js` after the `load` event when the browser supports the Service Worker API. Registration is skipped in the Vite development mode.
 - `sw.js` uses a versioned cache (`fleetops-v1.10`), precaches the app shell and public routes, and deletes older `fleetops-` caches on activation.
-- Navigations use a network-first strategy with a cache fallback, and static assets use stale-while-revalidate.
+- Navigations use a network-first strategy: a fulfilled HTTP response is returned to the browser unchanged, including error responses such as `404` and redirects, and such responses are not cached. The cache fallback runs only when the network request itself fails; a cache miss then returns a network error. Static assets use stale-while-revalidate.
 - Cache versioning in `sw.js` is maintained manually.
 - Beyond route and asset caching, offline mode is not simulated for data writes in any way: attempting to create, edit, or delete an order, vehicle, or driver while offline is rejected, and the user sees a message that the change was not saved and must be repeated after connectivity returns (`scripts/state/store.js`).
 

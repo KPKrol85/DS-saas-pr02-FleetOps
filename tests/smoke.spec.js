@@ -250,6 +250,20 @@ test.describe("service worker navigation cache", () => {
       await context.setOffline(false);
     }
   });
+
+  // The service worker must pass a fulfilled network response through unchanged,
+  // including an HTTP error status, instead of treating it as an offline failure.
+  // Only the status is asserted here: the Vite preview returns a plain 404 and does
+  // not serve Netlify's custom `404.html` body, which stays a deployment check.
+  test("returns the host 404 response for an unknown path while controlled by the service worker", async ({ page }) => {
+    await page.goto("/");
+    await waitForServiceWorkerControl(page);
+
+    const response = await page.goto("/missing-page", { waitUntil: "domcontentloaded" });
+
+    expect(response).not.toBeNull();
+    expect(response.status()).toBe(404);
+  });
 });
 
 test("static public navigation resets scroll position", async ({ page }) => {

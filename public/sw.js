@@ -115,16 +115,14 @@ function matchNavigationCache(cache, request) {
     });
 }
 
+// A fulfilled fetch is a completed network response, whatever its status: a 404,
+// a redirect or a 5xx must reach the browser unchanged. Only a rejected fetch is
+// an actual connectivity failure, so only that case falls back to the cache.
+// `cacheNavigationResponse` decides on its own whether the response may be stored.
 function networkFirstNavigation(request) {
   return caches.open(CACHE_NAME).then((cache) =>
     fetch(request)
-      .then((response) => {
-        if (!response || !response.ok) {
-          throw new Error("Network error");
-        }
-
-        return cacheNavigationResponse(cache, request, response).then(() => response);
-      })
+      .then((response) => cacheNavigationResponse(cache, request, response).then(() => response))
       .catch(() => matchNavigationCache(cache, request).then((cached) => cached || Response.error()))
   );
 }
