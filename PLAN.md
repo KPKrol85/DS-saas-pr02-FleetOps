@@ -84,11 +84,12 @@
   - **Completion condition:** at 1280 px neither navigation container exposes `aria-hidden="true"` or modal dialog semantics and every navigation link is in the accessibility tree; at 390 px the closed drawer remains hidden from it — verified manually and by the added Playwright test `tests/smoke.spec.js` ("drawer ARIA semantics are viewport-conditional and survive route renders and resizes")
   - **Source:** `AUDIT.md` — P1-01
 
-- [ ] **PH4-02 — Emit a `main` landmark inside the application shell** — **Priority:** High
-  - [ ] render the application content region as a `main` element carrying `id="main-content"` in `renderAppShell` (`scripts/ui/layoutApp.js:192-200`)
-  - [ ] confirm exactly one `main` landmark exists per rendered route, including the in-app not-found view
-  - [ ] verify the persistent skip link resolves and moves focus into the region
-  - **Completion condition:** on `#/app`, `#/app/orders` and the in-app not-found route a single `main#main-content` exists and the skip link moves focus into it
+- [x] **PH4-02 — Emit a `main` landmark inside the application shell** — **Priority:** High
+  - [x] render the application content region as a `main` element carrying `id="main-content"` in `renderAppShell` (`scripts/ui/layoutApp.js`) — the existing `.app-content` wrapper is now `<main class="app-content" id="main-content" tabindex="-1">`, so no second wrapper and no `role="main"` was introduced and the topbar stays outside the landmark
+  - [x] confirm exactly one `main` landmark exists per rendered route, including the in-app not-found view — every application route reaches the single `renderAppShell` call and `dom.mount` clears `#app` first, so the landing document's own `main#main-content` is replaced rather than duplicated; the login view keeps its separate `main#main-content` because it never renders the shell
+  - [x] verify the persistent skip link resolves and moves focus into the region — `tabindex="-1"` (the project's existing fragment-target pattern from the legal document sections) makes default fragment navigation move focus to the landmark instead of only scrolling to it; the link and its `href="#main-content"` are unchanged, and no focus ring appears because the base focus styles cover only form controls and links
+  - [x] restore the layout the converted container had as a `div` — the public-page default `main { min-height: 60vh }` (`styles/src/01-base.css`) stretched short route content inside the `.app-content` grid (the not-found panel grew from 192 px to 308 px), so `.app-content` now sets `min-height: auto` (`styles/src/06-app.css`)
+  - **Completion condition:** on `#/app`, `#/app/orders` and the in-app not-found route a single `main#main-content` exists and the skip link moves focus into it — met, verified by the added Playwright test `tests/smoke.spec.js` ("app shell exposes one main landmark that the skip link focuses")
   - **Source:** `AUDIT.md` — P1-02
 
 - [ ] **PH4-03 — Use one breakpoint boundary for the whole application shell** — **Priority:** High

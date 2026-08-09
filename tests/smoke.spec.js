@@ -638,6 +638,39 @@ test("orders CRUD flow escapes user-entered HTML-like text", async ({ page }) =>
   await expect(page.locator("tr.order-row").filter({ hasText: editedClient })).toHaveCount(0);
 });
 
+test("app shell exposes one main landmark that the skip link focuses", async ({ page }) => {
+  await loginAsDemo(page);
+
+  const skipLink = page.locator(".skip-link");
+  const mainContent = page.locator("main#main-content");
+
+  const routes = [
+    { hash: "#/app", heading: "Przegląd" },
+    { hash: "#/app/orders", heading: "Zlecenia" },
+    { hash: "#/app/does-not-exist", heading: "Nie znaleziono" },
+  ];
+
+  for (const route of routes) {
+    await page.evaluate((hash) => {
+      window.location.hash = hash;
+    }, route.hash);
+    await expect(page.getByRole("heading", { name: route.heading, level: 1 })).toBeVisible();
+
+    await expect(page.locator("main")).toHaveCount(1);
+    await expect(mainContent).toHaveCount(1);
+    await expect(mainContent).toHaveClass(/app-content/);
+    await expect(mainContent).not.toHaveAttribute("role", "main");
+
+    await expect(skipLink).toHaveAttribute("href", "#main-content");
+    expect(await skipLink.evaluate((link) => Boolean(document.getElementById(link.hash.slice(1))))).toBe(true);
+
+    await skipLink.focus();
+    await expect(skipLink).toBeFocused();
+    await page.keyboard.press("Enter");
+    await expect(mainContent).toBeFocused();
+  }
+});
+
 test("drawer ARIA semantics are viewport-conditional and survive route renders and resizes", async ({ page }) => {
   await loginAsDemo(page);
 

@@ -43,6 +43,10 @@
   display: grid;
   gap: var(--space-3);
   min-width: 0;
+  /* The app content region is the shell's `main` landmark; the public-page
+     default `main { min-height: 60vh }` (styles/src/01-base.css) would stretch
+     short route content, so the grid keeps its own intrinsic height. */
+  min-height: auto;
 }
 
 .app-content > * {

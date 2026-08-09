@@ -197,7 +197,15 @@ function renderAppShell(viewTitle, contentNode) {
   main.appendChild(topbar);
   main.appendChild(offlineBanner);
 
-  const contentWrap = dom.h("div", "app-content");
+  // The route content region is the shell's `main` landmark and the target of
+  // the persistent skip link (`index.html`). `dom.mount` replaces the whole of
+  // `#app`, so this stays the document's only `#main-content`. `tabindex="-1"`
+  // follows the project's existing fragment-target pattern (the legal document
+  // sections) and is what makes the skip link move focus here rather than only
+  // scroll.
+  const contentWrap = dom.h("main", "app-content");
+  contentWrap.id = "main-content";
+  contentWrap.setAttribute("tabindex", "-1");
   contentWrap.appendChild(contentNode);
   main.appendChild(contentWrap);
 
