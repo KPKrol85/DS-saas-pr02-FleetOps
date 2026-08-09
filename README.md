@@ -76,7 +76,7 @@ Tooling:
 │   ├── assets/                 # favicony, font, ikony, logo, obrazy, OG, screenshoty
 │   ├── sw.js                   # service worker
 │   ├── _headers                # nagłówki dla statycznego hostingu
-│   ├── _redirects              # przekierowania i fallback routingu
+│   ├── _redirects              # przekierowania routingu
 │   ├── robots.txt
 │   └── sitemap.xml
 ├── assets/img-src/             # źródła obrazów (wejście builda obrazów, poza dist/)
@@ -163,7 +163,7 @@ Repozytorium nie zawiera zapisanych wyników przebiegów testów.
 Repozytorium zawiera konfigurację dla statycznego hostingu:
 
 - `_headers` definiuje nagłówki bezpieczeństwa, CSP oraz cache dla `/assets/*` i plików HTML.
-- `_redirects` obsługuje slash redirects dla publicznych podstron, ścieżki assetów oraz fallback `/* /index.html 200`.
+- `_redirects` obsługuje slash redirects dla publicznych podstron oraz ścieżki assetów. Nie zawiera fallbacku typu SPA: publiczne podstrony są realnymi dokumentami, a aplikacja demonstracyjna działa w hashu, więc nieznane adresy nie są przepisywane na `/index.html` i trafiają do obsługi strony błędu `404.html`.
 - `robots.txt` i `sitemap.xml` wskazują kanoniczną domenę `https://saas-pr02-fleetops.netlify.app/`.
 
 Publikowanym artefaktem builda jest katalog `dist/`. Repozytorium zawiera konfigurację wdrożenia, ale nie zawiera potwierdzenia aktywnego środowiska produkcyjnego.
@@ -323,7 +323,7 @@ Tooling:
 │   ├── assets/                 # favicons, font, icons, logos, images, OG, screenshots
 │   ├── sw.js                   # service worker
 │   ├── _headers                # static hosting headers
-│   ├── _redirects              # redirects and routing fallback
+│   ├── _redirects              # routing redirects
 │   ├── robots.txt
 │   └── sitemap.xml
 ├── assets/img-src/             # image sources (build input, excluded from dist/)
@@ -410,7 +410,7 @@ The repository does not contain recorded test run results.
 The repository contains static hosting configuration:
 
 - `_headers` defines security headers, CSP, and cache rules for `/assets/*` and HTML files.
-- `_redirects` handles slash redirects for public subpages, asset paths, and the `/* /index.html 200` fallback.
+- `_redirects` handles slash redirects for public subpages and asset paths. It contains no SPA-style fallback: the public subpages are real documents and the demo application runs in the hash, so unknown addresses are not rewritten to `/index.html` and are left to the `404.html` error-page handling.
 - `robots.txt` and `sitemap.xml` point to the canonical domain `https://saas-pr02-fleetops.netlify.app/`.
 
 The publishable build artifact is the `dist/` directory. The repository contains deployment configuration but no confirmation of an active production environment.
