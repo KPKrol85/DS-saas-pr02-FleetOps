@@ -105,7 +105,7 @@
           <div class="page-hero__content">
             <p class="tag">Kontakt</p>
             <h1 class="page-hero__title">Kontakt</h1>
-            <p class="page-hero__lead">Formularz na tej stronie jest demonstracyjny i nie wysyła danych. W sprawie demo, wdrożenia lub zakresu funkcji skorzystaj z adresu e-mail lub telefonu.</p>
+            <p class="page-hero__lead">Napisz przez formularz kontaktowy albo skorzystaj z adresu e-mail lub telefonu. FleetOps pozostaje projektem demonstracyjnym, ale wiadomości z formularza trafiają do KP_Code Digital Studio.</p>
           </div>
 
           <div class="page-hero__mark" aria-hidden="true" role="presentation">
@@ -117,14 +117,39 @@
         <div class="grid grid--contact">
           <div class="contact-form">
             <h2 class="contact-form__title">Formularz kontaktowy</h2>
-            <p class="contact-form__lead">Formularz pokazuje wyłącznie działanie interfejsu: walidację pól i komunikat po zatwierdzeniu.</p>
+            <p class="contact-form__lead">Formularz służy do kontaktu w sprawie projektu FleetOps, podobnych wdrożeń SaaS i współpracy z KP_Code Digital Studio.</p>
             <p class="contact-form__note">
-              Formularz demonstracyjny — wpisane dane nie są wysyłane ani zapisywane jako zapytanie kontaktowe i nikt ich nie otrzymuje. Aby nawiązać kontakt, skorzystaj z adresu
+              Wiadomość wysłana tym formularzem trafia do KP_Code Digital Studio i służy wyłącznie obsłudze zapytania — zasady przetwarzania danych opisuje
+              <a class="contact-form__note-link" href="/privacy/">Polityka prywatności</a>.
+              Możesz też napisać bezpośrednio na adres
               <a class="contact-form__note-link" href="mailto:kontakt@kp-code.pl">kontakt@kp-code.pl</a>
-              lub telefonu
+              lub zadzwonić pod numer
               <a class="contact-form__note-link" href="tel:+48533537091">+48 533 537 091</a>.
             </p>
-            <form id="contactForm" class="contact-form__body">
+            <!--
+              Netlify Forms contract: `name`, `method="POST"` and `data-netlify`
+              are what the provider parses out of the deployed static HTML at
+              build time, so the form is detected without any runtime-generated
+              markup. The hidden `form-name` field carries the same identifier in
+              the request body, which is what the JavaScript submission in
+              `scripts/main.js` posts. Without JavaScript the form still submits
+              natively to its own URL and Netlify handles it.
+            -->
+            <form
+              id="contactForm"
+              class="contact-form__body"
+              name="fleetops-contact"
+              method="POST"
+              data-netlify="true"
+              data-netlify-honeypot="bot-field"
+            >
+              <input type="hidden" name="form-name" value="fleetops-contact" />
+              <p class="contact-form__honeypot" aria-hidden="true">
+                <label>
+                  Nie wypełniaj tego pola
+                  <input name="bot-field" type="text" tabindex="-1" autocomplete="off" />
+                </label>
+              </p>
               <label class="form-control">
                 <span class="label">Imię i nazwisko</span>
                 <input class="input" name="name" type="text" required minlength="3" placeholder="Jan Kowalski" />
@@ -148,12 +173,12 @@
               </label>
               <div class="form-control">
                 <span class="label">Potwierdzenie</span>
-                <label class="checkbox-control" for="contactDemoAck">
-                  <input id="contactDemoAck" name="demoAck" type="checkbox" required />
-                  <span>Rozumiem, że to formularz demonstracyjny i wpisane dane nie zostaną nikomu wysłane.</span>
+                <label class="checkbox-control" for="contactPrivacyAck">
+                  <input id="contactPrivacyAck" name="privacyAck" type="checkbox" required />
+                  <span>Przyjmuję do wiadomości, że przesłane dane posłużą do obsługi zapytania na zasadach opisanych w <a class="contact-form__note-link" href="/privacy/">Polityce prywatności</a>.</span>
                 </label>
               </div>
-              <button class="button button--primary" type="submit">Sprawdź formularz demo</button>
+              <button id="contactSubmit" class="button button--primary" type="submit">Wyślij wiadomość</button>
             </form>
           </div>
           <div class="contact-panel">
@@ -208,19 +233,19 @@
           <div class="accordion-item">
             <button class="accordion-header">Jak nawiązać kontakt w sprawie projektu?<span aria-hidden="true">▾</span></button>
             <div class="accordion-content">
-              <p class="accordion-text">Przez adres kontakt@kp-code.pl lub numer +48 533 537 091. Formularz na tej stronie jest demonstracyjny i nie przekazuje wpisanych danych, więc nie zastępuje wiadomości e-mail ani telefonu.</p>
+              <p class="accordion-text">Przez formularz na tej stronie, adres kontakt@kp-code.pl lub numer +48 533 537 091. Wiadomość z formularza trafia do KP_Code Digital Studio, a e-mail i telefon pozostają równorzędnymi kanałami kontaktu.</p>
             </div>
           </div>
           <div class="accordion-item">
             <button class="accordion-header">Czy formularz dotyczy prawdziwego wdrożenia FleetOps?<span aria-hidden="true">▾</span></button>
             <div class="accordion-content">
-              <p class="accordion-text">FleetOps jest projektem demonstracyjnym i formularz również — pokazuje wyłącznie działanie interfejsu. W sprawie podobnego panelu, strony firmowej lub rozwiązania SaaS napisz na adres kontakt@kp-code.pl.</p>
+              <p class="accordion-text">FleetOps pozostaje projektem demonstracyjnym i nie jest produkcyjną usługą transportową, natomiast sam formularz jest prawdziwym kanałem kontaktu. Wiadomość trafia do KP_Code Digital Studio i może dotyczyć projektu FleetOps, podobnego panelu, strony firmowej lub innego rozwiązania SaaS.</p>
             </div>
           </div>
           <div class="accordion-item">
             <button class="accordion-header">Czy można omówić podobny panel dla własnej firmy?<span aria-hidden="true">▾</span></button>
             <div class="accordion-content">
-              <p class="accordion-text">Tak. Wystarczy opisać w wiadomości e-mail branżę, cele i najważniejsze funkcje, a kontakt wróci z propozycją kierunku, zakresu i możliwego sposobu realizacji.</p>
+              <p class="accordion-text">Tak. Wystarczy opisać w formularzu lub w wiadomości e-mail branżę, cele i najważniejsze funkcje, a kontakt wróci z propozycją kierunku, zakresu i możliwego sposobu realizacji.</p>
             </div>
           </div>
           <div class="accordion-item">

@@ -144,6 +144,49 @@ async function expectCrudErrorsLinked(page, scenario) {
   await dialog.getByRole("button", { name: "Anuluj" }).click();
 }
 
+const CONTACT_SUBMIT_LABEL = "Wyślij wiadomość";
+const CONTACT_MESSAGE = "Opis potrzeb operacyjnych floty na potrzeby testu formularza.";
+
+async function fillContactForm(page) {
+  const form = page.locator("#contactForm");
+
+  await form.getByLabel("Imię i nazwisko").fill("Jan Kowalski");
+  await form.getByLabel("E-mail służbowy").fill("jan.kowalski@firma.pl");
+  await form.getByLabel("Wielkość floty").selectOption("16-60");
+  await form.getByLabel("Wiadomość").fill(CONTACT_MESSAGE);
+  await form.locator("#contactPrivacyAck").check();
+
+  return form;
+}
+
+// The contact form posts to the hosting provider's form ingestion, so both
+// contact tests intercept that request. Nothing leaves the browser and no real
+// submission is ever created.
+async function interceptContactSubmission(page, respond) {
+  const submissions = [];
+
+  await page.route(
+    (url) => url.pathname === "/",
+    async (route) => {
+      const request = route.request();
+      if (request.method() !== "POST") {
+        await route.continue();
+        return;
+      }
+
+      submissions.push({
+        method: request.method(),
+        contentType: request.headers()["content-type"] || "",
+        body: request.postData() || "",
+      });
+
+      await respond(route);
+    }
+  );
+
+  return submissions;
+}
+
 test("landing loads and demo login reaches the app shell", async ({ page }) => {
   await openFresh(page);
   await expect(page.locator("#app")).not.toBeEmpty();
@@ -949,42 +992,115 @@ test("collapsed FAQ accordion panels are hidden from the accessibility tree and 
     .toBe(true);
 });
 
-test("public contact form discloses that it is a demo and its submit transmits nothing", async ({ page }) => {
+test("public contact form submits its Netlify Forms contract and confirms only a successful response", async ({ page }) => {
   await openFresh(page, "/contact/");
 
-  // The disclosure is readable before the demo action is activated.
-  const note = page.locator(".contact-form__note");
-  await expect(note).toBeVisible();
-  await expect(note).toContainText("Formularz demonstracyjny");
-  await expect(note).toContainText("nie są wysyłane");
-  await expect(note.locator('a[href="mailto:kontakt@kp-code.pl"]')).toBeVisible();
-
+  // The provider parses this metadata out of the deployed document, so it has to
+  // exist in the served HTML rather than being created at runtime.
   const form = page.locator("#contactForm");
-  const name = form.getByLabel("Imię i nazwisko");
-  const email = form.getByLabel("E-mail służbowy");
-  const message = form.getByLabel("Wiadomość");
+  await expect(form).toHaveAttribute("name", "fleetops-contact");
+  await expect(form).toHaveAttribute("method", /^post$/i);
+  await expect(form).toHaveAttribute("data-netlify", "true");
+  await expect(form).toHaveAttribute("data-netlify-honeypot", "bot-field");
+  await expect(form.locator('input[type="hidden"][name="form-name"]')).toHaveValue("fleetops-contact");
 
-  await name.fill("Jan Kowalski");
-  await email.fill("jan.kowalski@firma.pl");
-  await form.getByLabel("Wielkość floty").selectOption("16-60");
-  await message.fill("Opis potrzeb operacyjnych floty na potrzeby testu formularza.");
-  await form.locator("#contactDemoAck").check();
+  // The honeypot has to stay a rendered control for the provider, so it is
+  // clipped rather than removed, and kept out of the accessibility tree and the
+  // tab order instead.
+  const honeypot = form.locator('input[name="bot-field"]');
+  await expect(honeypot).toHaveValue("");
+  await expect(honeypot).toHaveAttribute("tabindex", "-1");
 
-  await form.getByRole("button", { name: "Sprawdź formularz demo" }).click();
+  const honeypotWrapper = form.locator(".contact-form__honeypot");
+  await expect(honeypotWrapper).toHaveAttribute("aria-hidden", "true");
+  const honeypotBox = await honeypotWrapper.boundingBox();
+  expect(honeypotBox.width).toBeLessThanOrEqual(1);
+  expect(honeypotBox.height).toBeLessThanOrEqual(1);
 
-  const statusRegion = page.locator("#fleetops-toast-status");
-  await expect(statusRegion).toContainText("Formularz demonstracyjny");
-  await expect(statusRegion).toContainText("dane nie zostały wysłane");
-  const confirmation = (await statusRegion.textContent()) || "";
-  expect(confirmation).not.toMatch(/dziękujemy|odezw|odpowie|w ciągu/i);
+  // The response is held so the pending state can be observed before it resolves.
+  let releaseSubmission;
+  const heldSubmission = new Promise((resolve) => {
+    releaseSubmission = resolve;
+  });
 
-  // A prevented submit neither navigates nor discards what the user typed.
+  const submissions = await interceptContactSubmission(page, async (route) => {
+    await heldSubmission;
+    await route.fulfill({ status: 200, contentType: "text/html", body: "<!doctype html><title>OK</title>" });
+  });
+
+  await fillContactForm(page);
+
+  const submit = page.locator("#contactSubmit");
+  await submit.click();
+
+  // While the request is in flight the control is unusable, which is what makes
+  // a duplicate submission impossible.
+  await expect(submit).toBeDisabled();
+  await expect(submit).toHaveText("Wysyłanie…");
+  await expect(form).toHaveAttribute("aria-busy", "true");
+
+  // Nothing is claimed before the provider has answered: no toast exists yet.
+  await expect(page.locator("#fleetops-toast-status")).toHaveCount(0);
+
+  releaseSubmission();
+
+  await expect(page.locator("#fleetops-toast-status")).toContainText("Wiadomość została wysłana.");
+
+  expect(submissions).toHaveLength(1);
+  expect(submissions[0].method).toBe("POST");
+  expect(submissions[0].contentType).toContain("application/x-www-form-urlencoded");
+
+  const payload = new URLSearchParams(submissions[0].body);
+  expect(payload.get("form-name")).toBe("fleetops-contact");
+  expect(payload.get("name")).toBe("Jan Kowalski");
+  expect(payload.get("email")).toBe("jan.kowalski@firma.pl");
+  expect(payload.get("fleet")).toBe("16-60");
+  expect(payload.get("message")).toBe(CONTACT_MESSAGE);
+  expect(payload.get("bot-field")).toBe("");
+
+  // A confirmed success is the only thing that clears the form, acknowledgement
+  // included, and the control returns to its idle state.
+  await expect(form.getByLabel("Imię i nazwisko")).toHaveValue("");
+  await expect(form.getByLabel("E-mail służbowy")).toHaveValue("");
+  await expect(form.getByLabel("Wiadomość")).toHaveValue("");
+  await expect(form.locator("#contactPrivacyAck")).not.toBeChecked();
+  await expect(submit).toBeEnabled();
+  await expect(submit).toHaveText(CONTACT_SUBMIT_LABEL);
+  await expect(form).toHaveAttribute("aria-busy", "false");
   await expect(page).toHaveURL(/\/contact\/$/);
-  await expect(name).toHaveValue("Jan Kowalski");
-  await expect(email).toHaveValue("jan.kowalski@firma.pl");
-  await expect(message).toHaveValue("Opis potrzeb operacyjnych floty na potrzeby testu formularza.");
+});
 
-  // The genuine contact channels stay available alongside the demo form.
+test("a contact submission the provider rejects is reported as an error and keeps the typed message", async ({ page }) => {
+  await openFresh(page, "/contact/");
+
+  // A fulfilled response carrying an error status is the case a `.catch()`-only
+  // implementation would present as a successful submission.
+  const submissions = await interceptContactSubmission(page, async (route) => {
+    await route.fulfill({ status: 500, contentType: "text/plain", body: "Internal Server Error" });
+  });
+
+  const form = await fillContactForm(page);
+  const submit = page.locator("#contactSubmit");
+  await submit.click();
+
+  await expect(page.locator("#fleetops-toast-alert")).toContainText("Nie udało się potwierdzić wysłania wiadomości.");
+  expect(submissions).toHaveLength(1);
+
+  // No success is announced anywhere, and what the user typed survives.
+  await expect(page.locator("#fleetops-toast-status")).toHaveText("");
+  await expect(page.locator(".toast-container")).not.toContainText("Wiadomość została wysłana.");
+  await expect(form.getByLabel("Imię i nazwisko")).toHaveValue("Jan Kowalski");
+  await expect(form.getByLabel("E-mail służbowy")).toHaveValue("jan.kowalski@firma.pl");
+  await expect(form.getByLabel("Wiadomość")).toHaveValue(CONTACT_MESSAGE);
+  await expect(form.locator("#contactPrivacyAck")).toBeChecked();
+
+  // The control is usable again so the message can be sent once more.
+  await expect(submit).toBeEnabled();
+  await expect(submit).toHaveText(CONTACT_SUBMIT_LABEL);
+  await expect(form).toHaveAttribute("aria-busy", "false");
+  await expect(page).toHaveURL(/\/contact\/$/);
+
+  // The published fallback channels stay available on the page.
   await expect(page.locator('.contact-panel__link[href="mailto:kontakt@kp-code.pl"]')).toBeVisible();
   await expect(page.locator('.contact-panel__link[href="tel:+48533537091"]')).toBeVisible();
 });

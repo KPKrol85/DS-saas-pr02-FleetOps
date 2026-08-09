@@ -210,8 +210,22 @@
 
 ## Deferred work
 
-- [ ] **D-01 — Real contact-form submission endpoint**
-  - **Reason:** the project is intentionally frontend-only with no backend; `PH6-01` resolves the disclosure mismatch without introducing one
+- [ ] **D-01 — Real contact-form submission via Netlify Forms**
+  - **Decision:** the previous deferral reason — the project is intentionally frontend-only with no backend — was resolved by choosing a managed provider instead of building one. The architecture is `contact/index.html` → same-origin `POST /` → Netlify Forms submission storage → provider-side e-mail notification configured in the Netlify UI. The notification recipient is the internal operational address `kpkrol85@gmail.com`, which is a provider-side setting only: it must not appear in page content, form markup, the README or any other user-facing documentation, and it does not replace the published `kontakt@kp-code.pl` and telephone channels the site offers. No custom backend, database, serverless function, API key or environment secret is introduced, and the transport stays same-origin so the planned `O-03` `form-action 'self'` hardening remains compatible
+  - **Supersedes:** the demo-only submission limitation `PH6-01` documented. `PH6-01` stays completed and historically correct for the implementation it described: it removed a fake success claim from a form with no transport. D-01 removes the limitation itself, and keeps the same honesty standard — the confirmation is shown only after a successful provider response
+  - Implemented in the repository:
+    - [x] replace the demo-only form contract with Netlify Forms markup — `#contactForm` now carries `name="fleetops-contact"`, `method="POST"`, `data-netlify="true"` and `data-netlify-honeypot="bot-field"`, plus a hidden `form-name` field with the same identifier, so the provider detects the form by parsing the deployed static HTML and no metadata depends on runtime-generated markup. Without JavaScript the form still submits natively to its own URL
+    - [x] implement real AJAX-enhanced submission with honest success/error states — `bindStaticContactForm` (`scripts/main.js`) validates with `checkValidity()`/`reportValidity()`, then posts `application/x-www-form-urlencoded` data built from the form itself to the same-origin `/` endpoint. Only `response.ok` produces the success toast and the `form.reset()`; a rejected request and any error status both take the assertive error path, which keeps every typed value and repeats the `kontakt@kp-code.pl` and telephone channels. One request at a time: the submit control is disabled and relabelled `Wysyłanie…` with `aria-busy` on the form, and the idle state is restored on both outcomes
+    - [x] add provider-compatible honeypot protection — the documented `bot-field` input is clipped by `.contact-form__honeypot` rather than `display: none`, and stays out of the accessibility tree and the tab order through `aria-hidden="true"` and `tabindex="-1"`. No CAPTCHA was added
+    - [x] align contact copy, privacy documentation and automated verification — the contact hero, form lead, form note, acknowledgement checkbox, submit label and three FAQ answers no longer state that the form transmits nothing; the acknowledgement became `privacyAck` linking to `/privacy/`; privacy sections 3, 4, 7 and 8 describe the real processing chain and the policy date moved to `09.08.2026`; `terms/index.html` section 6 dropped the browser-only claim
+    - [x] verify the focused test and the production build locally — two Playwright contact tests replace the obsolete demo-disclosure test and intercept the submission transport, so the suite creates no real Netlify entries
+  - Remaining external steps — the project owner, in the Netlify account:
+    - [ ] deploy the updated production artifact to the linked FleetOps Netlify site
+    - [ ] confirm Netlify detects the `fleetops-contact` form
+    - [ ] configure form-submission notifications to `kpkrol85@gmail.com`
+    - [ ] perform one controlled live production submission
+    - [ ] confirm the submission appears in Netlify Forms and the notification reaches `kpkrol85@gmail.com`
+  - **Completion condition:** the application-side integration is implemented and locally verified, the production deployment is completed, Netlify detects the named form, the e-mail notification is configured, one controlled real submission is received in Netlify, and the corresponding notification arrives at the configured internal recipient `kpkrol85@gmail.com`. The repository work alone does not prove the managed endpoint is operational, so this item stays open until the five external steps above are confirmed
 
 ## Optional future improvements
 

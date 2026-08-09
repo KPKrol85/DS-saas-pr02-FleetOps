@@ -436,6 +436,21 @@
   gap: var(--space-3);
 }
 
+/* Netlify Forms honeypot. The field has to stay a real, rendered control that a
+   submitting bot can find, so it is clipped out of view instead of removed with
+   `display: none`; `aria-hidden` and `tabindex="-1"` on the markup keep it out of
+   the accessibility tree and the tab order. */
+.contact-form__honeypot {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
 .contact-panel {
   display: grid;
   gap: var(--space-4);

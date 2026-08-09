@@ -75,21 +75,77 @@ import { getMotionSafeScrollBehavior } from "./utils/dom.js";
     });
   };
 
+  // Netlify Forms ingests submissions posted to the site itself, so the enhanced
+  // path stays same-origin and needs no endpoint of the project's own. The
+  // provider accepts URL-encoded bodies only, and the form identifier travels in
+  // the body through the hidden `form-name` field declared in the document.
+  const CONTACT_ENDPOINT = "/";
+  const CONTACT_ENCODING = "application/x-www-form-urlencoded";
+
   const bindStaticContactForm = () => {
     const form = document.getElementById("contactForm");
     if (!form) return;
 
+    const submitButton = form.querySelector('button[type="submit"]');
+    const idleLabel = submitButton ? submitButton.textContent : "";
+    let pending = false;
+
+    const setPending = (isPending) => {
+      pending = isPending;
+      form.setAttribute("aria-busy", isPending ? "true" : "false");
+      if (!submitButton) return;
+      submitButton.disabled = isPending;
+      submitButton.textContent = isPending ? "Wysyłanie…" : idleLabel;
+    };
+
     form.addEventListener("submit", (event) => {
+      // Replacing the native navigation is an enhancement: the document keeps
+      // `method="POST"` and the Netlify metadata, so a browser that never runs
+      // this handler still submits the form natively to the same provider.
       event.preventDefault();
+
+      // One request at a time. The disabled control already blocks the pointer
+      // path; this also covers a submit reaching the form by any other route.
+      if (pending) return;
+
       if (!form.checkValidity()) {
         form.reportValidity();
         Toast.show("Uzupełnij wymagane pola.", "warning", { assertive: true });
         return;
       }
-      // The form is a UI demonstration with no transport, so the confirmation
-      // states that nothing was sent and the entered values are kept for the
-      // user to copy into a real message instead of being cleared.
-      Toast.show("Formularz demonstracyjny - dane nie zostały wysłane. Kontakt: kontakt@kp-code.pl lub +48 533 537 091.");
+
+      setPending(true);
+
+      fetch(CONTACT_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": CONTACT_ENCODING },
+        body: new URLSearchParams(new FormData(form)).toString(),
+      })
+        .then((response) => {
+          // Only a successful response proves the provider accepted the
+          // submission. A fulfilled request carrying an error status is a
+          // failure, so it must not reach the confirmation below.
+          if (!response.ok) {
+            throw new Error(`Contact form submission rejected with HTTP ${response.status}`);
+          }
+
+          // The values are cleared only once sending is confirmed; the
+          // acknowledgement checkbox is reset with them.
+          form.reset();
+          Toast.show("Wiadomość została wysłana.", "success");
+        })
+        .catch((error) => {
+          // A rejected request and an error status land here alike. The typed
+          // values are deliberately left in place so the message is not lost,
+          // and the published channels stay the stated alternative.
+          console.warn("[FleetOps] Contact form submission failed", error);
+          Toast.show(
+            "Nie udało się potwierdzić wysłania wiadomości. Spróbuj ponownie lub napisz na kontakt@kp-code.pl albo zadzwoń +48 533 537 091.",
+            "warning",
+            { assertive: true }
+          );
+        })
+        .finally(() => setPending(false));
     });
   };
 

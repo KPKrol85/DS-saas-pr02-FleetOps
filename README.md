@@ -6,11 +6,12 @@
 
 FleetOps to statyczny, frontend-only projekt demonstracyjny typu SaaS dla operacji transportowych i flotowych. Repozytorium zawiera publiczną stronę marketingową, statyczne podstrony informacyjne oraz hash-routowany panel demo działający na lokalnych danych przykładowych.
 
-Projekt jest częścią portfolio KP_Code Digital Studio i nie zawiera backendu, bazy danych, realnej autoryzacji ani produkcyjnych integracji z systemami zewnętrznymi.
+Projekt jest częścią portfolio KP_Code Digital Studio i nie zawiera własnego backendu, bazy danych, realnej autoryzacji ani produkcyjnych integracji z systemami zewnętrznymi. Jedynym wyjściem poza przeglądarkę jest publiczny formularz kontaktowy, którego zgłoszenia przyjmuje Netlify Forms — usługa dostawcy hostingu, a nie backend napisany w tym projekcie.
 
 ### Kluczowe funkcje
 
 - Publiczne strony: landing page, produkt, funkcje, cennik, o nas, kontakt, bezpieczeństwo, kariera, polityka prywatności, regulamin, polityka cookies oraz strona 404.
+- Publiczny formularz kontaktowy obsługiwany przez Netlify Forms: wykrywanie formularza ze statycznego HTML, wysyłka AJAX na tym samym origin, honeypot antyspamowy, stan wysyłania oraz komunikat sukcesu wyłącznie po potwierdzonej odpowiedzi dostawcy.
 - Panel demo pod trasami `#/app`, `#/app/orders`, `#/app/fleet`, `#/app/drivers`, `#/app/reports` i `#/app/settings`.
 - Demo logowania zapisujące stan lokalnie w przeglądarce, z powrotem do żądanej trasy po zalogowaniu.
 - Lokalne role demo: administrator, dyspozytor i kierowca, z ograniczeniami akcji w module uprawnień.
@@ -165,6 +166,7 @@ Repozytorium zawiera konfigurację dla statycznego hostingu:
 - `_headers` definiuje nagłówki bezpieczeństwa, CSP oraz cache dla `/assets/*` i plików HTML.
 - `_redirects` obsługuje slash redirects dla publicznych podstron oraz ścieżki assetów. Nie zawiera fallbacku typu SPA: publiczne podstrony są realnymi dokumentami, a aplikacja demonstracyjna działa w hashu, więc nieznane adresy nie są przepisywane na `/index.html` i trafiają do obsługi strony błędu `404.html`.
 - `robots.txt` i `sitemap.xml` wskazują kanoniczną domenę `https://saas-pr02-fleetops.netlify.app/`.
+- Publiczny formularz kontaktowy w `contact/index.html` jest wykrywany przez Netlify Forms podczas wdrożenia na podstawie statycznego HTML: `name="fleetops-contact"`, `method="POST"`, `data-netlify="true"` oraz ukryte pole `form-name`. Włączenie wykrywania formularzy i konfiguracja powiadomień o zgłoszeniach należą do konta Netlify i nie są częścią repozytorium.
 
 Publikowanym artefaktem builda jest katalog `dist/`. Repozytorium zawiera konfigurację wdrożenia, ale nie zawiera potwierdzenia aktywnego środowiska produkcyjnego.
 
@@ -232,7 +234,7 @@ Repozytorium nie zawiera zmierzonych wyników wydajności.
 - Reset danych demo (`FleetStore.resetDemo()`) przywraca dane domenowe i historię aktywności do stanu z `scripts/data/seed.js` oraz ustawia preferencje na wartości domyślne: motyw jasny, tryb kompaktowy wyłączony, zakres dashboardu 30 dni, domyślne filtry i preferencje list. Stan logowania demo i aktualny użytkownik są zachowywane, a `fleet-last-route` pozostaje poza zakresem resetu.
 - Klucze `fleet-offline-queue` i `fleet-intended-route` nie są przez implementację zapisywane — występują wyłącznie w kodzie usuwającym nieaktualne dane z przeglądarki.
 - Raporty można wyeksportować lokalnie do pliku `fleetops-reports.json`.
-- Projekt nie ma kont użytkowników, backendu, bazy danych ani synchronizacji między urządzeniami. Dane istnieją tylko w przeglądarce.
+- Projekt nie ma kont użytkowników, własnego backendu, bazy danych ani synchronizacji między urządzeniami. Dane demo istnieją wyłącznie w przeglądarce; poza nimi opuszczają ją tylko zgłoszenia z publicznego formularza kontaktowego, przekazywane do Netlify Forms.
 
 ### Utrzymanie projektu
 
@@ -258,11 +260,12 @@ Projekt jest objęty Własnościową Licencją Projektu KP_CODE (wersja 1.0). Pe
 
 FleetOps is a static, frontend-only SaaS-style demo project for transport and fleet operations. The repository contains a public marketing site, static informational subpages, and a hash-routed demo dashboard running on local sample data.
 
-The project is part of the KP_Code Digital Studio portfolio and does not include a backend, database, real authentication, or production integrations with external systems.
+The project is part of the KP_Code Digital Studio portfolio and does not include a backend of its own, a database, real authentication, or production integrations with external systems. The one path that leaves the browser is the public contact form, whose submissions are received by Netlify Forms — a hosting provider service, not a backend written in this project.
 
 ### Key Features
 
 - Public pages: landing page, product, features, pricing, about, contact, security, careers, privacy policy, terms, cookies policy, and 404 page.
+- Public contact form handled by Netlify Forms: form detection from the static HTML, same-origin AJAX submission, an anti-spam honeypot, a submitting state, and a success message only after a confirmed provider response.
 - Demo dashboard under `#/app`, `#/app/orders`, `#/app/fleet`, `#/app/drivers`, `#/app/reports`, and `#/app/settings`.
 - Demo login that stores state locally in the browser and returns to the requested route after sign-in.
 - Local demo roles: administrator, dispatcher, and driver, with action restrictions in the permissions module.
@@ -417,6 +420,7 @@ The repository contains static hosting configuration:
 - `_headers` defines security headers, CSP, and cache rules for `/assets/*` and HTML files.
 - `_redirects` handles slash redirects for public subpages and asset paths. It contains no SPA-style fallback: the public subpages are real documents and the demo application runs in the hash, so unknown addresses are not rewritten to `/index.html` and are left to the `404.html` error-page handling.
 - `robots.txt` and `sitemap.xml` point to the canonical domain `https://saas-pr02-fleetops.netlify.app/`.
+- The public contact form in `contact/index.html` is detected by Netlify Forms at deploy time from the static HTML: `name="fleetops-contact"`, `method="POST"`, `data-netlify="true"`, and the hidden `form-name` field. Enabling form detection and configuring submission notifications belong to the Netlify account and are not part of the repository.
 
 The publishable build artifact is the `dist/` directory. The repository contains deployment configuration but no confirmation of an active production environment.
 
@@ -484,7 +488,7 @@ The repository does not contain measured performance scores.
 - The demo data reset (`FleetStore.resetDemo()`) restores the domain data and the activity history to the state from `scripts/data/seed.js` and returns preferences to their defaults: light theme, compact mode off, a 30-day dashboard range, default filters and list preferences. The demo login state and the current demo user are preserved, and `fleet-last-route` stays outside the reset scope.
 - The keys `fleet-offline-queue` and `fleet-intended-route` are not written by the implementation — they appear only in code that removes stale data from the browser.
 - Reports can be exported locally to a `fleetops-reports.json` file.
-- The project has no user accounts, backend, database, or cross-device synchronization. Data exists only in the browser.
+- The project has no user accounts, backend of its own, database, or cross-device synchronization. Demo data exists only in the browser; the only thing that leaves it is a public contact form submission, which is passed to Netlify Forms.
 
 ### Project Maintenance
 
