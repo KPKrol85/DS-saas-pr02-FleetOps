@@ -124,11 +124,11 @@
   - **Completion condition:** every enabled control in the application top bar performs an observable action or communicates its unavailability — met, verified by the added Playwright test `tests/smoke.spec.js` ("app topbar search and alerts are demo-disabled while the adjacent controls stay operable"), which asserts both disabled states and their titles and then confirms the adjacent role switcher and user menu still operate; `npm run qa:css-vars` passes
   - **Source:** `AUDIT.md` — P2-05
 
-- [ ] **PH5-03 — Require confirmation before the demo reset** — **Priority:** Medium
-  - [ ] route `resetDemo` through the existing confirmation modal (`scripts/ui/views/settingsView.js:113-119,224-230`)
-  - [ ] state in the confirmation what is cleared, matching the full scope in `scripts/state/store.js:314-345`
-  - [ ] correct the reset card description so it matches that scope
-  - **Completion condition:** activating "Resetuj" requires an explicit confirmation naming the data being cleared
+- [x] **PH5-03 — Require confirmation before the demo reset** — **Priority:** Medium
+  - [x] route `resetDemo` through the existing confirmation modal (`scripts/ui/views/settingsView.js:113-119,224-230`) — the `#resetDemo` handler now opens the shared `Modal` ("Potwierdzenie resetu demo") with the same `modal-actions--confirm` / `data-modal-cancel` / `data-modal-confirm` body used by the orders, fleet and drivers delete confirmations; `FleetStore.resetDemo()` is called only from the confirm handler, and the modal's focus trap, Escape, backdrop dismissal and focus return are unchanged
+  - [x] state in the confirmation what is cleared, matching the full scope in `scripts/state/store.js:314-345` — the modal names zlecenia, pojazdy i kierowcy (including records added in the demo), historia aktywności, filtry oraz preferencje list i tabel, motyw i tryb kompaktowy and zakres raportów, and states that the current session and selected role stay unchanged, matching what `resetDemo` clears and preserves
+  - [x] correct the reset card description so it matches that scope — "Przywraca dane demo do stanu początkowego" became "Przywraca dane demo i preferencje interfejsu do stanu początkowego", with the full consequence list carried by the modal
+  - **Completion condition:** activating "Resetuj" requires an explicit confirmation naming the data being cleared — met, verified by the added Playwright test `tests/smoke.spec.js` ("demo reset runs only after an explicit confirmation that names the reset scope"), which creates a driver, switches the role to `u_disp_1`, asserts the confirmation names the reset scope, cancels and confirms the record survives with no success toast and no redirect, then confirms the reset and asserts the record is gone, the session stays authenticated on `#/app` and the selected role is still `u_disp_1`; `npm run qa:css-vars` passes
   - **Source:** `AUDIT.md` — P2-06
 
 ## Phase 6 — Public content and disclosure integrity

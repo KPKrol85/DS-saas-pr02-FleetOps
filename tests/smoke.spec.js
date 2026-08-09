@@ -621,6 +621,68 @@ test("settings table preferences update persisted list and dense state", async (
   await restoredPage.close();
 });
 
+test("demo reset runs only after an explicit confirmation that names the reset scope", async ({ page }) => {
+  await loginAsDemo(page);
+
+  const driverName = "Reset Confirmation Test";
+  const statusRegion = page.locator("#fleetops-toast-status");
+  const createdDriver = page.locator("tr.driver-row").filter({ hasText: driverName });
+  const roleSwitcher = page.locator("#roleSwitcher");
+
+  // Representative resettable state: one locally created domain record.
+  await page.locator('.sidebar nav a[data-route="/app/drivers"]').click();
+  await expect(page.getByRole("heading", { name: "Kierowcy", level: 1 })).toBeVisible();
+  await page.getByRole("button", { name: "Dodaj kierowcę" }).click();
+  const addDriverDialog = page.getByRole("dialog", { name: "Dodaj kierowcę" });
+  await addDriverDialog.getByLabel("Imię i nazwisko").fill(driverName);
+  await addDriverDialog.getByLabel("Telefon").fill("+48 600 700 800");
+  await addDriverDialog.getByRole("button", { name: "Dodaj kierowcę" }).click();
+  await expect(createdDriver).toHaveCount(1);
+
+  // The reset preserves the selected role, so move away from the default one.
+  await roleSwitcher.selectOption("u_disp_1");
+  await expect(roleSwitcher).toHaveValue("u_disp_1");
+
+  await page.locator('.sidebar nav a[data-route="/app/settings"]').click();
+  await expect(page.getByRole("heading", { name: "Ustawienia", level: 1 })).toBeVisible();
+
+  const resetButton = page.getByRole("button", { name: "Resetuj", exact: true });
+  await resetButton.click();
+
+  const confirmDialog = page.getByRole("dialog", { name: "Potwierdzenie resetu demo" });
+  await expect(confirmDialog).toBeVisible();
+  await expect(confirmDialog).toContainText("zlecenia, pojazdy i kierowcy");
+  await expect(confirmDialog).toContainText("historia aktywności");
+  await expect(confirmDialog).toContainText("filtry oraz preferencje list i tabel");
+  await expect(confirmDialog).toContainText("motyw i tryb kompaktowy");
+  await expect(confirmDialog).toContainText("zakres raportów");
+  await expect(confirmDialog).toContainText("Bez zmian pozostaną aktualna sesja i wybrana rola");
+
+  // Cancelling is a no-op: no reset, no success toast, no redirect.
+  await confirmDialog.getByRole("button", { name: "Anuluj" }).click();
+  await expect(confirmDialog).toHaveCount(0);
+  await expect(page).toHaveURL(/#\/app\/settings$/);
+  await expect(statusRegion).not.toContainText("Demo przywrócone");
+  await page.locator('.sidebar nav a[data-route="/app/drivers"]').click();
+  await expect(createdDriver).toHaveCount(1);
+
+  await page.locator('.sidebar nav a[data-route="/app/settings"]').click();
+  await expect(page.getByRole("heading", { name: "Ustawienia", level: 1 })).toBeVisible();
+  await resetButton.click();
+  await expect(confirmDialog).toBeVisible();
+  await confirmDialog.getByRole("button", { name: "Resetuj dane demo" }).click();
+
+  await expect(statusRegion).toHaveText("Demo przywrócone do stanu początkowego");
+  await expect(page).toHaveURL(/#\/app$/);
+  await expect(page.getByRole("heading", { name: "Przegląd", level: 1 })).toBeVisible();
+
+  // Session and selected role survive the reset; the created record does not.
+  await expect(roleSwitcher).toHaveValue("u_disp_1");
+  await page.locator('.sidebar nav a[data-route="/app/drivers"]').click();
+  await expect(page.getByRole("heading", { name: "Kierowcy", level: 1 })).toBeVisible();
+  await expect(createdDriver).toHaveCount(0);
+});
+
 test("CRUD validation errors are programmatically associated with fields", async ({ page }) => {
   await loginAsDemo(page);
 

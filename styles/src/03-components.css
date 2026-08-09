@@ -517,6 +517,12 @@ textarea[aria-invalid="true"]:focus-visible {
   margin-top: var(--space-3);
 }
 
+.modal-scope-list {
+  margin: var(--space-2) 0;
+  padding-left: var(--space-4);
+  list-style: disc;
+}
+
 /* Dropdown */
 
 .dropdown {

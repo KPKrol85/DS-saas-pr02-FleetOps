@@ -1,6 +1,7 @@
 import { FleetPermissions } from "../../core/permissions.js";
 import { FleetStore } from "../../state/store.js";
 import { dom, escapeHtml, FleetUI } from "../../utils/dom.js";
+import { Modal } from "../components/modal.js";
 import { Toast } from "../components/toast.js";
 
 function settingsView() {
@@ -116,7 +117,7 @@ function settingsView() {
   const resetCard = dom.h("div", "setting-card");
   resetCard.innerHTML = `
     <h3 class="setting-card__title">Reset demo</h3>
-    <p class="setting-card__description">Przywraca dane demo do stanu początkowego</p>
+    <p class="setting-card__description">Przywraca dane demo i preferencje interfejsu do stanu początkowego</p>
     <div class="setting-card__actions">
       <button class="button setting-card__button" type="button" id="resetDemo">Resetuj</button>
     </div>
@@ -226,11 +227,40 @@ function settingsView() {
   });
 
   resetCard.querySelector("#resetDemo").addEventListener("click", () => {
-    FleetStore.resetDemo();
-    syncPageSizeControl();
-    syncDenseControls();
-    Toast.show("Demo przywrócone do stanu początkowego", "success");
-    window.location.hash = "#/app";
+    const body = dom.h("div");
+    body.innerHTML = `
+      <p>Czy na pewno zresetować demo? Tej operacji nie można cofnąć.</p>
+      <p>Do stanu początkowego wrócą:</p>
+      <ul class="modal-scope-list">
+        <li>zlecenia, pojazdy i kierowcy - razem z rekordami dodanymi w demo</li>
+        <li>historia aktywności</li>
+        <li>filtry oraz preferencje list i tabel</li>
+        <li>motyw i tryb kompaktowy</li>
+        <li>zakres raportów</li>
+      </ul>
+      <p>Bez zmian pozostaną aktualna sesja i wybrana rola.</p>
+      <div class="modal-actions modal-actions--confirm">
+        <button class="button button--ghost" type="button" data-modal-cancel>Anuluj</button>
+        <button class="button button--primary" type="button" data-modal-confirm>Resetuj dane demo</button>
+      </div>
+    `;
+
+    body.querySelector("[data-modal-cancel]").addEventListener("click", (e) => {
+      e.preventDefault();
+      Modal.close();
+    });
+
+    body.querySelector("[data-modal-confirm]").addEventListener("click", (e) => {
+      e.preventDefault();
+      FleetStore.resetDemo();
+      syncPageSizeControl();
+      syncDenseControls();
+      Toast.show("Demo przywrócone do stanu początkowego", "success");
+      Modal.close();
+      window.location.hash = "#/app";
+    });
+
+    Modal.open({ title: "Potwierdzenie resetu demo", body });
   });
 
   return root;
