@@ -10,6 +10,10 @@ import { defineConfig } from "vite";
 const htmlEntries = [
   "index.html",
   "404.html",
+  // Offline fallback for failed navigations: a maintained source document rather
+  // than a `public/` passthrough, so it is built like every other page. The service
+  // worker precaches the emitted `dist/offline.html`.
+  "offline.html",
   "product/index.html",
   "features/index.html",
   "pricing/index.html",

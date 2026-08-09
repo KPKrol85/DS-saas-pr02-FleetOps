@@ -1,4 +1,4 @@
-const CACHE_NAME = "fleetops-v1.10";
+const CACHE_NAME = "fleetops-v1.11";
 
 const APP_SHELL_URLS = ["/", "/index.html"];
 const PUBLIC_ROUTE_URLS = [
@@ -13,7 +13,14 @@ const PUBLIC_ROUTE_URLS = [
   "/terms/",
   "/cookies/",
 ];
-const PRECACHE_URLS = Array.from(new Set([...APP_SHELL_URLS, ...PUBLIC_ROUTE_URLS]));
+// Branded fallback for a navigation that genuinely failed. It is deliberately not a
+// `PUBLIC_ROUTE_URLS` entry: it is PWA infrastructure, it is never substituted for a
+// requested route that is cached, and it is never used to answer a fulfilled response.
+const OFFLINE_FALLBACK_URL = "/offline.html";
+
+const PRECACHE_URLS = Array.from(
+  new Set([...APP_SHELL_URLS, ...PUBLIC_ROUTE_URLS, OFFLINE_FALLBACK_URL])
+);
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -119,11 +126,20 @@ function matchNavigationCache(cache, request) {
 // a redirect or a 5xx must reach the browser unchanged. Only a rejected fetch is
 // an actual connectivity failure, so only that case falls back to the cache.
 // `cacheNavigationResponse` decides on its own whether the response may be stored.
+//
+// Recovery order after a rejected request: the document actually requested, then the
+// offline fallback, then a network error if even the precache is unavailable. The
+// fallback body answers the original request, so the requested URL is preserved and
+// no redirect is performed.
 function networkFirstNavigation(request) {
   return caches.open(CACHE_NAME).then((cache) =>
     fetch(request)
       .then((response) => cacheNavigationResponse(cache, request, response).then(() => response))
-      .catch(() => matchNavigationCache(cache, request).then((cached) => cached || Response.error()))
+      .catch(() =>
+        matchNavigationCache(cache, request)
+          .then((cached) => cached || cache.match(OFFLINE_FALLBACK_URL))
+          .then((response) => response || Response.error())
+      )
   );
 }
 

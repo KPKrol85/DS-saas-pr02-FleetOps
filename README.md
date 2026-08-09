@@ -58,6 +58,7 @@ Tooling:
 .
 ├── index.html                  # główna strona i wejście dla aplikacji demo
 ├── 404.html                    # statyczna strona błędu
+├── offline.html                # fallback offline dla nieudanych nawigacji
 ├── product/ features/ pricing/ # publiczne podstrony marketingowe
 ├── about/ contact/ security/ careers/
 ├── privacy/ terms/ cookies/    # podstrony prawne i informacyjne
@@ -202,8 +203,9 @@ Projekt zawiera:
 
 - `public/assets/favicon/site.webmanifest` definiuje `name`, `short_name`, `start_url` `/`, `scope` `/`, `display` `standalone`, ikony 192/512 (w tym warianty maskable), screenshoty oraz skróty do dashboardu, floty i zleceń.
 - `scripts/main.js` rejestruje `/sw.js` po zdarzeniu `load`, gdy przeglądarka wspiera Service Worker API. Rejestracja jest pomijana w trybie developerskim Vite.
-- `sw.js` używa wersjonowanego cache (`fleetops-v1.10`), precache’uje powłokę aplikacji i publiczne trasy, a przy aktywacji usuwa starsze cache z prefiksem `fleetops-`.
-- Nawigacje działają w strategii network-first: spełniona odpowiedź HTTP jest zwracana do przeglądarki bez zmian, również gdy jest to odpowiedź błędu (np. `404`) lub przekierowanie, i taka odpowiedź nie trafia do cache. Fallback do cache uruchamia się dopiero wtedy, gdy samo żądanie sieciowe zostanie odrzucone; przy braku wpisu w cache zwracany jest błąd sieci. Assety statyczne działają w strategii stale-while-revalidate.
+- `sw.js` używa wersjonowanego cache (`fleetops-v1.11`), precache’uje powłokę aplikacji, publiczne trasy oraz dokument offline `/offline.html`, a przy aktywacji usuwa starsze cache z prefiksem `fleetops-`.
+- Nawigacje działają w strategii network-first: spełniona odpowiedź HTTP jest zwracana do przeglądarki bez zmian, również gdy jest to odpowiedź błędu (np. `404`) lub przekierowanie, i taka odpowiedź nie trafia do cache. Odzyskiwanie offline uruchamia się dopiero wtedy, gdy samo żądanie sieciowe zostanie odrzucone: najpierw sprawdzany jest cache żądanego dokumentu, a gdy go tam nie ma, zwracany jest precache’owany `/offline.html` — jako odpowiedź na oryginalne żądanie, bez przekierowania, więc żądany adres pozostaje niezmieniony. Błąd sieci przeglądarki pozostaje wyłącznie ścieżką awaryjną na wypadek, gdyby i dokument offline był niedostępny. Assety statyczne działają w strategii stale-while-revalidate.
+- `offline.html` jest utrzymywanym dokumentem builda i zasobem infrastrukturalnym PWA, nie publiczną podstroną: nie znajduje się na liście tras publicznych, ma `noindex` i jest samowystarczalny — krytyczne style są w samym dokumencie, więc nie wymaga arkusza stylów, skryptu, fontu ani obrazu. Komunikuje wyłącznie brak połączenia: nie sugeruje, że żądany adres nie istnieje, ani że zmiany zostały zakolejkowane lub będą synchronizowane.
 - Wersjonowanie cache w `sw.js` jest utrzymywane ręcznie.
 - Poza cache'em tras i assetów, tryb offline nie jest w żaden sposób symulowany dla zapisu danych: próba dodania, edycji lub usunięcia zlecenia, pojazdu lub kierowcy w trybie offline jest odrzucana, a użytkownik widzi komunikat, że zmiana nie została zapisana i trzeba ją powtórzyć po przywróceniu połączenia (`scripts/state/store.js`).
 
@@ -312,6 +314,7 @@ Tooling:
 .
 ├── index.html                  # main page and demo app entry
 ├── 404.html                    # static error page
+├── offline.html                # offline fallback for failed navigations
 ├── product/ features/ pricing/ # public marketing subpages
 ├── about/ contact/ security/ careers/
 ├── privacy/ terms/ cookies/    # legal and informational subpages
@@ -456,8 +459,9 @@ The project includes:
 
 - `public/assets/favicon/site.webmanifest` defines `name`, `short_name`, `start_url` `/`, `scope` `/`, `display` `standalone`, 192/512 icons (including maskable variants), screenshots, and shortcuts to the dashboard, fleet, and orders.
 - `scripts/main.js` registers `/sw.js` after the `load` event when the browser supports the Service Worker API. Registration is skipped in the Vite development mode.
-- `sw.js` uses a versioned cache (`fleetops-v1.10`), precaches the app shell and public routes, and deletes older `fleetops-` caches on activation.
-- Navigations use a network-first strategy: a fulfilled HTTP response is returned to the browser unchanged, including error responses such as `404` and redirects, and such responses are not cached. The cache fallback runs only when the network request itself fails; a cache miss then returns a network error. Static assets use stale-while-revalidate.
+- `sw.js` uses a versioned cache (`fleetops-v1.11`), precaches the app shell, the public routes, and the offline document `/offline.html`, and deletes older `fleetops-` caches on activation.
+- Navigations use a network-first strategy: a fulfilled HTTP response is returned to the browser unchanged, including error responses such as `404` and redirects, and such responses are not cached. Offline recovery runs only when the network request itself fails: the cache is first checked for the requested document, and when it is not there the precached `/offline.html` is returned — as the response to the original request, with no redirect, so the requested URL stays unchanged. The browser's own network error remains only as the emergency path in case even the offline document is unavailable. Static assets use stale-while-revalidate.
+- `offline.html` is a maintained build entry and a PWA infrastructure resource, not a public subpage: it is absent from the public route list, carries `noindex`, and is self-contained — its critical styles live in the document itself, so it needs no stylesheet, script, font, or image. It communicates connectivity failure only: it does not suggest that the requested URL does not exist, or that changes were queued or will be synchronized.
 - Cache versioning in `sw.js` is maintained manually.
 - Beyond route and asset caching, offline mode is not simulated for data writes in any way: attempting to create, edit, or delete an order, vehicle, or driver while offline is rejected, and the user sees a message that the change was not saved and must be repeated after connectivity returns (`scripts/state/store.js`).
 

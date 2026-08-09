@@ -307,6 +307,28 @@ test.describe("service worker navigation cache", () => {
     expect(response).not.toBeNull();
     expect(response.status()).toBe(404);
   });
+
+  // The counterpart of the test above: a genuinely rejected navigation request with no
+  // cached document for the requested URL must render the precached FleetOps offline
+  // document instead of the browser's own connectivity error page. The fallback answers
+  // the original request, so the requested URL stays in the address bar.
+  test("serves the branded offline fallback for an uncached navigation while offline", async ({ page, context }) => {
+    await page.goto("/");
+    await waitForServiceWorkerControl(page);
+    await context.setOffline(true);
+
+    try {
+      await page.goto("/offline-fallback-probe", { waitUntil: "domcontentloaded" });
+
+      await expect(page).toHaveTitle("Brak połączenia z siecią | FleetOps");
+      await expect(page.getByRole("heading", { name: "Brak połączenia z siecią", level: 1 })).toBeVisible();
+      await expect(page.getByText("FleetOps", { exact: true })).toBeVisible();
+      await expect(page.getByRole("link", { name: "Wróć do FleetOps" })).toHaveAttribute("href", "/");
+      await expect(page).toHaveURL(/\/offline-fallback-probe$/);
+    } finally {
+      await context.setOffline(false);
+    }
+  });
 });
 
 test("static public navigation resets scroll position", async ({ page }) => {
