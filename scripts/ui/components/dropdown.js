@@ -72,5 +72,3 @@ const Dropdown = (() => {
 })();
 
 export { Dropdown };
-
-window.Dropdown = Dropdown;

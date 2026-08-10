@@ -120,5 +120,3 @@ function cancelScheduledHide(content) {
 }
 
 export { Accordion };
-
-window.Accordion = Accordion;

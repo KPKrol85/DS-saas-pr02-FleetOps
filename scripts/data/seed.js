@@ -49,5 +49,3 @@ const FleetSeed = {
 };
 
 export { FleetSeed };
-
-window.FleetSeed = FleetSeed;

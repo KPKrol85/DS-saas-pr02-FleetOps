@@ -267,5 +267,3 @@ function settingsView() {
 }
 
 export { settingsView };
-
-window.settingsView = settingsView;

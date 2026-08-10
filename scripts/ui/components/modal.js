@@ -117,5 +117,3 @@ const Modal = (() => {
 })();
 
 export { Modal };
-
-window.Modal = Modal;

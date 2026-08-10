@@ -57,5 +57,3 @@ function reportsView() {
 }
 
 export { reportsView };
-
-window.reportsView = reportsView;

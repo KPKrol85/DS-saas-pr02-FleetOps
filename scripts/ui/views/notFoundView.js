@@ -17,5 +17,3 @@ function notFoundView() {
 }
 
 export { notFoundView };
-
-window.notFoundView = notFoundView;

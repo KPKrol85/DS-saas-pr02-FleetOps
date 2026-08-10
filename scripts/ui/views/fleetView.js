@@ -562,5 +562,3 @@ function fleetView() {
 }
 
 export { fleetView };
-
-window.fleetView = fleetView;

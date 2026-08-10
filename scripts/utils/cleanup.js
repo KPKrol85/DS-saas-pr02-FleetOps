@@ -30,5 +30,3 @@ const CleanupRegistry = (() => {
 })();
 
 export { CleanupRegistry };
-
-window.CleanupRegistry = CleanupRegistry;

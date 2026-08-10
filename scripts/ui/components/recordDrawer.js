@@ -214,5 +214,3 @@ const RecordDrawer = (() => {
 })();
 
 export { RecordDrawer };
-
-window.RecordDrawer = RecordDrawer;

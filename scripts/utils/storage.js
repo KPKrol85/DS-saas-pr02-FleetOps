@@ -23,5 +23,3 @@ const Storage = {
 };
 
 export { Storage as FleetStorage };
-
-window.FleetStorage = Storage;

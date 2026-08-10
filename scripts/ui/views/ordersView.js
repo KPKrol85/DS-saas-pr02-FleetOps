@@ -650,5 +650,3 @@ function ordersView() {
 }
 
 export { ordersView };
-
-window.ordersView = ordersView;

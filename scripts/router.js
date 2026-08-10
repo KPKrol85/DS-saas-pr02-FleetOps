@@ -213,27 +213,27 @@ function routeTo(hash) {
       renderLogin();
       break;
     case "/app":
-      renderAppShell("Przegląd", dashboardView());
+      renderAppShell("Przegląd", dashboardView(), { routeTo });
       break;
     case "/app/orders":
-      renderAppShell("Zlecenia", ordersView());
+      renderAppShell("Zlecenia", ordersView(), { routeTo });
       break;
     case "/app/fleet":
-      renderAppShell("Flota", fleetView());
+      renderAppShell("Flota", fleetView(), { routeTo });
       break;
     case "/app/drivers":
-      renderAppShell("Kierowcy", driversView());
+      renderAppShell("Kierowcy", driversView(), { routeTo });
       break;
     case "/app/reports":
-      renderAppShell("Raporty", reportsView());
+      renderAppShell("Raporty", reportsView(), { routeTo });
       break;
     case "/app/settings":
-      renderAppShell("Ustawienia", settingsView());
+      renderAppShell("Ustawienia", settingsView(), { routeTo });
       break;
     default:
       if (path.startsWith("/app")) {
         renderedLabel = "Nie znaleziono";
-        renderAppShell("Nie znaleziono", notFoundView());
+        renderAppShell("Nie znaleziono", notFoundView(), { routeTo });
       } else {
         // Public pages are static documents, not hash routes: anything that is
         // neither `/login` nor an `/app` route belongs to the public site.
@@ -251,5 +251,3 @@ function routeTo(hash) {
 const FleetRouter = { routeTo };
 
 export { FleetRouter, routeTo };
-
-window.FleetRouter = FleetRouter;

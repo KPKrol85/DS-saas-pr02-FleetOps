@@ -6,7 +6,7 @@ import { format } from "../utils/format.js";
 import { Dropdown } from "./components/dropdown.js";
 import { Toast } from "./components/toast.js";
 
-function renderAppShell(viewTitle, contentNode) {
+function renderAppShell(viewTitle, contentNode, { routeTo } = {}) {
   const app = document.getElementById("app");
   const { auth, preferences } = FleetStore.state;
   const currentUser = FleetStore.state.currentUser || FleetPermissions.defaultUser;
@@ -161,8 +161,8 @@ function renderAppShell(viewTitle, contentNode) {
         time: new Date().toISOString(),
       });
       Toast.show(`Rola zmieniona: ${selectedRoleLabel}`, "success");
-      if (window.FleetRouter?.routeTo) {
-        FleetRouter.routeTo(window.location.hash);
+      if (typeof routeTo === "function") {
+        routeTo(window.location.hash);
       }
     });
   }
@@ -328,5 +328,3 @@ function renderAppShell(viewTitle, contentNode) {
 }
 
 export { renderAppShell };
-
-window.renderAppShell = renderAppShell;

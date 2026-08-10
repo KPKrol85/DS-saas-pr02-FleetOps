@@ -48,7 +48,7 @@ Tooling:
 - `scripts/state/store.js` jest centralnym store stanu z zapisem do `localStorage`. Udostępnia też API nasłuchu zmian (`FleetStore.onChange`), z którego obecnie nie korzysta żaden moduł uruchomieniowy. `scripts/data/seed.js` dostarcza dane początkowe.
 - Widoki aplikacji są w `scripts/ui/views/`, powłoka panelu w `scripts/ui/layoutApp.js`, a wspólne komponenty w `scripts/ui/components/`.
 - Uprawnienia ról demo są zamknięte w `scripts/core/permissions.js`.
-- Zależności między modułami są jawne: każdy plik w `scripts/` eksportuje swoje API i importuje to, czego używa, zamiast polegać na kolejności skryptów. Moduły publikują swoje nazwy również na `window` (`FleetStore`, `FleetUI`, `Toast`, `FleetRouter` i pozostałe) — to celowo zachowany kontrakt wewnętrzny, a nie mechanizm ładowania.
+- Zależności między modułami są jawne: każdy plik w `scripts/` eksportuje swoje API i importuje to, czego używa, zamiast polegać na kolejności skryptów lub publikować API na `window`. Aby uniknąć cyklu modułów, store rejestruje w warstwie uprawnień dwie leniwe funkcje dostępowe (`getCurrentUser` i `addActivity`) przez eksport ES modułu, a router przekazuje powłoce aplikacji callback ponownego routingu.
 - CSS jest modułowy: `styles/main.css` importuje numerowane pliki z `styles/src/`. Vite przetwarza to wejście przez znacznik `<link>` w HTML i emituje z niego jeden zbundlowany, zminifikowany arkusz z hashem w nazwie w `dist/assets/`.
 - `public/` zawiera pliki statyczne produkcyjne (assety, `sw.js`, `_headers`, `_redirects`, `robots.txt`, `sitemap.xml`). Vite kopiuje je do `dist/` bez zmiany nazw, więc ich adresy produkcyjne pozostają niezmienione.
 
@@ -304,7 +304,7 @@ Tooling:
 - `scripts/state/store.js` is the central state store with `localStorage` persistence. It also exposes a change-listener API (`FleetStore.onChange`) that currently has no runtime subscriber. `scripts/data/seed.js` provides the initial data.
 - Application views live in `scripts/ui/views/`, the dashboard shell in `scripts/ui/layoutApp.js`, and shared components in `scripts/ui/components/`.
 - Demo role permissions are contained in `scripts/core/permissions.js`.
-- Module dependencies are explicit: every file in `scripts/` exports its API and imports what it uses, instead of relying on script order. Modules also publish their names on `window` (`FleetStore`, `FleetUI`, `Toast`, `FleetRouter`, and the rest) — a deliberately preserved internal contract, not a loading mechanism.
+- Module dependencies are explicit: every file in `scripts/` exports its API and imports what it uses, instead of relying on script order or publishing APIs on `window`. To avoid a module cycle, the store registers two lazy accessors (`getCurrentUser` and `addActivity`) with the permission layer through an ES-module export, while the router passes the application shell a rerouting callback.
 - CSS is modular: `styles/main.css` imports the numbered files from `styles/src/`. Vite processes that entry through the HTML `<link>` tag and emits a single bundled, minified, content-hashed stylesheet into `dist/assets/`.
 - `public/` holds the production-static files (assets, `sw.js`, `_headers`, `_redirects`, `robots.txt`, `sitemap.xml`). Vite copies them into `dist/` verbatim, so their production URLs are unchanged.
 

@@ -574,5 +574,3 @@ function driversView() {
 }
 
 export { driversView };
-
-window.driversView = driversView;

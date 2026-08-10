@@ -53,5 +53,3 @@ const Toast = (() => {
 })();
 
 export { Toast };
-
-window.Toast = Toast;

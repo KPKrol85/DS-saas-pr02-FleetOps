@@ -1,4 +1,4 @@
-import { FleetPermissions } from "../core/permissions.js";
+import { configurePermissionStoreAccess, FleetPermissions } from "../core/permissions.js";
 import { FleetSeed } from "../data/seed.js";
 import { Toast } from "../ui/components/toast.js";
 import { FleetUI } from "../utils/dom.js";
@@ -363,6 +363,9 @@ const Store = {
   },
 };
 
-export { Store as FleetStore };
+configurePermissionStoreAccess({
+  getCurrentUser: () => Store.state.currentUser,
+  addActivity: (activity) => Store.addActivity(activity),
+});
 
-window.FleetStore = Store;
+export { Store as FleetStore };

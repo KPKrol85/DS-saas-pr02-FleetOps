@@ -19,14 +19,9 @@ const mount = (selector, content) => {
 
 const dom = { h, clear, mount };
 
-window.dom = dom;
-
-// Shared UI namespace. This module owns the object; other UI modules extend it
-// through the exported binding, and it stays published on `window` because it is
-// part of the project's internal runtime contract.
+// Shared UI namespace. This module owns the object and other UI modules extend
+// it through the exported binding.
 const FleetUI = {};
-
-window.FleetUI = FleetUI;
 
 const escapeHtml = (value) =>
   String(value ?? "").replace(/[&<>"']/g, (char) => ({

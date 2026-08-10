@@ -203,6 +203,44 @@ test("landing loads and demo login reaches the app shell", async ({ page }) => {
   await expect(page.locator(".sidebar")).toContainText("demo@fleetops.app");
 });
 
+test("application bootstrap and routing do not publish module APIs on window", async ({ page }) => {
+  await loginAsDemo(page);
+  await page.locator('.sidebar nav a[data-route="/app/orders"]').click();
+  await expect(page.getByRole("heading", { name: "Zlecenia", level: 1 })).toBeVisible();
+
+  const publishedGlobals = await page.evaluate(() => {
+    const legacyGlobals = [
+      "FleetStorage",
+      "CleanupRegistry",
+      "format",
+      "dom",
+      "FleetUI",
+      "FleetStore",
+      "FleetRouter",
+      "renderAppShell",
+      "FleetPermissions",
+      "FleetSeed",
+      "Accordion",
+      "Dropdown",
+      "Modal",
+      "Toast",
+      "RecordDrawer",
+      "Table",
+      "settingsView",
+      "fleetView",
+      "dashboardView",
+      "driversView",
+      "notFoundView",
+      "ordersView",
+      "reportsView",
+    ];
+
+    return legacyGlobals.filter((name) => Object.prototype.hasOwnProperty.call(window, name));
+  });
+
+  expect(publishedGlobals).toEqual([]);
+});
+
 test("public static pages expose route-specific metadata", async ({ page }) => {
   const routes = [
     { path: "/", title: "FleetOps", heading: /FleetOps/, canonical: "https://saas-pr02-fleetops.netlify.app/" },
@@ -510,6 +548,46 @@ test("toast feedback exposes stable polite and assertive live regions", async ({
   await firstOrder.locator('[data-order-menu] .dropdown-trigger').click();
   await firstOrder.locator('[data-order-action="edit"]').click({ force: true });
   await expect(alertRegion).toContainText("Brak uprawnień:");
+});
+
+test("non-admin roles remain restricted and permission denials reach the activity trail", async ({ page }) => {
+  await loginAsDemo(page);
+  const roleSwitcher = page.locator("#roleSwitcher");
+  const alertRegion = page.locator("#fleetops-toast-alert");
+
+  await roleSwitcher.selectOption("u_disp_1");
+  await expect(page.getByRole("heading", { name: "Przegląd", level: 1 })).toBeVisible();
+  await page.locator('.sidebar nav a[data-route="/app/orders"]').click();
+  await expect(page.getByRole("button", { name: "Dodaj zlecenie" })).toBeEnabled();
+  const dispatcherOrder = page.locator("tr.order-row").first();
+  await expect(dispatcherOrder).toBeVisible();
+  await dispatcherOrder.locator('[data-order-menu] .dropdown-trigger').click();
+  const dispatcherDelete = dispatcherOrder.locator('[data-order-action="delete"]');
+  await expect(dispatcherDelete).toHaveAttribute("aria-disabled", "true");
+  await dispatcherDelete.click({ force: true });
+  await expect(alertRegion).toContainText("Dyspozytor");
+
+  await roleSwitcher.selectOption("u_drv_1");
+  await expect(page.getByRole("heading", { name: "Zlecenia", level: 1 })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Dodaj zlecenie" })).toBeDisabled();
+  const driverOrder = page.locator("tr.order-row").first();
+  await expect(driverOrder).toBeVisible();
+  await driverOrder.locator('[data-order-menu] .dropdown-trigger').click();
+  const driverEdit = driverOrder.locator('[data-order-action="edit"]');
+  await expect(driverEdit).toHaveAttribute("aria-disabled", "true");
+  await driverEdit.click({ force: true });
+  await expect(alertRegion).toContainText("Kierowca");
+  await expect.poll(async () =>
+    page.evaluate(() => {
+      const activity = JSON.parse(localStorage.getItem("fleet-activity-v1") || "[]");
+      const denials = activity.filter((entry) => entry.title === "Odmowa uprawnień");
+      return {
+        count: denials.length,
+        hasDispatcher: denials.some((entry) => entry.detail.includes("Dyspozytor")),
+        hasDriver: denials.some((entry) => entry.detail.includes("Kierowca")),
+      };
+    })
+  ).toEqual({ count: 2, hasDispatcher: true, hasDriver: true });
 });
 
 test("offline mutations are rejected with an explicit not-saved message and reconnect does not imply sync", async ({ page, context }) => {

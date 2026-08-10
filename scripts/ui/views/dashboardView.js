@@ -254,7 +254,6 @@ function dashboardView() {
 
 export { dashboardView };
 
-window.dashboardView = dashboardView;
 
 let alertsRulesDocListenersBound = false;
 let alertsRulesState = {

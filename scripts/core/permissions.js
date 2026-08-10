@@ -46,13 +46,29 @@ const DemoUsers = [
 
 const defaultUser = DemoUsers[0];
 
-// `FleetStore` is read lazily through `window` on purpose: the store imports
-// this module for its default user, so a static import here would create a
-// module cycle. The lookup only happens at call time, never at module init.
+let storeAccess = null;
+
+const configurePermissionStoreAccess = ({ getCurrentUser, addActivity }) => {
+  if (typeof getCurrentUser !== "function" || typeof addActivity !== "function") {
+    throw new TypeError("Permission store access requires getCurrentUser and addActivity callbacks.");
+  }
+
+  storeAccess = { getCurrentUser, addActivity };
+};
+
+// The store imports this module for the permission model, so importing the
+// store back here would create a cycle. `store.js` registers these lazy accessors
+// after constructing the store, keeping the dependency explicit without making
+// module initialization order observable through a global fallback.
+const requireStoreAccess = () => {
+  if (!storeAccess) {
+    throw new Error("Permission store access has not been configured.");
+  }
+  return storeAccess;
+};
+
 const resolveUser = (context = {}) =>
-  context.user ||
-  (window.FleetStore && window.FleetStore.state && window.FleetStore.state.currentUser) ||
-  defaultUser;
+  context.user || requireStoreAccess().getCurrentUser() || defaultUser;
 
 const isOwner = (record, user) => record && user && record.createdBy && record.createdBy === user.id;
 
@@ -111,13 +127,11 @@ const guard = (action, context = {}) => {
   if (can(action, context)) return true;
   const message = explainDeny(action, context);
   Toast.show(`Brak uprawnień: ${message}`, "warning", { assertive: true });
-  if (window.FleetStore && typeof window.FleetStore.addActivity === "function") {
-    window.FleetStore.addActivity({
-      title: "Odmowa uprawnień",
-      detail: message,
-      time: new Date().toISOString(),
-    });
-  }
+  requireStoreAccess().addActivity({
+    title: "Odmowa uprawnień",
+    detail: message,
+    time: new Date().toISOString(),
+  });
   return false;
 };
 
@@ -134,6 +148,4 @@ const FleetPermissions = {
   guard,
 };
 
-export { FleetPermissions };
-
-window.FleetPermissions = FleetPermissions;
+export { configurePermissionStoreAccess, FleetPermissions };
