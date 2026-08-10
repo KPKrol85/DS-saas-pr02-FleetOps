@@ -1,4 +1,4 @@
-const CACHE_NAME = "fleetops-v1.11";
+const CACHE_NAME = "fleetops-v1.12";
 
 const APP_SHELL_URLS = ["/", "/index.html"];
 const PUBLIC_ROUTE_URLS = [
@@ -18,8 +18,18 @@ const PUBLIC_ROUTE_URLS = [
 // requested route that is cached, and it is never used to answer a fulfilled response.
 const OFFLINE_FALLBACK_URL = "/offline.html";
 
+// Hashed stylesheet and script assets the precached documents need to render styled
+// and interactive on a first offline visit. The list is build data, never maintained
+// configuration: `vite build` replaces the placeholder below with the URLs the same
+// build actually emitted (see `fleetopsServiceWorkerPrecache` in `vite.config.js`), so
+// no content hash is ever written by hand and a generated URL cannot go stale. The
+// maintained source keeps the list empty, which is also what the development server
+// serves; the worker is registered in production builds only.
+// `OFFLINE_FALLBACK_URL` deliberately does not depend on any of these assets.
+const RUNTIME_ASSET_URLS = /* __FLEETOPS_RUNTIME_ASSETS__ */ [];
+
 const PRECACHE_URLS = Array.from(
-  new Set([...APP_SHELL_URLS, ...PUBLIC_ROUTE_URLS, OFFLINE_FALLBACK_URL])
+  new Set([...APP_SHELL_URLS, ...PUBLIC_ROUTE_URLS, OFFLINE_FALLBACK_URL, ...RUNTIME_ASSET_URLS])
 );
 
 self.addEventListener("install", (event) => {

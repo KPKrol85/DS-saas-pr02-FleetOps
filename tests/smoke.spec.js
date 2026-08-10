@@ -329,6 +329,56 @@ test.describe("service worker navigation cache", () => {
       await context.setOffline(false);
     }
   });
+
+  // Precaching the documents alone leaves a first offline visit to a precached but
+  // unvisited route rendering as unstyled, inert HTML: the hashed stylesheet and entry
+  // script this build emitted have to be precached alongside them.
+  test("renders a precached but unvisited route styled and interactive on a first offline navigation", async ({ page, context }) => {
+    await page.goto("/");
+
+    // Read the precache while this document is still uncontrolled: it was loaded
+    // before any worker existed, so no request has passed through the worker's
+    // revalidation path and a hashed `/assets/` entry can only come from `install`.
+    // Chrome serves the immutable `/assets/` responses from its own HTTP cache during
+    // the offline navigation below, so this is the assertion that pins the precache
+    // itself, and the offline navigation proves the resulting user-visible behaviour.
+    await page.evaluate(() => navigator.serviceWorker.ready);
+    const precachedAssets = await page.evaluate(async () => {
+      const paths = [];
+      for (const key of await caches.keys()) {
+        const cache = await caches.open(key);
+        paths.push(...(await cache.keys()).map((request) => new URL(request.url).pathname));
+      }
+      return paths.filter((pathname) => pathname.startsWith("/assets/"));
+    });
+
+    expect(precachedAssets.filter((pathname) => pathname.endsWith(".css"))).not.toHaveLength(0);
+    expect(precachedAssets.filter((pathname) => pathname.endsWith(".js"))).not.toHaveLength(0);
+
+    await waitForServiceWorkerControl(page);
+    await context.setOffline(true);
+
+    try {
+      // First navigation to `/contact/` in this context: it is in the document
+      // precache and has never been visited.
+      await page.goto("/contact/", { waitUntil: "domcontentloaded" });
+      await expect(page).toHaveTitle("Kontakt | FleetOps");
+      await expect(page.getByRole("heading", { name: "Kontakt", level: 1 })).toBeVisible();
+
+      // The production stylesheet is applied, not merely linked: a stylesheet that
+      // did not load contributes no custom properties.
+      expect(await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--accent").trim())).not.toBe("");
+
+      // The production entry script executed: the FAQ markup ships without
+      // `aria-expanded`, so both the attribute and the toggle come from the bundle.
+      const header = page.locator("#faq .accordion-item").first().locator(".accordion-header");
+      await expect(header).toHaveAttribute("aria-expanded", "false");
+      await header.click();
+      await expect(header).toHaveAttribute("aria-expanded", "true");
+    } finally {
+      await context.setOffline(false);
+    }
+  });
 });
 
 test("static public navigation resets scroll position", async ({ page }) => {
