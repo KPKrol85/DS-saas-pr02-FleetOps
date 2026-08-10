@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { defineConfig } from "vite";
@@ -42,6 +43,8 @@ const precachedDocuments = htmlEntries.filter(
 
 const SW_FILE_NAME = "sw.js";
 const SW_RUNTIME_ASSETS_PLACEHOLDER = "/* __FLEETOPS_RUNTIME_ASSETS__ */ []";
+const SW_CACHE_REVISION_PLACEHOLDER = '/* __FLEETOPS_CACHE_REVISION__ */ "dev"';
+const SW_CACHE_REVISION_PATTERN = /^[0-9a-f]{12}$/;
 
 const ASSET_TAG = /<(link|script)\b[^>]*>/gi;
 const REL_ATTRIBUTE = /\brel\s*=\s*["']([^"']*)["']/i;
@@ -69,13 +72,24 @@ function collectDocumentAssetUrls(html) {
   return urls;
 }
 
+// The cache identity of one build, derived from the runtime asset URLs that build
+// emitted. Those URLs carry Vite's content hashes, so the revision changes exactly
+// when the precached asset set does, and two equivalent builds hash the same sorted
+// list to the same value. Nothing here reads the clock, the filesystem or a random
+// source, so the result is reproducible rather than merely unique. `public/sw.js`
+// owns the `fleetops-` namespace the revision is appended to.
+function cacheRevisionFor(sortedRuntimeAssetUrls) {
+  return createHash("sha256").update(sortedRuntimeAssetUrls.join("\n")).digest("hex").slice(0, 12);
+}
+
 /**
- * Ties the production service-worker precache to the runtime assets this build
- * actually emitted. `public/sw.js` stays the single maintained worker source and
- * owns the precache contract; it carries one placeholder, which is replaced here
- * with the hashed URLs read out of the same bundle that produced those hashes.
- * The emitted `dist/sw.js` is therefore a pure build artifact, content hashing
- * stays enabled, and no generated filename is maintained by hand.
+ * Ties the production service-worker precache and cache identity to the runtime
+ * assets this build actually emitted. `public/sw.js` stays the single maintained
+ * worker source and owns both contracts; it carries two placeholders, replaced
+ * here with the hashed URLs read out of the same bundle that produced those hashes
+ * and with the revision derived from them. The emitted `dist/sw.js` is therefore a
+ * pure build artifact, content hashing stays enabled, and neither a generated
+ * filename nor a cache version is maintained by hand.
  */
 function fleetopsServiceWorkerPrecache() {
   return {
@@ -111,18 +125,26 @@ function fleetopsServiceWorkerPrecache() {
         }
 
         const source = readFileSync(resolve(__dirname, "public", SW_FILE_NAME), "utf8");
-        if (!source.includes(SW_RUNTIME_ASSETS_PLACEHOLDER)) {
-          this.error(`"public/${SW_FILE_NAME}" no longer carries the runtime-asset placeholder.`);
+        for (const placeholder of [SW_RUNTIME_ASSETS_PLACEHOLDER, SW_CACHE_REVISION_PLACEHOLDER]) {
+          if (!source.includes(placeholder)) {
+            this.error(`"public/${SW_FILE_NAME}" no longer carries the \`${placeholder}\` build placeholder.`);
+          }
         }
 
-        // Sorted so two equivalent builds produce byte-identical output.
+        // Sorted so two equivalent builds produce byte-identical output, and so the
+        // cache revision depends on the asset set rather than on bundle iteration order.
+        const sortedRuntimeAssetUrls = [...runtimeAssetUrls].sort();
+        const cacheRevision = cacheRevisionFor(sortedRuntimeAssetUrls);
+        if (!SW_CACHE_REVISION_PATTERN.test(cacheRevision)) {
+          this.error(`The generated service-worker cache revision "${cacheRevision}" is not a 12-character hexadecimal digest.`);
+        }
+
         this.emitFile({
           type: "asset",
           fileName: SW_FILE_NAME,
-          source: source.replace(
-            SW_RUNTIME_ASSETS_PLACEHOLDER,
-            JSON.stringify([...runtimeAssetUrls].sort())
-          ),
+          source: source
+            .replace(SW_RUNTIME_ASSETS_PLACEHOLDER, JSON.stringify(sortedRuntimeAssetUrls))
+            .replace(SW_CACHE_REVISION_PLACEHOLDER, JSON.stringify(cacheRevision)),
         });
       },
     },
@@ -139,7 +161,8 @@ export default defineConfig({
   // `assets/img-src/` stays outside this directory: it is an image source input,
   // not production output.
   publicDir: "public",
-  // Rewrites the `public/sw.js` copy in `dist/` with this build's real asset URLs.
+  // Rewrites the `public/sw.js` copy in `dist/` with this build's real asset URLs
+  // and the cache revision derived from them.
   plugins: [fleetopsServiceWorkerPrecache()],
   server: {
     host: "127.0.0.1",

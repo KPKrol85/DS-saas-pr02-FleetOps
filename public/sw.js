@@ -1,4 +1,15 @@
-const CACHE_NAME = "fleetops-v1.12";
+// The single namespace for every cache this worker owns: the current cache is
+// named from it and activation retires the older ones by the same prefix.
+const CACHE_PREFIX = "fleetops-";
+// The cache identity is build data, never maintained configuration, exactly like
+// the precache content below it: `vite build` replaces the placeholder with a
+// revision derived from the runtime asset URLs the same build emitted (see
+// `fleetopsServiceWorkerPrecache` in `vite.config.js`). A build whose precached
+// assets changed therefore installs into a new cache and the previous build's
+// hashed entries are deleted on activation, with no version to advance by hand.
+// The maintained source keeps the `dev` revision, which no deployed client ever
+// sees: the worker is registered in production builds only.
+const CACHE_NAME = CACHE_PREFIX + (/* __FLEETOPS_CACHE_REVISION__ */ "dev");
 
 const APP_SHELL_URLS = ["/", "/index.html"];
 const PUBLIC_ROUTE_URLS = [
@@ -48,7 +59,7 @@ self.addEventListener("activate", (event) => {
       .then((keys) =>
         Promise.all(
           keys
-            .filter((key) => key.startsWith("fleetops-") && key !== CACHE_NAME)
+            .filter((key) => key.startsWith(CACHE_PREFIX) && key !== CACHE_NAME)
             .map((key) => caches.delete(key))
         )
       )

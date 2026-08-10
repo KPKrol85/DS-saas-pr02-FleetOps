@@ -1,4 +1,9 @@
+const { createHash } = require("node:crypto");
+const { readFileSync } = require("node:fs");
+const { resolve } = require("node:path");
 const { test, expect } = require("@playwright/test");
+
+const repositoryFile = (relativePath) => readFileSync(resolve(__dirname, "..", relativePath), "utf8");
 
 async function openFresh(page, target = "/") {
   await page.addInitScript(() => {
@@ -264,6 +269,37 @@ test("static and dynamic entrypoints do not emit console errors", async ({ page 
   await expect(page.getByRole("heading", { name: "Przegląd", level: 1 })).toBeVisible();
 
   expect(errors).toEqual([]);
+});
+
+// The worker's cache identity is build data, so it is checked against the build that
+// produced it rather than against a recorded name: the revision is recomputed here,
+// independently of the plugin, from the runtime asset list in the same artifact. That
+// pins both halves of the contract at once — two equivalent builds emit the same sorted
+// list and therefore the same cache name, and a build that emits a different runtime
+// asset hash cannot keep the previous name, because the hashed URLs are the digest
+// input. The maintained source is asserted to carry no build-specific value at all, so
+// neither result can be produced by a hand edit.
+test("the generated service worker derives its cache name from this build's runtime assets", () => {
+  const generated = repositoryFile("dist/sw.js");
+  const maintained = repositoryFile("public/sw.js");
+
+  const prefix = generated.match(/^const CACHE_PREFIX = "([^"]*)";$/m)?.[1];
+  const revision = generated.match(/^const CACHE_NAME = CACHE_PREFIX \+ \("([^"]*)"\);$/m)?.[1];
+  const runtimeAssetUrls = JSON.parse(generated.match(/^const RUNTIME_ASSET_URLS = (\[.*\]);$/m)?.[1] || "null");
+
+  expect(prefix).toBe("fleetops-");
+  expect(Array.isArray(runtimeAssetUrls)).toBe(true);
+  expect(runtimeAssetUrls.length).toBeGreaterThan(0);
+  // Sorted output is what keeps the digest independent of bundle iteration order.
+  expect(runtimeAssetUrls).toEqual([...runtimeAssetUrls].sort());
+
+  const expectedRevision = createHash("sha256").update(runtimeAssetUrls.join("\n")).digest("hex").slice(0, 12);
+  expect(revision).toBe(expectedRevision);
+
+  // No cache version is maintained by hand: the build placeholder is what ships in the
+  // repository, and no build-specific cache literal survives anywhere in the source.
+  expect(maintained).toContain('CACHE_PREFIX + (/* __FLEETOPS_CACHE_REVISION__ */ "dev")');
+  expect(maintained).not.toMatch(/fleetops-v\d/);
 });
 
 test.describe("service worker navigation cache", () => {
