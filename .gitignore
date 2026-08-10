@@ -11,6 +11,9 @@ playwright-report/
 # Local Netlify folder
 .netlify/
 
+# Local agent tooling worktrees
+/.claude/
+
 # Runtime and package manager logs
 *.log
 npm-debug.log*

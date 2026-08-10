@@ -13,7 +13,7 @@ The behaviours that were previously misleading are now honest. The contact form 
 
 Documentation is the strongest part of the repository. The README describes the executed model file by file, lists every `localStorage` key the implementation writes, states which of them nothing reads back, records that the deployment is manual and that no CI exists, and declines to claim anything it cannot support.
 
-What remains is residue and verification hygiene, not defect. The ES module migration left twenty-three modules publishing themselves on `window`; exactly one of those globals is read at runtime, and it is the one that looks most disposable. The smoke suite is allowed to reuse an existing preview server, so it can pass against a stale artifact. Service-worker cache versioning is hand-maintained while its precache content is build-derived. A 385 MB directory of tooling worktrees sits untracked and unignored, and three development dependencies carry high-severity advisories with no runtime exposure. None of these blocks release, deployment or portfolio presentation.
+What remains is residue and verification hygiene, not defect. The ES module migration left twenty-three modules publishing themselves on `window`; exactly one of those globals is read at runtime, and it is the one that looks most disposable. The smoke suite is allowed to reuse an existing preview server, so it can pass against a stale artifact. Service-worker cache versioning is hand-maintained while its precache content is build-derived, and three development dependencies carry high-severity advisories with no runtime exposure. None of these blocks release, deployment or portfolio presentation.
 
 ## 2. Audit scope and verification
 
@@ -33,7 +33,7 @@ What remains is residue and verification hygiene, not defect. The ES module migr
 
 - `node scripts/qa/check-css-vars.js` (`npm run qa:css-vars`) — executed and passed; 971 `var()` usages against 77 definitions across 11 source files, exit code 0
 - `node --check` across every tracked JavaScript file including `public/sw.js`, `vite.config.js` and `optimize-images.js` — executed and passed; syntax only, no behavioural verification
-- `npm audit` — executed; three high-severity advisories reported, all in development dependencies (see [P2-05])
+- `npm audit` — executed; three high-severity advisories reported, all in development dependencies (see [P2-04])
 - `git status`, `git log`, `git ls-files`, working-tree comparison of `dist/` against its sources — executed
 - Static inspection of every file listed above, including cross-referencing each `window.*` publication against its consumers, each documented README claim against its implementation, and each finding of the previous audit against the current source
 - `npm run test:smoke` — **executed and passed on the project owner's machine on 2026-08-10, not re-executed during this audit.** The supplied run reports 29 of 29 tests passing. `playwright.config.js:19-24` starts the suite with `npm run build && npm run preview`, so the run exercised the built `dist/` artifact rather than the development server. This audit reports that result as supplied evidence and does not independently assert it.
@@ -59,7 +59,7 @@ What remains is residue and verification hygiene, not defect. The ES module migr
 - Consistent output escaping wherever record data reaches the DOM, via one helper — `escapeHtml` in `scripts/utils/dom.js`, used across all seven views and the application shell — with the behaviour asserted by the smoke suite.
 - Security-relevant headers are specific and now complete for a self-only policy: frame denial, nosniff, referrer policy, permissions policy, HSTS, and a CSP that closes `base-uri`, `form-action` and `object-src` (`public/_headers:1-7`). No `.env`, credential, token or key material is tracked, and no `console.log`, `debugger`, `TODO` or `FIXME` appears in runtime code — the only logging is in the QA script.
 - Routing configuration matches the architecture: `public/_redirects` carries slash redirects and an asset rule with no SPA catch-all, so unmatched paths reach `404.html`, and that document uses root-relative references throughout (`404.html:34-44,55`).
-- Repository hygiene is enforced rather than assumed. `.gitattributes` declares a line-ending policy per file type and states that it overrides local Git settings; `.gitignore` covers dependencies, build output, test artifacts and the local Netlify folder; the previously committed Playwright run artifact is no longer tracked.
+- Repository hygiene is enforced rather than assumed. `.gitattributes` declares a line-ending policy per file type and states that it overrides local Git settings; `.gitignore` covers dependencies, build output, test artifacts, the local Netlify folder and the local agent tooling directory; the previously committed Playwright run artifact is no longer tracked.
 - Documentation matches the implementation to an unusual degree: the README Architecture section describes the executed model, the data section enumerates all ten written `localStorage` keys, groups them by responsibility and names the two legacy keys that appear only in cleanup code (`README.md:229-238`), and the deployment section records the manual CLI path and the absence of CI.
 - `npm test` is a genuinely read-only gate — `qa:css-vars` plus the smoke suite — and image generation is an explicit maintenance command that no build or test path invokes (`package.json` — `scripts`).
 
@@ -103,17 +103,7 @@ None detected.
 - **Recommended direction:** Derive the cache name from the same build data that produces the asset list, or fail the build when the emitted asset set changes and the version literal does not.
 - **Verification criteria:** Two consecutive builds with different asset hashes produce different cache names without a manual edit, and the older cache is removed on activation.
 
-### [P2-04] A 385 MB directory of tooling worktrees sits untracked and unignored in the repository root
-
-- **Classification:** Maintenance risk
-- **Affected area:** Repository hygiene
-- **Evidence:** `.gitignore` (no entry for `.claude/`); `git status --short` reports `?? .claude/`; the directory contains ten worktree copies of the project
-- **Current behavior:** `.gitignore` covers `node_modules/`, `dist/`, `test-results/`, `playwright-report/` and `.netlify/`, but not the local tooling directory, which currently holds ten full copies of the project totalling about 385 MB.
-- **Impact:** `git status` is dominated by a single untracked entry that hides real untracked work, and a routine `git add -A` would stage hundreds of megabytes of duplicated sources. The repository otherwise treats generated and local-only content explicitly, so this is the one gap in an established convention.
-- **Recommended direction:** Add the tooling directory to `.gitignore` alongside the other local-only entries.
-- **Verification criteria:** `git status` is clean after a full install, build and test run, with no untracked entry outside deliberate work.
-
-### [P2-05] Three development dependencies carry high-severity advisories, two of them fixable within the current major versions
+### [P2-04] Three development dependencies carry high-severity advisories, two of them fixable within the current major versions
 
 - **Classification:** Security exposure
 - **Affected area:** Dependency configuration
@@ -145,7 +135,7 @@ None detected.
 
 No critical or important finding remains. Every defect from the previous audit was closed at the source rather than documented away: the duplicate page-rendering path was deleted, the application shell gained a `main` landmark, drawer semantics became viewport-conditional, the shell breakpoints were unified, the offline queue was replaced with an honest rejection, the contact form became a real submission path reconciled with the privacy policy, unsupported public claims were reframed, the unreachable error page was restored by removing the SPA catch-all, collapsed accordion panels were hidden from assistive technology, the undefined design token was resolved, and repository hygiene was put under `.gitignore` and `.gitattributes`. All three previously optional improvements — the offline fallback document, the build-derived runtime-asset precache and the extended CSP — were implemented.
 
-What is left are five contained refinements: module-migration residue with a documented but silent failure mode, two verification-hygiene items, a tooling directory outside `.gitignore`, and development-dependency advisories with no runtime exposure. None of them affects a user-facing behaviour, a build, a deployment or an accessibility contract, and none needs to be resolved before this is presented, deployed or handed over. The remaining risk sits in verification this audit could not perform — contrast, assistive technology, cross-browser behaviour and the live environment — rather than in the implementation.
+What is left are four contained refinements: module-migration residue with a documented but silent failure mode, two verification-hygiene items, and development-dependency advisories with no runtime exposure. None of them affects a user-facing behaviour, a build, a deployment or an accessibility contract, and none needs to be resolved before this is presented, deployed or handed over. The remaining risk sits in verification this audit could not perform — contrast, assistive technology, cross-browser behaviour and the live environment — rather than in the implementation.
 
 ## 9. Senior rating
 
