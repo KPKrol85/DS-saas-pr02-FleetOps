@@ -1,64 +1,67 @@
 # FleetOps — Final Technical Front-End Audit
 
-**Audit date:** 2026-08-08
-**Project type:** Static multi-page front-end site with a hash-routed browser-local demo application (vanilla HTML/CSS/JS, no framework, no bundler)
+**Audit date:** 2026-08-10
+**Project type:** Static multi-page front-end site with a hash-routed, browser-local demo application (vanilla HTML/CSS/JS as an ES module graph, no UI framework, built with Vite)
 **Audit mode:** Final repository and implementation review
-**Current readiness:** Needs important fixes
+**Current readiness:** Ready with minor refinements
 
 ## 1. Executive assessment
 
-FleetOps is a coherent, self-consistent static project. The layering is deliberate: eleven public documents plus `404.html`, a hash-routed demo area rendered into `#app`, a single owner for domain state (`scripts/state/store.js`), a permission module isolated from the views, a numbered CSS source set with one canonical entry point, a deterministic `dist/` build, and a substantial Playwright smoke suite. User-entered text is escaped consistently through one helper, storage access is wrapped in `try/catch`, and route changes drain a cleanup registry. Documentation is unusually evidence-based and correctly declines to claim an active deployment.
+FleetOps is now a coherent project with a single definition for everything it ships. Each public route is one maintained static document, the demo application is one hash-routed shell, runtime JavaScript is an explicit ES module graph behind a single entry, `styles/src/` is the only CSS source, and `public/` holds the production-static files Vite copies verbatim. The Vite migration preserved every production URL, and the service-worker precache is derived from the build that emitted the assets rather than maintained by hand — a custom Rollup plugin reads the finished bundle and fails the build if a precached document, the placeholder or a runtime asset is missing.
 
-The project's main weakness is not architecture but honesty of the surface. The public pages now have exactly one definition each — their static documents — after the unreachable hash-routed renderer duplicates were removed, but the README still describes those deleted renderers as the source of truth for the header, footer and marketing content.
+The behaviours that were previously misleading are now honest. The contact form posts to a real provider with progressive enhancement, confirms only on a successful response and keeps the typed message on failure; the privacy policy describes that same data path; the landing page presents demo scenarios instead of attributed testimonials and the product page marks its figures as illustrative; unavailable controls are natively disabled with an explanatory title; offline mutations are rejected with a message that says so; the demo reset requires a confirmation that names its scope. Accessibility is handled where it matters: drawer semantics are viewport-conditional in both shells, the application content region is a `main` landmark that the skip link focuses, and collapsed accordion panels leave the accessibility tree.
 
-Three defect groups are worth fixing before this is presented as finished work: accessibility (the app shell has no `<main>` landmark, so the skip link resolves to nothing on every `#/app` route); content integrity (the contact form confirms a reply that no code path can deliver, contradicting the project's own privacy page, and the public pages carry attributed testimonials and precise trust metrics that nothing supports); and correctness details (queued offline actions are discarded on reconnect, `_redirects` makes `404.html` unreachable, and a one-pixel breakpoint gap at exactly 1024 px leaves the app with no navigation).
+Documentation is the strongest part of the repository. The README describes the executed model file by file, lists every `localStorage` key the implementation writes, states which of them nothing reads back, records that the deployment is manual and that no CI exists, and declines to claim anything it cannot support.
 
-No blocker prevents the project from building or running. Core flows — routing, guard, CRUD, permissions, persistence, theming — are implemented consistently and are covered by the smoke suite. With the P1 items resolved this is a credible portfolio piece; as it stands it should not be presented as final.
+What remains is residue and verification hygiene, not defect. The ES module migration left twenty-three modules publishing themselves on `window`; exactly one of those globals is read at runtime, and it is the one that looks most disposable. The smoke suite is allowed to reuse an existing preview server, so it can pass against a stale artifact. Service-worker cache versioning is hand-maintained while its precache content is build-derived. One page still drops Polish diacritics, a 385 MB directory of tooling worktrees sits untracked and unignored, and three development dependencies carry high-severity advisories with no runtime exposure. None of these blocks release, deployment or portfolio presentation.
 
 ## 2. Audit scope and verification
 
 ### Areas inspected
 
-- All twelve HTML documents: `index.html`, `404.html`, and the ten route directories (`product`, `features`, `pricing`, `about`, `contact`, `security`, `careers`, `privacy`, `terms`, `cookies`)
-- All 26 files under `scripts/` — entry, router, store, seed, permissions, utilities, six shared components, seven views, two layouts, marketing renderers, QA script
-- All eleven CSS sources under `styles/src/` plus the `styles/main.css` entry point
-- Build and asset pipeline: `build-dist.js`, `optimize-images.js`, `postcss.config.js`, `package.json` scripts, `package-lock.json`
-- Service worker and PWA contract: `sw.js`, `assets/favicon/site.webmanifest`, registration in `scripts/main.js`
-- Deployment and SEO configuration: `_headers`, `_redirects`, `robots.txt`, `sitemap.xml`, canonical and social metadata across all documents
-- Testing: `playwright.config.js`, `tests/smoke.spec.js`, `test-results/`
-- Documentation and licensing: `README.md`, `CHANGELOG.md`, `LICENSE`, `package.json` metadata
-- Repository state: tracked file set, working tree, commit history
+- All thirteen maintained HTML documents: `index.html`, `404.html`, `offline.html` and the ten route directories (`product`, `features`, `pricing`, `about`, `contact`, `security`, `careers`, `privacy`, `terms`, `cookies`)
+- All 24 runtime modules under `scripts/` plus the QA script — entry, router, store, seed, permissions, four utilities, six shared components, seven views, two layouts
+- All eleven CSS sources under `styles/src/` and the `styles/main.css` entry point
+- Build and tooling: `vite.config.js` including the `fleetopsServiceWorkerPrecache` plugin, `package.json` scripts, `package-lock.json`, `optimize-images.js`
+- Service worker and PWA contract: `public/sw.js`, the emitted `dist/sw.js`, `public/assets/favicon/site.webmanifest`, registration in `scripts/main.js`, `offline.html`
+- Deployment, security and SEO configuration: `public/_headers`, `public/_redirects`, `public/robots.txt`, `public/sitemap.xml`, canonical and social metadata across all documents
+- Testing: `playwright.config.js`, `tests/smoke.spec.js`
+- Documentation, licensing and repository state: `README.md`, `CHANGELOG.md`, `docs/archive/plans/PLAN-2026-08-10.md`, `LICENSE`, `.gitignore`, `.gitattributes`, tracked file set, working tree, commit history
+- The `dist/` artifact present in the working tree, including the emitted bundle and the generated service worker
 
 ### Verification performed
 
-- `node scripts/qa/check-css-vars.js` (`npm run qa:css-vars`) — executed and failed; exit code 1, two unresolved custom-property usages reported
-- `node --check` across all 29 JavaScript files (`scripts/**`, `sw.js`, `build-dist.js`, `optimize-images.js`) — executed and passed; syntax only, no behavioural verification
-- `git status --short`, `git diff --stat`, `git log --oneline`, `git ls-files` — executed; working tree carries three modified files, `dist/` is untracked, `test-results/.last-run.json` is tracked
-- Static inspection of every file listed above, including cross-referencing of every `render*` entry point against its call sites and of every documented claim against its implementation
-- Static reachability analysis of `scripts/main.js` → `scripts/router.js` route dispatch
+- `node scripts/qa/check-css-vars.js` (`npm run qa:css-vars`) — executed and passed; 971 `var()` usages against 77 definitions across 11 source files, exit code 0
+- `node --check` across every tracked JavaScript file including `public/sw.js`, `vite.config.js` and `optimize-images.js` — executed and passed; syntax only, no behavioural verification
+- `npm audit` — executed; three high-severity advisories reported, all in development dependencies (see [P2-05])
+- `git status`, `git log`, `git ls-files`, working-tree comparison of `dist/` against its sources — executed
+- Static inspection of every file listed above, including cross-referencing each `window.*` publication against its consumers, each documented README claim against its implementation, and each finding of the previous audit against the current source
+- `npm run test:smoke` — **executed and passed on the project owner's machine on 2026-08-10, not re-executed during this audit.** The supplied run reports 29 of 29 tests passing. `playwright.config.js:19-24` starts the suite with `npm run build && npm run preview`, so the run exercised the built `dist/` artifact rather than the development server. This audit reports that result as supplied evidence and does not independently assert it.
 
 ### Verification limitations
 
-- `node_modules/` is absent, so `npm run test:smoke` was **not executed**. No statement in this audit asserts that any Playwright test passes.
-- `npm run build` was **not executed**. It invokes `optimize:images`, which overwrites tracked files in `assets/img/`, and the audit is read-only outside `AUDIT.md`. The build was inspected statically only; this audit does not claim the build succeeds.
-- No browser or assistive-technology environment was available. Responsive behaviour, focus order, live-region announcement, service-worker runtime behaviour and offline navigation were **not executed**. Findings derived from CSS and DOM structure alone are labelled as source-visible risks unless the outcome is deterministic from the code.
+- The smoke suite and the production build were not executed by this audit. The `dist/` artifact inspected here was produced by the owner's run; its timestamps are newer than every source file, and `dist/sw.js:29` carries the real hashed URLs of the emitted bundle, which is consistent with a current build. That is artifact inspection, not an executed build.
+- No browser or assistive-technology environment was available to this audit. Responsive behaviour, focus order, live-region announcement, service-worker runtime behaviour and offline navigation were **not executed here**; several of them are covered by the supplied Playwright run.
 - Contrast compliance was not fully verified because reliable computed-style analysis was not available.
-- No live URL was supplied and no deployment was inspected. Statements about `_redirects` and `_headers` describe the committed configuration, not observed production behaviour.
+- No live URL was supplied to this audit and no deployed environment was inspected. `README.md` and `CHANGELOG.md` record a manual Netlify CLI deployment and provider-side form verification performed by the project owner; that is repository documentation, and this audit neither confirms nor contradicts it.
+- Third-party availability and delivery guarantees for the contact form provider are outside the scope of a repository audit.
 
 ## 3. Verified strengths
 
-- Single escaping helper applied consistently wherever record data reaches the DOM — `scripts/utils/dom.js:22-32` defines `escapeHtml`, and every data-rendering view uses it (for example `scripts/ui/views/driversView.js:455-473`, `scripts/ui/views/ordersView.js`, `scripts/ui/layoutApp.js:12-19`); `tests/smoke.spec.js:594-640` asserts that HTML-like input stays inert.
-- Keyboard-complete dialog patterns implemented once and reused: focus trap, `Escape`, focus restoration and `aria-labelledby` in `scripts/ui/components/modal.js:18-112`; `aria-expanded` synchronisation, outside-click close, `Escape` and focus return in `scripts/ui/components/dropdown.js:5-67`.
-- Defensive initialisation throughout: optional-chaining guards before every cross-module call in `scripts/main.js:101-169`, a `try/catch` storage wrapper in `scripts/utils/storage.js:1-25`, and a cleanup registry drained on every route change (`scripts/utils/cleanup.js:9-19`, invoked at `scripts/router.js:220`).
-- Clear domain-state ownership with seed-versus-persisted separation, shape validation before adopting stored data, and ID normalisation — `scripts/state/store.js:27-44,110-127`.
-- Role logic isolated from presentation, with denial messages and an activity trail rather than silent no-ops — `scripts/core/permissions.js:54-119`.
-- Honest demo boundaries stated in the interface: CSV export is disabled with an explanatory `title` rather than failing silently (`scripts/ui/views/ordersView.js:603-607`), and the login card states that data stays in the browser (`scripts/router.js:42`).
-- Build script fails loudly rather than emitting a partial artifact — missing sources, missing HTML entries, unreplaceable stylesheet links and empty Terser output all throw, and `ensureInsideRoot` guards the destructive `dist/` reset (`build-dist.js:48-61,67-69,125-127,160-168,192-194`).
-- A project-specific validation script exists and demonstrably catches real defects rather than being decorative — `scripts/qa/check-css-vars.js`.
-- Security-relevant hosting configuration is present and specific: frame denial, nosniff, referrer policy, permissions policy, HSTS and a self-only CSP (`_headers:1-7`). No `.env`, credential, token or key material is tracked, and runtime code contains no `console.log`, `debugger`, `TODO` or `FIXME` (logging appears only in build tooling).
-- Motion and focus preferences are treated as first-class: 31 `:focus-visible` rules and 13 `prefers-reduced-motion` blocks across `styles/src/`, plus a motion-safe scroll helper used by navigation (`scripts/utils/dom.js:34-39`).
-- The Playwright suite present in the repository is broad for a project of this size — per-route metadata, legacy hash redirects, console-error assertions, live-region roles, scroll reset, drawer geometry on mobile, CRUD error association and export behaviour (`tests/smoke.spec.js`). Present and configured; not executed during this audit.
-- Documentation avoids unsupported claims: `README.md` explicitly states that the repository contains deployment configuration but no confirmation of an active production environment, declares no WCAG conformance, and records no measured performance results.
+- One definition per public page. Each route is a single maintained document, and the previously duplicated hash-routed renderer path is gone — `scripts/ui/marketingPages.js` no longer exists and `scripts/ui/layoutLanding.js:248` now exports only shell behaviour (`getLandingTheme`, `initResourcesMenu`, `initLandingShell`).
+- Explicit module dependencies replacing implicit script order: every file under `scripts/` declares its imports and exports, behind the single `<script type="module" src="/scripts/main.js">` entry (`index.html:449`), with the bootstrap sequence documented at `scripts/main.js:1-12`.
+- The service-worker precache is build-derived rather than hand-maintained. `fleetopsServiceWorkerPrecache` in `vite.config.js:80-130` reads the emitted documents, keeps only URLs the same bundle actually produced, sorts them for byte-identical rebuilds, and calls `this.error` if a precached document, the placeholder or any runtime asset is missing (`vite.config.js:101,110,115`). The result is visible in `dist/sw.js:29`.
+- Service-worker navigation semantics are correct and reasoned in place: a fulfilled response of any status passes through unchanged so host 404s survive worker control, only a rejected request falls back, and recovery order is requested document → offline fallback → network error (`public/sw.js:135-154`). `cacheNavigationResponse` stores only successful responses for known public routes (`public/sw.js:105-120`).
+- The offline fallback is genuinely self-sufficient: `offline.html` loads no stylesheet, script, font or image and inlines its own presentation, with the reason documented in the file (`offline.html:11-19`).
+- Honest interface boundaries applied consistently. Global search and the alerts button are natively `disabled` with explanatory `title` attributes (`scripts/ui/layoutApp.js:92,110`), orders CSV export uses the same treatment, offline mutations are rejected with "zmiana nie została zapisana" rather than a false queue (`scripts/state/store.js:353-363`), and the demo reset opens a confirmation that names what it clears (`scripts/ui/views/settingsView.js:237-263`).
+- Accessibility is viewport-aware rather than static. Drawer semantics — `role="dialog"`, `aria-modal` and `aria-hidden` — are applied and removed against a `matchMedia("(min-width: 1025px)")` query in both shells, kept in sync on viewport change and unsubscribed through the cleanup registry (`scripts/ui/layoutLanding.js:90-103,195-201`; `scripts/ui/layoutApp.js:238,264-274,314-327`). The application content region is the shell's `main` landmark and the skip-link target (`scripts/ui/layoutApp.js:205-215`), and collapsed accordion panels are removed from the accessibility tree through `hidden` while keeping the transition (`scripts/ui/components/accordion.js` — `syncState`).
+- The contact form is a real submission path with a working no-JavaScript baseline. The document carries the provider's detection contract and a clipped honeypot kept out of the tab order and the accessibility tree (`contact/index.html:138-152`), and the enhanced path posts same-origin, treats only `response.ok` as success, preserves typed values on failure, restates the published e-mail and telephone channels, and serialises requests behind a disabled control with `aria-busy` (`scripts/main.js:85-150`).
+- Consistent output escaping wherever record data reaches the DOM, via one helper — `escapeHtml` in `scripts/utils/dom.js`, used across all seven views and the application shell — with the behaviour asserted by the smoke suite.
+- Security-relevant headers are specific and now complete for a self-only policy: frame denial, nosniff, referrer policy, permissions policy, HSTS, and a CSP that closes `base-uri`, `form-action` and `object-src` (`public/_headers:1-7`). No `.env`, credential, token or key material is tracked, and no `console.log`, `debugger`, `TODO` or `FIXME` appears in runtime code — the only logging is in the QA script.
+- Routing configuration matches the architecture: `public/_redirects` carries slash redirects and an asset rule with no SPA catch-all, so unmatched paths reach `404.html`, and that document uses root-relative references throughout (`404.html:34-44,55`).
+- Repository hygiene is enforced rather than assumed. `.gitattributes` declares a line-ending policy per file type and states that it overrides local Git settings; `.gitignore` covers dependencies, build output, test artifacts and the local Netlify folder; the previously committed Playwright run artifact is no longer tracked.
+- Documentation matches the implementation to an unusual degree: the README Architecture section describes the executed model, the data section enumerates all ten written `localStorage` keys, groups them by responsibility and names the two legacy keys that appear only in cleanup code (`README.md:229-238`), and the deployment section records the manual CLI path and the absence of CI.
+- `npm test` is a genuinely read-only gate — `qa:css-vars` plus the smoke suite — and image generation is an explicit maintenance command that no build or test path invokes (`package.json` — `scripts`).
 
 ## 4. P0 — Critical risks
 
@@ -66,163 +69,98 @@ None detected.
 
 ## 5. P1 — Important issues worth fixing next
 
-### [P1-02] Application shell has no `main` landmark, so the skip link has no target on every `#/app` route
-
-- **Classification:** Defect
-- **Affected area:** Accessibility, document structure
-- **Evidence:** `index.html:86,88`; `scripts/ui/layoutApp.js:87,192-200`
-- **Current behavior:** The skip link `<a class="skip-link" href="#main-content">` lives outside `#app` and therefore persists across all routes. `renderAppShell` replaces the contents of `#app` with a structure built entirely from `div` elements (`.app-shell`, `.app-main`, `.app-content`); no element carries `id="main-content"` and no `<main>` element is emitted. The static public documents and `renderLogin` do provide `#main-content`, so the gap is specific to the six `#/app` routes and the in-app not-found view.
-- **Impact:** On every application route the first focusable control is a skip link that navigates nowhere and moves focus nowhere, and the application content is not exposed as a main landmark, removing the primary landmark-navigation shortcut for screen-reader users.
-- **Recommended direction:** Emit the application content region as a `main` element carrying `id="main-content"` inside the app shell, matching the contract the static pages and the login view already satisfy.
-- **Verification criteria:** On `#/app`, `#/app/orders` and the in-app not-found route, a single `main` landmark with `id="main-content"` exists and activating the skip link moves focus into it.
-
-### [P1-04] README describes removed renderers as the source of truth for shared layout and marketing content
-
-- **Classification:** Documentation mismatch
-- **Affected area:** Documentation, maintenance
-- **Evidence:** `README.md:47,49` and `README.md:285,287`; `index.html:91-140,362-462`; `product/index.html:52-101,270-370`
-- **Current behavior:** The Architecture section states that the shared header and footer are rendered in `scripts/ui/layoutLanding.js` and marketing subpage content in `scripts/ui/marketingPages.js`, and that the store is a central state store "with subscriptions". In the current implementation each static document contains its own inline header, footer and page content, `scripts/ui/marketingPages.js` no longer exists and the header/footer renderers have been deleted from `scripts/ui/layoutLanding.js`, and `FleetStore.onChange` has no subscriber anywhere in the repository.
-- **Impact:** The single document intended to orient a maintainer or reviewer points them at a deleted file and at renderers that no longer exist, which is the most likely route to editing the wrong source and to misjudging the project's architecture during review.
-- **Recommended direction:** Rewrite the Architecture bullets to describe the model the code actually executes — per-route static documents owning their own shell markup, with JavaScript limited to shell behaviour and the demo application — and drop or qualify the subscription claim.
-- **Verification criteria:** Every file named in the Architecture section has a reachable runtime role matching the description, and no described mechanism lacks an implementation.
-
-### [P1-05] Contact form confirms a reply that no code path can deliver, contradicting the project's own privacy page
-
-- **Classification:** Content integrity risk
-- **Affected area:** Public content, forms, privacy disclosure
-- **Evidence:** `scripts/main.js:65-79`; `contact/index.html:120,147,150`; `privacy/index.html:193`
-- **Current behavior:** `bindStaticContactForm` calls `preventDefault`, resets the form and shows the toast "Dziękujemy! Wkrótce się odezwiemy." The form has no `action`, no submission target and no delivery mechanism; the entered name, business e-mail, fleet size and message are discarded. The page states "Zostaw dane, a odezwiemy się w ciągu 1 dnia roboczego", and the FAQ repeats the one-working-day commitment. The consent line discloses that the form is part of a portfolio demo but not that nothing is transmitted. The privacy page states the opposite of the interface: the form "nie wysyła danych do produkcyjnego backendu FleetOps", while also describing the message data as processed in order to reply.
-- **Impact:** A visitor is given an explicit success confirmation and a response deadline for a message that was never delivered, and the two public documents contradict each other on whether the data is transmitted and processed. This is the project's only personal-data collection point, so the mismatch carries trust and disclosure risk disproportionate to its size.
-- **Recommended direction:** Align the three surfaces on one truth. Either give the form a real destination, or state on the form itself that the submission is not delivered, replace the success wording with a demo-accurate confirmation, remove the response-time commitments, and reconcile the privacy-page description with the chosen behaviour.
-- **Verification criteria:** The contact page, the success message and the privacy page make the same statement about whether a submission is transmitted, and no response-time commitment remains that the implementation cannot honour.
-
-### [P1-06] Actions performed offline are queued in name only and are discarded on reconnect
-
-- **Classification:** Defect
-- **Affected area:** Demo application, state handling, offline behaviour
-- **Evidence:** `scripts/state/store.js:347-357,359-369,377-386`
-- **Current behavior:** Every mutating store method opens with `ensureOnline`, which, while `navigator.onLine` is `false`, calls `enqueueOfflineAction`, shows "Tryb offline - akcja dodana do kolejki" and returns `false`, so the create, edit or delete never runs. `enqueueOfflineAction` stores only an action label, an ID and a timestamp — never the payload — so the operation cannot be replayed. On reconnect, `setOnlineStatus` calls `clearOfflineQueue()` and shows "Połączenie przywrócone"; the queued entries are deleted and no action is ever applied.
-- **Impact:** A user who fills in and submits a record while offline is told the action was queued, sees the queue cleared with a positive confirmation on reconnect, and never learns the work was lost. The message promises deferred processing the data model cannot support.
-- **Recommended direction:** Either persist enough of each action to replay it and apply the queue on reconnect, or change the offline messaging to state plainly that the action was rejected and must be repeated once the connection returns, and stop presenting the reconnect as a completed sync.
-- **Verification criteria:** After creating a record offline and returning online, either the record exists or the user has been told explicitly that it was not saved; no message implies deferred processing that does not occur.
-
-### [P1-08] Catch-all redirect makes `404.html` unreachable and turns every unknown URL into a soft 404
-
-- **Classification:** Contract mismatch
-- **Affected area:** Deployment routing, SEO, error handling
-- **Evidence:** `_redirects:16`; `404.html:9,13,34-38,55`; `build-dist.js:24,26-27`
-- **Current behavior:** `_redirects` ends with `/* /index.html 200`. Under that rule any path that is not an existing file or an earlier rule is served the landing document with HTTP 200, so the static error document is never reached even though it is authored, maintained, carries `noindex, follow` and a canonical URL, and is copied into `dist/` by the build. `404.html` also diverges from every other document in using relative `./assets/...` references for icons and the manifest and `href="./"` for its home link, which resolve incorrectly for any nested request path.
-- **Impact:** Unknown URLs return a 200 landing page rather than an error, which is a soft 404 for crawlers and gives users no signal that the address was wrong; the maintained error page is dead weight in the repository and the build. The relative references mean the page would also render incorrectly at nested paths if it were reached.
-- **Recommended direction:** Decide whether the catch-all fallback is required. The public routes are real directories and the demo application lives entirely in the hash, so a fallback is not needed for routing; scope or remove it so unmatched paths reach the error document, and switch the `404.html` asset and home references to root-relative paths.
-- **Verification criteria:** A request to a non-existent path returns the error document with a 404 status, and that document loads its icons, manifest and home link correctly regardless of the requested path depth.
-
-### [P1-09] At a viewport width of exactly 1024 px the application has no navigation and its content is confined to the sidebar column
-
-- **Classification:** Defect
-- **Affected area:** Responsive layout, application navigation
-- **Evidence:** `styles/src/06-app.css:25-30,145-148,350-367,457-470`
-- **Current behavior:** The breakpoints for the application shell are inconsistent. At `min-width: 1024px` the mobile top bar — the only host of `#drawerToggle` — is set to `display: none`, and `.app-shell` becomes a two-column grid (`240px 1fr`). The desktop sidebar rules are gated at `min-width: 1025px`, so at exactly 1024 px `.sidebar` retains its base state (`position: fixed; transform: translateX(-100%); visibility: hidden`). Being out of flow, it is not a grid item, so `.app-main` occupies the 240 px first column instead of the second. The landing header uses a single consistent 1025 px boundary and is unaffected.
-- **Impact:** At exactly 1024 CSS pixels — a common tablet-landscape and windowed-desktop width — the demo application presents no route navigation at all (drawer toggle hidden, sidebar hidden) and renders its content into a 240 px column. The outcome is deterministic from the CSS; the visual severity was not confirmed in a browser.
-- **Recommended direction:** Use one boundary for the whole application shell so that the sidebar becomes static at exactly the width where the mobile top bar is withdrawn.
-- **Verification criteria:** At viewport widths of 1023 px, 1024 px and 1025 px the application always exposes exactly one usable navigation affordance, and `.app-main` occupies the content column at every width where the grid is active.
-
-### [P1-10] Public pages present attributed testimonials and precise trust metrics that nothing in the project supports
-
-- **Classification:** Content integrity risk
-- **Affected area:** Public marketing content
-- **Evidence:** `index.html:283-314` (`grid--testimonials`, company attributions at lines 291, 301, 311); `product/index.html:127-141` (`marketing-hero__stats`)
-- **Current behavior:** The landing page carries three testimonials presented as quotations from named roles at named companies (CargoNord, FreshLine, AeroParts). The product page presents a "Wskaźniki zaufania" panel with specific figures — 96.8 % ETA accuracy, 99.6 % SLA availability, 12-minute alert response. The project has no backend, no customers and no measurement capability; the FAQ elsewhere states that panel data is sample data, and the README describes the project as a demonstration.
-- **Impact:** Fabricated social proof and quantified performance claims on a public page create a trust problem the rest of the project carefully avoids, and they sit inconsistently beside the demo disclaimers on the same site. In portfolio review this reads as either careless placeholder content or misleading commercial claiming.
-- **Recommended direction:** Either mark these sections unambiguously as illustrative sample content in the visible copy, or replace them with statements the project can support — for example, what the demo actually demonstrates instead of attributed quotations and measured percentages.
-- **Verification criteria:** No public page presents a quotation attributed to a named organisation or a numeric performance figure without a visible indication that the content is illustrative.
+None detected.
 
 ## 6. P2 — Minor refinements
 
-### [P2-04] Collapsed accordion panels remain exposed to assistive technology
+### [P2-01] Twenty-three modules publish themselves on `window`; the one global that is load-bearing is indistinguishable from the twenty-two that are not
+
+- **Classification:** Maintenance risk
+- **Affected area:** Module architecture, demo permission model, documentation
+- **Evidence:** `scripts/state/store.js:366,368`; `scripts/core/permissions.js:49-55,114-115`; `README.md:51` and `README.md:307`
+- **Current behavior:** Every runtime module both exports its API and assigns itself to `window` — 23 such assignments across `scripts/`. Only one is read anywhere: `scripts/core/permissions.js` resolves the current user and writes the activity trail through `window.FleetStore`, deliberately and with the reason documented in place (`scripts/state/store.js` imports `FleetPermissions`, so a static import back would close a module cycle). The other 22 assignments have no consumer in the repository, in the tests or in any HTML document. The README describes the whole set as "a deliberately preserved internal contract, not a loading mechanism", which is accurate for 22 of them and inaccurate for the one that is a runtime dependency.
+- **Impact:** Nothing is currently broken. The risk is that removing `store.js:368` during an obvious dead-global cleanup silently degrades the permission model rather than failing: `resolveUser` falls back to `defaultUser`, which is `DemoUsers[0]` — the administrator — so every demo role would gain administrator rights and `guard` would stop recording denials. The in-code explanation sits in `permissions.js`, not at the assignment being removed, and the README statement actively suggests the assignment is inert.
+- **Recommended direction:** Remove the global publications nothing consumes, and make the remaining dependency explicit at both ends — either resolve the cycle so `permissions.js` can import the store, or keep the lazy lookup while marking the assignment in `store.js` as load-bearing and correcting the README sentence to distinguish the two cases.
+- **Verification criteria:** Every remaining `window.*` publication has an identifiable consumer, and removing any single one of them causes a visible failure rather than a silent change in permission behaviour.
+
+### [P2-02] The smoke suite may pass against a stale build artifact
 
 - **Classification:** Source-visible risk
-- **Affected area:** Accessibility, FAQ sections
-- **Evidence:** `styles/src/03-components.css:444-452`; `scripts/ui/components/accordion.js:45-49`
-- **Current behavior:** `syncState` sets `aria-expanded` correctly on the header and toggles an `open` class, but the collapsed state is expressed only as `max-height: 0` with `overflow: hidden`. The panel content is not hidden from the accessibility tree.
-- **Impact:** A screen reader can encounter and read the answers of every FAQ item while its control reports `aria-expanded="false"`, so the collapsed state is announced but not honoured. Affected content is text-only, so no focusable element is stranded. Runtime announcement behaviour was not verified.
-- **Recommended direction:** Make the collapsed state authoritative — for example by applying `hidden`, `display: none` or `visibility: hidden` in the closed state in addition to the height transition.
-- **Verification criteria:** With an accordion item collapsed, its panel content is absent from the accessibility tree and is not reachable by screen-reader browse mode.
+- **Affected area:** Automated verification
+- **Evidence:** `playwright.config.js:19-24`
+- **Current behavior:** The suite's `webServer` command is `npm run build && npm run preview`, but `reuseExistingServer: true` means the whole command is skipped whenever something already answers on `http://127.0.0.1:8182`. A preview server left running from an earlier build therefore serves a `dist/` that predates the current sources, and the run reports success against it.
+- **Impact:** The project's only automated gate covering the production artifact can report a pass that does not describe the current sources. This is exactly the scenario the suite exists to rule out, and there is no CI run to catch it independently — the README records that no CI integration exists.
+- **Recommended direction:** Reserve server reuse for local iteration and require a fresh build for a reported verification run, for example by tying `reuseExistingServer` to an environment flag that defaults to off.
+- **Verification criteria:** A verification run started while a stale preview server is listening either rebuilds first or fails, rather than testing the stale artifact.
 
-### [P2-05] Application top bar exposes a search field and an alerts button with no behaviour
+### [P2-03] Service-worker cache versioning is hand-maintained while its precache content is build-derived
 
-- **Classification:** Defect
-- **Affected area:** Demo application, interface honesty
-- **Evidence:** `scripts/ui/layoutApp.js:92,110`
-- **Current behavior:** The application top bar renders `<input aria-label="Szukaj" type="search" placeholder="Szukaj...">` and a button labelled "Alerty" with `aria-label="Otwórz alerty"`. Neither has a handler anywhere in the repository. The per-view search inputs in the orders, fleet and drivers tables are separate controls and do work.
-- **Impact:** Two prominent, enabled controls in the persistent application chrome accept interaction and do nothing — the pattern the project handles correctly elsewhere by disabling CSV export with an explanatory title.
-- **Recommended direction:** Give both controls behaviour, or apply the same honest treatment already used for CSV export — disabled with a title explaining the demo limitation.
-- **Verification criteria:** Every enabled control in the application top bar performs an observable action, or communicates its unavailability.
+- **Classification:** Maintenance risk
+- **Affected area:** Service worker, client storage
+- **Evidence:** `public/sw.js:1,29-33,44-57`
+- **Current behavior:** `RUNTIME_ASSET_URLS` changes automatically with every build that emits new content hashes, but `CACHE_NAME` is a literal (`"fleetops-v1.12"`) that a maintainer must remember to advance. Activation deletes only caches whose name differs from the current one. If the version is not bumped, a new build's `install` adds its hashed assets to the same cache while the previous build's hashed entries stay in it permanently, because nothing else evicts them.
+- **Impact:** Storage growth across deployments rather than incorrect serving — content-hashed URLs cannot collide, so a stale entry is never returned for new content. The two halves of the precache contract nevertheless move on different schedules, and the manual half is the one with no build-time check behind it, unlike every other part of the precache which fails the build when inconsistent.
+- **Recommended direction:** Derive the cache name from the same build data that produces the asset list, or fail the build when the emitted asset set changes and the version literal does not.
+- **Verification criteria:** Two consecutive builds with different asset hashes produce different cache names without a manual edit, and the older cache is removed on activation.
 
-### [P2-06] Demo reset destroys local data without confirmation, unlike every other destructive action
+### [P2-04] A 385 MB directory of tooling worktrees sits untracked and unignored in the repository root
 
-- **Classification:** Defect
-- **Affected area:** Settings view, data safety
-- **Evidence:** `scripts/ui/views/settingsView.js:113-119,224-230`; `scripts/state/store.js:314-345`
-- **Current behavior:** A single click on "Resetuj" calls `FleetStore.resetDemo()` immediately. That clears eight storage keys — domain records, activity, list preferences, filters, theme, compact mode, dashboard range and the offline queue — and rebuilds from seed. Record deletion elsewhere in the application routes through a "Potwierdzenie usunięcia" modal.
-- **Impact:** All locally created demo records and interface preferences are lost from one unconfirmed click, and the reset is broader than the card's description ("Przywraca dane demo do stanu początkowego") suggests. The loss is limited to browser-local demo data and is recoverable by re-entry.
-- **Recommended direction:** Route the reset through the existing confirmation modal and state in the confirmation what will be cleared.
-- **Verification criteria:** Activating "Resetuj" requires an explicit confirmation that names the data being cleared.
+- **Classification:** Maintenance risk
+- **Affected area:** Repository hygiene
+- **Evidence:** `.gitignore` (no entry for `.claude/`); `git status --short` reports `?? .claude/`; the directory contains ten worktree copies of the project
+- **Current behavior:** `.gitignore` covers `node_modules/`, `dist/`, `test-results/`, `playwright-report/` and `.netlify/`, but not the local tooling directory, which currently holds ten full copies of the project totalling about 385 MB.
+- **Impact:** `git status` is dominated by a single untracked entry that hides real untracked work, and a routine `git add -A` would stage hundreds of megabytes of duplicated sources. The repository otherwise treats generated and local-only content explicitly, so this is the one gap in an established convention.
+- **Recommended direction:** Add the tooling directory to `.gitignore` alongside the other local-only entries.
+- **Verification criteria:** `git status` is clean after a full install, build and test run, with no untracked entry outside deliberate work.
 
-### [P2-07] README understates the persisted storage keys, the reset scope and the store's subscription model
+### [P2-05] Three development dependencies carry high-severity advisories, two of them fixable within the current major versions
 
-- **Classification:** Documentation mismatch
-- **Affected area:** Documentation, data and state description
-- **Evidence:** `README.md:218` and `README.md:456`; `scripts/state/store.js:96-108,314-326,92-94`; `scripts/router.js:234`
-- **Current behavior:** The README lists five `localStorage` keys. `persist()` additionally writes `fleet-theme`, `fleet-compact`, `fleet-dashboard-range`, `fleet-auth` and `fleet-filters`, and the router writes `fleet-last-route`. The documented reset scope (domain, activity, list preferences) is narrower than the implementation, which also clears theme, compact mode, dashboard range, filters and the offline queue. `onChange` is documented as a subscription mechanism and has no subscriber.
-- **Impact:** The section a reader would consult to understand what the project stores in their browser, and what a reset removes, is materially incomplete — which matters more than usual because the privacy page relies on the same description.
-- **Recommended direction:** Update the data-and-state section to list every key actually written and the full reset scope, and either remove the subscription claim or note that the API is currently unused.
-- **Verification criteria:** Every key written by the implementation appears in the README list, and the documented reset scope matches `resetDemo`.
+- **Classification:** Security exposure
+- **Affected area:** Dependency configuration
+- **Evidence:** `npm audit` output; `package.json` — `devDependencies`; `package-lock.json`
+- **Current behavior:** `npm audit` reports three high-severity advisories, all in the development tree: `nanoid` at or below 3.3.16 and `postcss` at or below 8.5.22, both transitive under Vite, and `sharp` below 0.35.0 for inherited libvips issues. The audit reports the first two as fixable without breaking changes and `sharp` as requiring a major upgrade to 0.35.3.
+- **Impact:** No runtime exposure — nothing from these packages ships to the browser, the PostCSS advisory needs an attacker-controlled `sourceMappingURL` in processed CSS while all CSS here is first-party, and `sharp` processes two first-party source images. The practical cost is that a reviewer running `npm audit` on a portfolio project sees three unresolved high-severity findings and has to reason this through themselves.
+- **Recommended direction:** Take the non-breaking updates for the transitive advisories, and evaluate the `sharp` major upgrade separately since it affects only the explicit image-generation command.
+- **Verification criteria:** `npm audit` reports no high-severity advisory, or each remaining one is recorded in the repository with its reason for being accepted.
 
-### [P2-08] Product page copy drops Polish diacritics in three places
+### [P2-06] One public page still drops Polish diacritics
 
 - **Classification:** Content integrity risk
 - **Affected area:** Public content, Polish-language copy
-- **Evidence:** `product/index.html:127,148,173`
-- **Current behavior:** The page renders "Wskazniki zaufania", "Jak to dziala" and "Raporty KPI i eksporty pomagaja zamykac petle operacyjna", while the surrounding copy on the same page and across the other ten public documents uses correct diacritics.
-- **Impact:** Visible spelling errors on a public marketing page of a portfolio project, inconsistent with the standard of the rest of the site.
-- **Recommended direction:** Correct the three strings to match the diacritic convention used everywhere else.
+- **Evidence:** `features/index.html:179`
+- **Current behavior:** The section heading reads "Branze, ktore wspiera FleetOps" instead of "Branże, które". The equivalent errors on the product page were corrected; this occurrence was not.
+- **Impact:** A visible spelling error in a section heading on a public marketing page, inconsistent with the correct copy everywhere else on the site.
+- **Recommended direction:** Correct the heading to match the diacritic convention used across the other documents.
 - **Verification criteria:** No public page contains Polish words with dropped diacritics.
 
 ## 7. Extra quality improvements
 
-### Offline fallback document for failed navigations
+### Split the demo application out of the bundle every public page loads
 
-- **Relevant area:** Service worker (`sw.js:118-130`).
-- **Current evidence:** `networkFirstNavigation` returns `Response.error()` when the network fails and no cached entry matches, so an offline navigation to an unvisited, non-precached route surfaces the browser's own error page. The README describes the current strategy accurately, so this is not a documentation gap.
-- **Potential value:** A branded offline document would make the service worker's behaviour legible to a reviewer and close the one path where the application currently hands control back to the browser.
-- **Scope boundary:** Optional. The current behaviour matches the documented design and is not a defect.
+- **Relevant area:** Module graph and build output (`scripts/main.js:8`; `scripts/router.js:1-12`; `dist/assets/main-BBQDKSh8.js`).
+- **Current evidence:** `main.js` statically imports `FleetRouter`, which statically imports the application shell and all seven views, so the single emitted chunk — 107 KB for the current build — is downloaded and parsed by all thirteen documents. The router, the application shell and the views account for roughly 3 100 source lines that no public marketing page can execute, since those pages never enter a `#/app` route.
+- **Potential value:** The marketing pages would load only the shell behaviour they actually run. Vite is already configured for it, so the change is a dynamic import at the router boundary rather than a restructure.
+- **Scope boundary:** Optional. The current payload is modest and nothing is broken; this is a proportionality improvement, not a defect.
 
-### Precache the stylesheet and entry scripts alongside the documents
+### Record a contrast and assistive-technology verification pass
 
-- **Relevant area:** Service worker precache (`sw.js:3-16`).
-- **Current evidence:** `PRECACHE_URLS` covers the app shell and the ten public documents but no CSS, JavaScript or font. Those are cached only opportunistically by the stale-while-revalidate handler after a controlled navigation has requested them.
-- **Potential value:** A first offline navigation to a precached-but-unvisited route would render styled and interactive rather than as unstyled markup.
-- **Scope boundary:** Optional, and it would tie the precache list to the build output naming, so it is worth doing only alongside a decision about generated asset names.
-
-### Extend the CSP with the directives the current policy leaves open
-
-- **Relevant area:** Hosting headers (`_headers:7`).
-- **Current evidence:** The policy sets `default-src`, `img-src`, `style-src`, `script-src`, `font-src` and `connect-src`, and framing is separately denied via `X-Frame-Options`. `base-uri`, `form-action` and `object-src` are not set and therefore fall back to permissive defaults rather than to `default-src`.
-- **Potential value:** Closes the residual injection surface a self-only policy is otherwise designed to eliminate, at no functional cost for a static site.
-- **Scope boundary:** Optional hardening. No current implementation depends on the omitted directives.
+- **Relevant area:** Accessibility verification (`styles/src/00-settings.css` token definitions; the accessibility section of `README.md`).
+- **Current evidence:** The implementation covers the mechanisms a source audit can confirm — landmarks, live regions, focus management, viewport-conditional drawer semantics, 31 `:focus-visible` rules and 13 `prefers-reduced-motion` blocks — but colour contrast and actual screen-reader announcement are the two areas neither this audit nor the smoke suite can establish.
+- **Potential value:** It would close the one remaining gap between what the project implements and what it can evidence, without changing the README's correct refusal to claim formal conformance.
+- **Scope boundary:** Optional, and it is a verification activity rather than a code change.
 
 ## 8. Current readiness conclusion
 
-**Status:** Needs important fixes
+**Status:** Ready with minor refinements
 
-No finding prevents the project from being built, served or navigated, and no critical risk was detected: there are no exposed secrets, no broken asset contract, no data-loss path outside browser-local demo data, and no failure that makes the project substantially unusable. The readiness status is set by seven P1 findings that a reviewer would reasonably expect to be closed before this is presented as finished work — one accessibility defect affecting landmark structure across the whole application area, two content-integrity issues on public pages, a documentation section that points maintainers at renderers that no longer exist, an unreachable error page, a deterministic layout break at one common viewport width, and an offline queue that silently discards user input.
+No critical or important finding remains. Every defect from the previous audit was closed at the source rather than documented away: the duplicate page-rendering path was deleted, the application shell gained a `main` landmark, drawer semantics became viewport-conditional, the shell breakpoints were unified, the offline queue was replaced with an honest rejection, the contact form became a real submission path reconciled with the privacy policy, unsupported public claims were reframed, the unreachable error page was restored by removing the SPA catch-all, collapsed accordion panels were hidden from assistive technology, the undefined design token was resolved, and repository hygiene was put under `.gitignore` and `.gitattributes`. All three previously optional improvements — the offline fallback document, the build-derived runtime-asset precache and the extended CSP — were implemented.
 
-None of these requires redesign or migration; each has a contained correction path within the existing architecture. Once they are resolved, the remaining risk is concentrated in verification that this audit could not perform — browser, assistive-technology, cross-browser, build and production checks — rather than in the implementation itself.
+What is left are six contained refinements: module-migration residue with a documented but silent failure mode, two verification-hygiene items, a tooling directory outside `.gitignore`, development-dependency advisories with no runtime exposure, and one spelling error. None of them affects a user-facing behaviour, a build, a deployment or an accessibility contract, and none needs to be resolved before this is presented, deployed or handed over. The remaining risk sits in verification this audit could not perform — contrast, assistive technology, cross-browser behaviour and the live environment — rather than in the implementation.
 
 ## 9. Senior rating
 
-**Rating:** 6/10
+**Rating:** 8/10
 
-Judged as a vanilla, frontend-only portfolio SaaS demo with no backend, the engineering foundations are above average for the category: one canonical source of domain state with validated rehydration, permissions isolated from views, consistent output escaping backed by a test that asserts it, reusable keyboard-complete dialog patterns, a cleanup registry that actually runs on route change, a build that fails loudly instead of emitting partial output, a project-specific validation script, real security headers, and documentation that resists overclaiming.
+Judged as a vanilla, frontend-only portfolio SaaS demo, this is now a strong implementation with an unusually disciplined relationship between its code, its tests and its documentation. The architecture has one owner for every concern: one document per public route, one module graph behind one entry, one CSS source tree, one service-worker source whose precache is generated from the build that produced the assets and which fails the build when the two disagree. The interface no longer claims anything the implementation cannot do — disabled controls say why, offline rejections say the change was not saved, public figures are marked illustrative, and the contact form confirms only what the provider accepted while keeping a working no-JavaScript path. The README describes the executed system precisely enough to audit against, including the parts that are inert.
 
-The rating is held at 6 by the number of confirmed current defects rather than by any single one. The accessibility contract is stated in the README but is not met where it matters most — the application's only navigation is hidden from assistive technology at desktop widths and its content region is not a landmark. The project's own CSS gate fails in `HEAD`. The README still documents the deleted duplicate renderer path as canonical. Public content asserts testimonials and metrics the project cannot support, and the contact form confirms a delivery it does not perform while the privacy page says the opposite. These are the kinds of issues a final review is meant to catch, and their combined presence is what separates the current state from the 8-plus range the underlying architecture would otherwise support. Verification limitations — no executed test suite, no browser or assistive-technology checks, no build run, no deployment inspection — mean the rating reflects source-verified quality and unresolved risk, not measured runtime behaviour.
+The rating stops at 8 rather than higher for reasons of verification and residue, not correctness. The module migration left twenty-three global publications of which one is load-bearing, and the documentation describes that set in a way that would mislead the person most likely to clean it up. The single automated gate covering the production artifact can be satisfied by a stale server. Cache versioning is the one part of the service-worker contract with no build-time check behind it. Contrast and assistive-technology behaviour remain unevidenced, and the deployment is recorded in documentation rather than verified here. The 29-test suite that covers the built artifact is reported as passing on the project owner's machine and was not re-executed by this audit; the rating reflects source-verified quality plus that supplied evidence, not independently measured runtime behaviour.
