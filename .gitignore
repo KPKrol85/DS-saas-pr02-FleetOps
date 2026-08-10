@@ -13,6 +13,7 @@ playwright-report/
 
 # Local agent tooling worktrees
 /.claude/
+/.codex/
 
 # Runtime and package manager logs
 *.log
