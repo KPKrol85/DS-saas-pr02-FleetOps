@@ -13,7 +13,7 @@ The behaviours that were previously misleading are now honest. The contact form 
 
 Documentation is the strongest part of the repository. The README describes the executed model file by file, lists every `localStorage` key the implementation writes, states which of them nothing reads back, records that the deployment is manual and that no CI exists, and declines to claim anything it cannot support.
 
-What remains is residue and verification hygiene, not defect. The ES module migration left twenty-three modules publishing themselves on `window`; exactly one of those globals is read at runtime, and it is the one that looks most disposable. The smoke suite is allowed to reuse an existing preview server, so it can pass against a stale artifact. Service-worker cache versioning is hand-maintained while its precache content is build-derived. One page still drops Polish diacritics, a 385 MB directory of tooling worktrees sits untracked and unignored, and three development dependencies carry high-severity advisories with no runtime exposure. None of these blocks release, deployment or portfolio presentation.
+What remains is residue and verification hygiene, not defect. The ES module migration left twenty-three modules publishing themselves on `window`; exactly one of those globals is read at runtime, and it is the one that looks most disposable. The smoke suite is allowed to reuse an existing preview server, so it can pass against a stale artifact. Service-worker cache versioning is hand-maintained while its precache content is build-derived. A 385 MB directory of tooling worktrees sits untracked and unignored, and three development dependencies carry high-severity advisories with no runtime exposure. None of these blocks release, deployment or portfolio presentation.
 
 ## 2. Audit scope and verification
 
@@ -123,16 +123,6 @@ None detected.
 - **Recommended direction:** Take the non-breaking updates for the transitive advisories, and evaluate the `sharp` major upgrade separately since it affects only the explicit image-generation command.
 - **Verification criteria:** `npm audit` reports no high-severity advisory, or each remaining one is recorded in the repository with its reason for being accepted.
 
-### [P2-06] One public page still drops Polish diacritics
-
-- **Classification:** Content integrity risk
-- **Affected area:** Public content, Polish-language copy
-- **Evidence:** `features/index.html:179`
-- **Current behavior:** The section heading reads "Branze, ktore wspiera FleetOps" instead of "Branże, które". The equivalent errors on the product page were corrected; this occurrence was not.
-- **Impact:** A visible spelling error in a section heading on a public marketing page, inconsistent with the correct copy everywhere else on the site.
-- **Recommended direction:** Correct the heading to match the diacritic convention used across the other documents.
-- **Verification criteria:** No public page contains Polish words with dropped diacritics.
-
 ## 7. Extra quality improvements
 
 ### Split the demo application out of the bundle every public page loads
@@ -155,7 +145,7 @@ None detected.
 
 No critical or important finding remains. Every defect from the previous audit was closed at the source rather than documented away: the duplicate page-rendering path was deleted, the application shell gained a `main` landmark, drawer semantics became viewport-conditional, the shell breakpoints were unified, the offline queue was replaced with an honest rejection, the contact form became a real submission path reconciled with the privacy policy, unsupported public claims were reframed, the unreachable error page was restored by removing the SPA catch-all, collapsed accordion panels were hidden from assistive technology, the undefined design token was resolved, and repository hygiene was put under `.gitignore` and `.gitattributes`. All three previously optional improvements — the offline fallback document, the build-derived runtime-asset precache and the extended CSP — were implemented.
 
-What is left are six contained refinements: module-migration residue with a documented but silent failure mode, two verification-hygiene items, a tooling directory outside `.gitignore`, development-dependency advisories with no runtime exposure, and one spelling error. None of them affects a user-facing behaviour, a build, a deployment or an accessibility contract, and none needs to be resolved before this is presented, deployed or handed over. The remaining risk sits in verification this audit could not perform — contrast, assistive technology, cross-browser behaviour and the live environment — rather than in the implementation.
+What is left are five contained refinements: module-migration residue with a documented but silent failure mode, two verification-hygiene items, a tooling directory outside `.gitignore`, and development-dependency advisories with no runtime exposure. None of them affects a user-facing behaviour, a build, a deployment or an accessibility contract, and none needs to be resolved before this is presented, deployed or handed over. The remaining risk sits in verification this audit could not perform — contrast, assistive technology, cross-browser behaviour and the live environment — rather than in the implementation.
 
 ## 9. Senior rating
 
