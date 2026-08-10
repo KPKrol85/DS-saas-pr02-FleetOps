@@ -13,7 +13,7 @@ The behaviours that were previously misleading are now honest. The contact form 
 
 Documentation is the strongest part of the repository. The README describes the executed model file by file, lists every `localStorage` key the implementation writes, states which of them nothing reads back, records that the deployment is manual and that no CI exists, and declines to claim anything it cannot support.
 
-What remains is residue and verification hygiene, not defect. The ES module migration left twenty-three modules publishing themselves on `window`; exactly one of those globals is read at runtime, and it is the one that looks most disposable. The smoke suite is allowed to reuse an existing preview server, so it can pass against a stale artifact. Service-worker cache versioning is hand-maintained while its precache content is build-derived, and three development dependencies carry high-severity advisories with no runtime exposure. None of these blocks release, deployment or portfolio presentation.
+What remains is residue and verification hygiene, not defect. The ES module migration left twenty-three modules publishing themselves on `window`; exactly one of those globals is read at runtime, and it is the one that looks most disposable. Service-worker cache versioning is hand-maintained while its precache content is build-derived, and three development dependencies carry high-severity advisories with no runtime exposure. None of these blocks release, deployment or portfolio presentation.
 
 ## 2. Audit scope and verification
 
@@ -33,7 +33,7 @@ What remains is residue and verification hygiene, not defect. The ES module migr
 
 - `node scripts/qa/check-css-vars.js` (`npm run qa:css-vars`) — executed and passed; 971 `var()` usages against 77 definitions across 11 source files, exit code 0
 - `node --check` across every tracked JavaScript file including `public/sw.js`, `vite.config.js` and `optimize-images.js` — executed and passed; syntax only, no behavioural verification
-- `npm audit` — executed; three high-severity advisories reported, all in development dependencies (see [P2-04])
+- `npm audit` — executed; three high-severity advisories reported, all in development dependencies (see [P2-03])
 - `git status`, `git log`, `git ls-files`, working-tree comparison of `dist/` against its sources — executed
 - Static inspection of every file listed above, including cross-referencing each `window.*` publication against its consumers, each documented README claim against its implementation, and each finding of the previous audit against the current source
 - `npm run test:smoke` — **executed and passed on the project owner's machine on 2026-08-10, not re-executed during this audit.** The supplied run reports 29 of 29 tests passing. `playwright.config.js:19-24` starts the suite with `npm run build && npm run preview`, so the run exercised the built `dist/` artifact rather than the development server. This audit reports that result as supplied evidence and does not independently assert it.
@@ -83,17 +83,7 @@ None detected.
 - **Recommended direction:** Remove the global publications nothing consumes, and make the remaining dependency explicit at both ends — either resolve the cycle so `permissions.js` can import the store, or keep the lazy lookup while marking the assignment in `store.js` as load-bearing and correcting the README sentence to distinguish the two cases.
 - **Verification criteria:** Every remaining `window.*` publication has an identifiable consumer, and removing any single one of them causes a visible failure rather than a silent change in permission behaviour.
 
-### [P2-02] The smoke suite may pass against a stale build artifact
-
-- **Classification:** Source-visible risk
-- **Affected area:** Automated verification
-- **Evidence:** `playwright.config.js:19-24`
-- **Current behavior:** The suite's `webServer` command is `npm run build && npm run preview`, but `reuseExistingServer: true` means the whole command is skipped whenever something already answers on `http://127.0.0.1:8182`. A preview server left running from an earlier build therefore serves a `dist/` that predates the current sources, and the run reports success against it.
-- **Impact:** The project's only automated gate covering the production artifact can report a pass that does not describe the current sources. This is exactly the scenario the suite exists to rule out, and there is no CI run to catch it independently — the README records that no CI integration exists.
-- **Recommended direction:** Reserve server reuse for local iteration and require a fresh build for a reported verification run, for example by tying `reuseExistingServer` to an environment flag that defaults to off.
-- **Verification criteria:** A verification run started while a stale preview server is listening either rebuilds first or fails, rather than testing the stale artifact.
-
-### [P2-03] Service-worker cache versioning is hand-maintained while its precache content is build-derived
+### [P2-02] Service-worker cache versioning is hand-maintained while its precache content is build-derived
 
 - **Classification:** Maintenance risk
 - **Affected area:** Service worker, client storage
@@ -103,7 +93,7 @@ None detected.
 - **Recommended direction:** Derive the cache name from the same build data that produces the asset list, or fail the build when the emitted asset set changes and the version literal does not.
 - **Verification criteria:** Two consecutive builds with different asset hashes produce different cache names without a manual edit, and the older cache is removed on activation.
 
-### [P2-04] Three development dependencies carry high-severity advisories, two of them fixable within the current major versions
+### [P2-03] Three development dependencies carry high-severity advisories, two of them fixable within the current major versions
 
 - **Classification:** Security exposure
 - **Affected area:** Dependency configuration
@@ -135,7 +125,7 @@ None detected.
 
 No critical or important finding remains. Every defect from the previous audit was closed at the source rather than documented away: the duplicate page-rendering path was deleted, the application shell gained a `main` landmark, drawer semantics became viewport-conditional, the shell breakpoints were unified, the offline queue was replaced with an honest rejection, the contact form became a real submission path reconciled with the privacy policy, unsupported public claims were reframed, the unreachable error page was restored by removing the SPA catch-all, collapsed accordion panels were hidden from assistive technology, the undefined design token was resolved, and repository hygiene was put under `.gitignore` and `.gitattributes`. All three previously optional improvements — the offline fallback document, the build-derived runtime-asset precache and the extended CSP — were implemented.
 
-What is left are four contained refinements: module-migration residue with a documented but silent failure mode, two verification-hygiene items, and development-dependency advisories with no runtime exposure. None of them affects a user-facing behaviour, a build, a deployment or an accessibility contract, and none needs to be resolved before this is presented, deployed or handed over. The remaining risk sits in verification this audit could not perform — contrast, assistive technology, cross-browser behaviour and the live environment — rather than in the implementation.
+What is left are three contained refinements: module-migration residue with a documented but silent failure mode, a verification-hygiene item, and development-dependency advisories with no runtime exposure. None of them affects a user-facing behaviour, a build, a deployment or an accessibility contract, and none needs to be resolved before this is presented, deployed or handed over. The remaining risk sits in verification this audit could not perform — contrast, assistive technology, cross-browser behaviour and the live environment — rather than in the implementation.
 
 ## 9. Senior rating
 
@@ -143,4 +133,4 @@ What is left are four contained refinements: module-migration residue with a doc
 
 Judged as a vanilla, frontend-only portfolio SaaS demo, this is now a strong implementation with an unusually disciplined relationship between its code, its tests and its documentation. The architecture has one owner for every concern: one document per public route, one module graph behind one entry, one CSS source tree, one service-worker source whose precache is generated from the build that produced the assets and which fails the build when the two disagree. The interface no longer claims anything the implementation cannot do — disabled controls say why, offline rejections say the change was not saved, public figures are marked illustrative, and the contact form confirms only what the provider accepted while keeping a working no-JavaScript path. The README describes the executed system precisely enough to audit against, including the parts that are inert.
 
-The rating stops at 8 rather than higher for reasons of verification and residue, not correctness. The module migration left twenty-three global publications of which one is load-bearing, and the documentation describes that set in a way that would mislead the person most likely to clean it up. The single automated gate covering the production artifact can be satisfied by a stale server. Cache versioning is the one part of the service-worker contract with no build-time check behind it. Contrast and assistive-technology behaviour remain unevidenced, and the deployment is recorded in documentation rather than verified here. The 29-test suite that covers the built artifact is reported as passing on the project owner's machine and was not re-executed by this audit; the rating reflects source-verified quality plus that supplied evidence, not independently measured runtime behaviour.
+The rating stops at 8 rather than higher for reasons of verification and residue, not correctness. The module migration left twenty-three global publications of which one is load-bearing, and the documentation describes that set in a way that would mislead the person most likely to clean it up. Cache versioning is the one part of the service-worker contract with no build-time check behind it. Contrast and assistive-technology behaviour remain unevidenced, and the deployment is recorded in documentation rather than verified here. The 29-test suite that covers the built artifact is reported as passing on the project owner's machine and was not re-executed by this audit; the rating reflects source-verified quality plus that supplied evidence, not independently measured runtime behaviour.
