@@ -22,8 +22,37 @@ async function waitForServiceWorkerControl(page) {
     await navigator.serviceWorker.ready;
   });
 
-  await page.reload({ waitUntil: "domcontentloaded" });
+  // `ready` describes the active registration, while this helper's callers need
+  // the current client to be controlled. Activation calls `clients.claim()`, so
+  // wait for that state directly instead of introducing a second page load.
   await expect.poll(async () => page.evaluate(() => Boolean(navigator.serviceWorker.controller))).toBe(true);
+}
+
+async function readPrecachedRuntimeAssetsFromWorker(context) {
+  const workers = context.serviceWorkers();
+  expect(workers).toHaveLength(1);
+
+  return workers[0].evaluate(async () => {
+    const assets = [];
+
+    for (const key of await caches.keys()) {
+      const cache = await caches.open(key);
+
+      for (const request of await cache.keys()) {
+        const pathname = new URL(request.url).pathname;
+        if (!pathname.endsWith(".css") && !pathname.endsWith(".js")) continue;
+
+        const response = await cache.match(request);
+        assets.push({
+          pathname,
+          status: response?.status || null,
+          bytes: response ? (await response.arrayBuffer()).byteLength : 0,
+        });
+      }
+    }
+
+    return assets;
+  });
 }
 
 async function loginAsDemo(page) {
@@ -408,31 +437,29 @@ test.describe("service worker navigation cache", () => {
   // unvisited route rendering as unstyled, inert HTML: the hashed stylesheet and entry
   // script this build emitted have to be precached alongside them.
   test("renders a precached but unvisited route styled and interactive on a first offline navigation", async ({ page, context }) => {
+    // Keep Chromium's normal HTTP cache out of the proof: successful CSS and JavaScript
+    // responses below must come through the active worker rather than a previous page load.
+    const client = await context.newCDPSession(page);
+    await client.send("Network.enable");
+    await client.send("Network.setCacheDisabled", { cacheDisabled: true });
+
     await page.goto("/");
-
-    // Read the precache while this document is still uncontrolled: it was loaded
-    // before any worker existed, so no request has passed through the worker's
-    // revalidation path and a hashed `/assets/` entry can only come from `install`.
-    // Chrome serves the immutable `/assets/` responses from its own HTTP cache during
-    // the offline navigation below, so this is the assertion that pins the precache
-    // itself, and the offline navigation proves the resulting user-visible behaviour.
-    await page.evaluate(() => navigator.serviceWorker.ready);
-    const precachedAssets = await page.evaluate(async () => {
-      const paths = [];
-      for (const key of await caches.keys()) {
-        const cache = await caches.open(key);
-        paths.push(...(await cache.keys()).map((request) => new URL(request.url).pathname));
-      }
-      return paths.filter((pathname) => pathname.startsWith("/assets/"));
-    });
-
-    expect(precachedAssets.filter((pathname) => pathname.endsWith(".css"))).not.toHaveLength(0);
-    expect(precachedAssets.filter((pathname) => pathname.endsWith(".js"))).not.toHaveLength(0);
-
     await waitForServiceWorkerControl(page);
     await context.setOffline(true);
 
     try {
+      // Installation readiness, client control and cache readiness are separate states.
+      // Read and consume the generated runtime responses inside the active worker after
+      // the offline transition, which both validates the exact dependency and provides
+      // a deterministic worker handshake before the browser issues concurrent subrequests.
+      const precachedAssets = await readPrecachedRuntimeAssetsFromWorker(context);
+      const stylesheets = precachedAssets.filter(({ pathname }) => pathname.endsWith(".css"));
+      const scripts = precachedAssets.filter(({ pathname }) => pathname.endsWith(".js"));
+
+      expect(stylesheets).not.toHaveLength(0);
+      expect(scripts).not.toHaveLength(0);
+      expect(precachedAssets.every(({ status, bytes }) => status === 200 && bytes > 0)).toBe(true);
+
       // First navigation to `/contact/` in this context: it is in the document
       // precache and has never been visited.
       await page.goto("/contact/", { waitUntil: "domcontentloaded" });
@@ -451,6 +478,7 @@ test.describe("service worker navigation cache", () => {
       await expect(header).toHaveAttribute("aria-expanded", "true");
     } finally {
       await context.setOffline(false);
+      await client.detach();
     }
   });
 });

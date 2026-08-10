@@ -165,19 +165,22 @@ function networkFirstNavigation(request) {
 }
 
 function staleWhileRevalidate(request) {
-  return caches.match(request).then((cached) => {
-    const fetchPromise = fetch(request)
-      .then((response) => {
-        if (response && response.ok) {
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(request, response.clone());
-          });
-          return response;
-        }
-        return cached || response;
-      })
-      .catch(() => cached);
+  const url = new URL(request.url);
+  const cacheKey = url.search === "" && RUNTIME_ASSET_URLS.includes(url.pathname) ? url.pathname : request;
 
-    return cached || fetchPromise;
-  });
+  return caches.open(CACHE_NAME).then((cache) =>
+    cache.match(cacheKey).then((cached) => {
+      const fetchPromise = fetch(request)
+        .then((response) => {
+          if (response && response.ok) {
+            cache.put(cacheKey, response.clone());
+            return response;
+          }
+          return cached || response;
+        })
+        .catch(() => cached);
+
+      return cached || fetchPromise;
+    })
+  );
 }
