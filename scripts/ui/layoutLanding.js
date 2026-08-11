@@ -6,7 +6,7 @@ import { Accordion } from "./components/accordion.js";
 function getLandingTheme() {
   const { preferences } = FleetStore.state;
   const theme = preferences.theme || "light";
-  document.documentElement.setAttribute("data-theme", theme);
+  FleetStore.applyTheme(theme);
   return theme;
 }
 

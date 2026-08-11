@@ -236,17 +236,31 @@ const Store = {
     return true;
   },
 
+  // The single place a theme value reaches the document. The attribute the
+  // stylesheets read and the theme-specific logo/hero sources are applied from
+  // that same value, so no render can observe one without the other. Every
+  // theme write below goes through here, including the first one at boot.
+  applyTheme(theme) {
+    document.documentElement.setAttribute("data-theme", theme);
+    FleetUI.syncThemeImages(theme);
+  },
+
+  // Boot entry: the persisted preference is authoritative for the first render.
+  // The maintained documents ship the light asset URLs in their markup, so this
+  // is what makes a dark first load show its own logo and hero without a toggle.
+  initTheme() {
+    this.setTheme(this.state.preferences.theme || "light");
+  },
+
   toggleTheme() {
     const next = this.state.preferences.theme === "light" ? "dark" : "light";
     this.setState({ preferences: { ...this.state.preferences, theme: next } });
-    document.documentElement.setAttribute("data-theme", next);
-    FleetUI.syncThemeImages();
+    this.applyTheme(next);
   },
 
   setTheme(theme) {
     this.setState({ preferences: { ...this.state.preferences, theme } });
-    document.documentElement.setAttribute("data-theme", theme);
-    FleetUI.syncThemeImages();
+    this.applyTheme(theme);
   },
 
   setCompact(compact) {
@@ -333,9 +347,8 @@ const Store = {
       },
     });
 
-    document.documentElement.setAttribute("data-theme", "light");
+    this.applyTheme("light");
     delete document.body.dataset.compact;
-    FleetUI.syncThemeImages();
 
     this.resetDomainData();
   },

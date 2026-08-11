@@ -1527,3 +1527,84 @@ test("public pages present scenario cards and metric figures as illustrative dem
   await expect(panel.getByText("99.6%")).toBeVisible();
   await expect(panel.getByText("12 min")).toBeVisible();
 });
+
+async function readThemeAssets(page) {
+  return page.evaluate(() => {
+    const hero = document.querySelector(".img-swap img");
+    return {
+      documentTheme: document.documentElement.getAttribute("data-theme"),
+      headerLogo: document.querySelector(".site-header__logo").getAttribute("src"),
+      heroSources: Array.from(document.querySelectorAll(".img-swap source"), (source) => source.getAttribute("srcset")),
+      heroSrc: hero.getAttribute("src"),
+      heroBoxRatio: Number((hero.getBoundingClientRect().width / hero.getBoundingClientRect().height).toFixed(3)),
+    };
+  });
+}
+
+const LIGHT_THEME_ASSETS = {
+  headerLogo: "/assets/logos/logo-black.svg",
+  heroSources: ["/assets/img/hero/hero-light.avif", "/assets/img/hero/hero-light.webp"],
+  heroSrc: "/assets/img/hero/hero-light.jpg",
+};
+
+const DARK_THEME_ASSETS = {
+  headerLogo: "/assets/logos/logo-white.svg",
+  heroSources: ["/assets/img/hero/hero-dark.avif", "/assets/img/hero/hero-dark.webp"],
+  heroSrc: "/assets/img/hero/hero-dark.jpg",
+};
+
+// The maintained documents ship the light logo and hero URLs in their markup, so
+// every dark render depends on the runtime applying the persisted theme to those
+// assets. This covers the first render, where nothing has toggled yet.
+test("a persisted dark theme reaches the logo and hero on first render and follows every later toggle", async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.clear();
+    sessionStorage.clear();
+    localStorage.setItem("fleet-theme", JSON.stringify("dark"));
+  });
+  await page.goto("/");
+
+  const themeToggle = page.locator("#themeToggleLanding");
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+
+  // No interaction has happened yet: the persisted theme alone has to own the assets.
+  expect(await readThemeAssets(page)).toEqual({
+    documentTheme: "dark",
+    heroBoxRatio: 1.6,
+    ...DARK_THEME_ASSETS,
+  });
+
+  await themeToggle.click();
+  expect(await readThemeAssets(page)).toEqual({
+    documentTheme: "light",
+    heroBoxRatio: 1.6,
+    ...LIGHT_THEME_ASSETS,
+  });
+
+  await themeToggle.click();
+  expect(await readThemeAssets(page)).toEqual({
+    documentTheme: "dark",
+    heroBoxRatio: 1.6,
+    ...DARK_THEME_ASSETS,
+  });
+});
+
+// The two generated hero variants do not share pixel dimensions, so the rendered
+// box has to come from the declared ratio rather than from whichever resource the
+// current theme loaded.
+test("the hero box keeps one aspect ratio across both theme variants", async ({ page }) => {
+  await openFresh(page, "/");
+
+  const hero = page.locator(".img-swap img");
+  // The layout box, which the hero's entrance animation does not scale.
+  const layoutBox = () => hero.evaluate((image) => [image.offsetWidth, image.offsetHeight]);
+
+  await expect(hero).toHaveJSProperty("naturalWidth", 1440);
+  const lightBox = await layoutBox();
+
+  await page.locator("#themeToggleLanding").click();
+  await expect(hero).toHaveJSProperty("naturalWidth", 1446);
+  const darkBox = await layoutBox();
+
+  expect(darkBox).toEqual(lightBox);
+});

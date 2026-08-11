@@ -146,9 +146,11 @@ function bindLogoScroll(kind, getContainer) {
 FleetUI.bindLogoScroll = bindLogoScroll;
 
 // ===== Theme-aware asset swapping =====
-function syncThemeImages(root = document) {
-  const theme = document.documentElement.getAttribute("data-theme") || "light";
-  const useDark = theme === "dark";
+// The theme travels in as a value so the caller that owns it can apply the
+// document attribute and the assets from the same one; reading it back off the
+// document would make the result depend on when the attribute was written.
+function syncThemeImages(theme = document.documentElement.getAttribute("data-theme"), root = document) {
+  const useDark = (theme || "light") === "dark";
 
   root.querySelectorAll("[data-theme-src-light][data-theme-src-dark]").forEach((el) => {
     const next = useDark ? el.dataset.themeSrcDark : el.dataset.themeSrcLight;

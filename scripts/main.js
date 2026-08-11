@@ -203,12 +203,7 @@ import { getMotionSafeScrollBehavior } from "./utils/dom.js";
   FleetStore.initDomain();
   FleetStore.initActivity();
 
-  const savedTheme = FleetStore.state.preferences.theme;
-  if (!savedTheme) {
-    FleetStore.setTheme("light");
-  } else {
-    document.documentElement.setAttribute("data-theme", savedTheme);
-  }
+  FleetStore.initTheme();
   if (FleetStore.state.preferences.compact) {
     document.body.dataset.compact = "true";
   }

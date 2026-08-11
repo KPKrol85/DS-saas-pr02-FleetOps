@@ -169,7 +169,7 @@ function renderAppShell(viewTitle, contentNode, { routeTo } = {}) {
 
   const syncThemeUI = () => {
     const current = FleetStore.state.preferences.theme || "light";
-    document.documentElement.setAttribute("data-theme", current);
+    FleetStore.applyTheme(current);
   };
 
   syncThemeUI();

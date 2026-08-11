@@ -100,9 +100,15 @@
   animation: heroFade 0.4s ease-out;
 }
 
+/* The hero box keeps the 1440x900 ratio of the generated variants for both
+   themes. The dark source is six pixels wider than the light one, so leaving the
+   height to each resource's own ratio moved the section by a pixel on every
+   toggle; the declared ratio holds the box and `object-fit` absorbs the
+   difference as a crop rather than a distortion. */
 .img-swap img {
   width: 100%;
   height: auto;
+  aspect-ratio: 1440 / 900;
   object-fit: cover;
 }
 
