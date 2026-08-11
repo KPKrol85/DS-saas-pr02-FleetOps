@@ -36,14 +36,14 @@
   "screenshots": [
     {
       "src": "/assets/screenshots/screenshot-desktop.png",
-      "sizes": "1440x858",
+      "sizes": "1440x898",
       "type": "image/png",
       "form_factor": "wide",
       "label": "Widok aplikacji – desktop"
     },
     {
       "src": "/assets/screenshots/screenshot-mobile.png",
-      "sizes": "400x815",
+      "sizes": "400x851",
       "type": "image/png",
       "form_factor": "narrow",
       "label": "Widok aplikacji – mobile"
