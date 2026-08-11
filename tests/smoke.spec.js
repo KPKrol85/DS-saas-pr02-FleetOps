@@ -5,6 +5,29 @@ const { test, expect } = require("@playwright/test");
 
 const repositoryFile = (relativePath) => readFileSync(resolve(__dirname, "..", relativePath), "utf8");
 
+function generatedRuntimeAssetUrls() {
+  const generated = repositoryFile("dist/sw.js");
+  const runtimeAssetUrls = JSON.parse(generated.match(/^const RUNTIME_ASSET_URLS = (\[.*\]);$/m)?.[1] || "null");
+
+  expect(Array.isArray(runtimeAssetUrls)).toBe(true);
+  return runtimeAssetUrls;
+}
+
+async function generatedLazyRuntimeAssetUrls(page) {
+  const eagerAssetUrls = new Set(
+    await page.evaluate(() =>
+      Array.from(
+        document.querySelectorAll('script[type="module"][src], link[rel="modulepreload"][href], link[rel="stylesheet"][href]'),
+        (element) => new URL(element.src || element.href, window.location.href).pathname
+      )
+    )
+  );
+  const lazyAssetUrls = generatedRuntimeAssetUrls().filter((url) => !eagerAssetUrls.has(url));
+
+  expect(lazyAssetUrls.some((url) => url.endsWith(".js"))).toBe(true);
+  return lazyAssetUrls;
+}
+
 async function openFresh(page, target = "/") {
   await page.addInitScript(() => {
     localStorage.clear();
@@ -232,6 +255,111 @@ test("landing loads and demo login reaches the app shell", async ({ page }) => {
   await expect(page.locator(".sidebar")).toContainText("demo@fleetops.app");
 });
 
+test("public pages load the application graph only when an application hash is entered", async ({ page }) => {
+  const requestCounts = new Map();
+  page.on("request", (request) => {
+    const pathname = new URL(request.url()).pathname;
+    requestCounts.set(pathname, (requestCounts.get(pathname) || 0) + 1);
+  });
+
+  await openFresh(page);
+  await expect(page.locator(".landing-home")).toBeVisible();
+
+  const lazyAssetUrls = await generatedLazyRuntimeAssetUrls(page);
+  const faqHeader = page.locator("#faq .accordion-header").first();
+  await expect(faqHeader).toHaveAttribute("aria-expanded", "false");
+  await faqHeader.click();
+  await expect(faqHeader).toHaveAttribute("aria-expanded", "true");
+
+  for (const url of lazyAssetUrls) {
+    expect(requestCounts.get(url) || 0).toBe(0);
+  }
+
+  await page.evaluate(() => {
+    window.location.hash = "#/app/orders";
+  });
+  await expect(page.getByRole("heading", { name: "Zaloguj się", level: 1 })).toBeVisible();
+  expect(await page.evaluate(() => sessionStorage.getItem("auth:returnTo"))).toBe("#/app/orders");
+
+  for (const url of lazyAssetUrls) {
+    expect(requestCounts.get(url) || 0).toBeGreaterThan(0);
+  }
+
+  const loadedRequestCounts = new Map(lazyAssetUrls.map((url) => [url, requestCounts.get(url)]));
+  await page.getByRole("button", { name: "Kontynuuj jako demo" }).click();
+  await expect(page).toHaveURL(/#\/app\/orders$/);
+  await expect(page.getByRole("heading", { name: "Zlecenia", level: 1 })).toBeVisible();
+  await page.locator('.sidebar nav a[data-route="/app/reports"]').click();
+  await expect(page.getByRole("heading", { name: "Raporty", level: 1 })).toBeVisible();
+
+  for (const url of lazyAssetUrls) {
+    expect(requestCounts.get(url)).toBe(loadedRequestCounts.get(url));
+  }
+});
+
+test("direct application entries preserve the guarded return route after lazy loading", async ({ context }) => {
+  const entries = [
+    { hash: "#/app", heading: "Przegląd" },
+    { hash: "#/app/orders", heading: "Zlecenia" },
+  ];
+
+  for (const entry of entries) {
+    const page = await context.newPage();
+
+    try {
+      await openFresh(page, entry.hash);
+      await expect(page.getByRole("heading", { name: "Zaloguj się", level: 1 })).toBeVisible();
+      expect(await page.evaluate(() => sessionStorage.getItem("auth:returnTo"))).toBe(entry.hash);
+
+      await page.getByRole("button", { name: "Kontynuuj jako demo" }).click();
+      await expect(page).toHaveURL(new RegExp(`${entry.hash}$`));
+      await expect(page.getByRole("heading", { name: entry.heading, level: 1 })).toBeVisible();
+      expect(await page.evaluate(() => sessionStorage.getItem("auth:returnTo"))).toBeNull();
+    } finally {
+      await page.close();
+    }
+  }
+});
+
+test("a delayed application import cannot render an obsolete hash", async ({ page }) => {
+  await openFresh(page);
+  await expect(page.locator(".landing-home")).toBeVisible();
+
+  const lazyJavascriptUrl = (await generatedLazyRuntimeAssetUrls(page)).find((url) => url.endsWith(".js"));
+  let releaseApplicationRequest;
+  const applicationRequestGate = new Promise((resolveRequest) => {
+    releaseApplicationRequest = resolveRequest;
+  });
+  let applicationRequestCount = 0;
+  const isApplicationRequest = (url) => url.pathname === lazyJavascriptUrl;
+
+  await page.route(isApplicationRequest, async (route) => {
+    applicationRequestCount += 1;
+    await applicationRequestGate;
+    await route.continue();
+  });
+
+  try {
+    await page.evaluate(() => {
+      window.location.hash = "#/app/orders";
+    });
+    await expect.poll(() => applicationRequestCount).toBe(1);
+
+    await page.evaluate(() => {
+      window.location.hash = "#/login";
+    });
+    releaseApplicationRequest();
+
+    await expect(page.getByRole("heading", { name: "Zaloguj się", level: 1 })).toBeVisible();
+    await expect(page).toHaveURL(/#\/login$/);
+    expect(await page.evaluate(() => sessionStorage.getItem("auth:returnTo"))).toBeNull();
+    expect(applicationRequestCount).toBe(1);
+  } finally {
+    releaseApplicationRequest();
+    await page.unroute(isApplicationRequest);
+  }
+});
+
 test("application bootstrap and routing do not publish module APIs on window", async ({ page }) => {
   await loginAsDemo(page);
   await page.locator('.sidebar nav a[data-route="/app/orders"]').click();
@@ -352,7 +480,7 @@ test("the generated service worker derives its cache name from this build's runt
 
   const prefix = generated.match(/^const CACHE_PREFIX = "([^"]*)";$/m)?.[1];
   const revision = generated.match(/^const CACHE_NAME = CACHE_PREFIX \+ \("([^"]*)"\);$/m)?.[1];
-  const runtimeAssetUrls = JSON.parse(generated.match(/^const RUNTIME_ASSET_URLS = (\[.*\]);$/m)?.[1] || "null");
+  const runtimeAssetUrls = generatedRuntimeAssetUrls();
 
   expect(prefix).toBe("fleetops-");
   expect(Array.isArray(runtimeAssetUrls)).toBe(true);
@@ -476,6 +604,52 @@ test.describe("service worker navigation cache", () => {
       await expect(header).toHaveAttribute("aria-expanded", "false");
       await header.click();
       await expect(header).toHaveAttribute("aria-expanded", "true");
+    } finally {
+      await context.setOffline(false);
+      await client.detach();
+    }
+  });
+
+  test("loads the precached application graph on a first offline application entry", async ({ page, context }) => {
+    const client = await context.newCDPSession(page);
+    await client.send("Network.enable");
+    await client.send("Network.setCacheDisabled", { cacheDisabled: true });
+
+    await page.goto("/");
+    await expect(page.locator(".landing-home")).toBeVisible();
+    const lazyAssetUrls = await generatedLazyRuntimeAssetUrls(page);
+    const loadedResourceUrls = await page.evaluate(() =>
+      performance.getEntriesByType("resource").map((entry) => new URL(entry.name).pathname)
+    );
+
+    for (const url of lazyAssetUrls) {
+      expect(loadedResourceUrls).not.toContain(url);
+    }
+
+    await waitForServiceWorkerControl(page);
+    await context.setOffline(true);
+
+    try {
+      const precachedAssets = await readPrecachedRuntimeAssetsFromWorker(context);
+
+      for (const url of lazyAssetUrls) {
+        const cachedAsset = precachedAssets.find(({ pathname }) => pathname === url);
+        expect(cachedAsset).toBeDefined();
+        expect(cachedAsset.status).toBe(200);
+        expect(cachedAsset.bytes).toBeGreaterThan(0);
+      }
+
+      await page.evaluate(() => {
+        window.location.hash = "#/app/orders";
+      });
+      await expect(page.getByRole("heading", { name: "Zaloguj się", level: 1 })).toBeVisible();
+      expect(await page.evaluate(() => sessionStorage.getItem("auth:returnTo"))).toBe("#/app/orders");
+
+      await page.getByRole("button", { name: "Kontynuuj jako demo" }).click();
+      await expect(page).toHaveURL(/#\/app\/orders$/);
+      await expect(page.getByRole("heading", { name: "Zlecenia", level: 1 })).toBeVisible();
+      await page.locator('.sidebar nav a[data-route="/app/reports"]').click();
+      await expect(page.getByRole("heading", { name: "Raporty", level: 1 })).toBeVisible();
     } finally {
       await context.setOffline(false);
       await client.detach();

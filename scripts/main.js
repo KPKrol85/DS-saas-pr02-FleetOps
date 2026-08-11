@@ -5,7 +5,6 @@
  * bootstrap sequence that the previous ordered `<script defer>` list performed
  * implicitly; module imports below make that order explicit.
  */
-import { FleetRouter } from "./router.js";
 import { FleetStore } from "./state/store.js";
 import { Toast } from "./ui/components/toast.js";
 import { initLandingShell } from "./ui/layoutLanding.js";
@@ -32,6 +31,14 @@ import { getMotionSafeScrollBehavior } from "./utils/dom.js";
   };
 
   const isDynamicHash = (hash) => hash === "#/login" || hash === "#/app" || hash.startsWith("#/app/");
+
+  let applicationRouterPromise;
+  let latestRouteRequest = 0;
+
+  const loadApplicationRouter = () => {
+    applicationRouterPromise ||= import("./router.js");
+    return applicationRouterPromise;
+  };
 
   const redirectLegacyPublicHash = (hash) => {
     if (!hash) return false;
@@ -175,10 +182,19 @@ import { getMotionSafeScrollBehavior } from "./utils/dom.js";
   };
 
   const handleHashRoute = () => {
+    const requestId = ++latestRouteRequest;
     const hash = normalizeHash();
     if (redirectLegacyPublicHash(hash)) return true;
     if (isDynamicHash(hash)) {
-      FleetRouter.routeTo(hash);
+      void loadApplicationRouter()
+        .then(({ FleetRouter }) => {
+          if (requestId !== latestRouteRequest || normalizeHash() !== hash) return;
+          FleetRouter.routeTo(hash);
+        })
+        .catch((error) => {
+          if (requestId !== latestRouteRequest || normalizeHash() !== hash) return;
+          console.warn("[FleetOps] Application runtime failed to load", error);
+        });
       return true;
     }
     return false;

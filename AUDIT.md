@@ -77,13 +77,6 @@ None detected.
 
 ## 7. Extra quality improvements
 
-### Split the demo application out of the bundle every public page loads
-
-- **Relevant area:** Module graph and build output (`scripts/main.js:8`; `scripts/router.js:1-12`; `dist/assets/main-BBQDKSh8.js`).
-- **Current evidence:** `main.js` statically imports `FleetRouter`, which statically imports the application shell and all seven views, so the single emitted chunk — 107 KB for the current build — is downloaded and parsed by all thirteen documents. The router, the application shell and the views account for roughly 3 100 source lines that no public marketing page can execute, since those pages never enter a `#/app` route.
-- **Potential value:** The marketing pages would load only the shell behaviour they actually run. Vite is already configured for it, so the change is a dynamic import at the router boundary rather than a restructure.
-- **Scope boundary:** Optional. The current payload is modest and nothing is broken; this is a proportionality improvement, not a defect.
-
 ### Record a contrast and assistive-technology verification pass
 
 - **Relevant area:** Accessibility verification (`styles/src/00-settings.css` token definitions; the accessibility section of `README.md`).

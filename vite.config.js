@@ -108,6 +108,30 @@ function fleetopsServiceWorkerPrecache() {
         );
 
         const runtimeAssetUrls = new Set();
+        const chunksByUrl = new Map(
+          Object.values(bundle)
+            .filter((output) => output.type === "chunk")
+            .map((chunk) => [`/${chunk.fileName}`, chunk])
+        );
+
+        const addRuntimeAssetGraph = (url) => {
+          if (!emitted.has(url) || runtimeAssetUrls.has(url)) return;
+
+          runtimeAssetUrls.add(url);
+
+          const chunk = chunksByUrl.get(url);
+          if (!chunk) return;
+
+          const dependentFileNames = [
+            ...chunk.imports,
+            ...chunk.dynamicImports,
+            ...(chunk.viteMetadata?.importedCss || []),
+          ];
+
+          for (const fileName of dependentFileNames) {
+            addRuntimeAssetGraph(`/${fileName}`);
+          }
+        };
 
         for (const fileName of precachedDocuments) {
           const document = bundle[fileName];
@@ -116,7 +140,7 @@ function fleetopsServiceWorkerPrecache() {
           }
 
           for (const url of collectDocumentAssetUrls(String(document.source))) {
-            if (emitted.has(url)) runtimeAssetUrls.add(url);
+            addRuntimeAssetGraph(url);
           }
         }
 
