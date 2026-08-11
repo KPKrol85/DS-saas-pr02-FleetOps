@@ -3,7 +3,7 @@
 **Audit date:** 2026-08-10
 **Project type:** Static multi-page front-end site with a hash-routed, browser-local demo application (vanilla HTML/CSS/JS as an ES module graph, no UI framework, built with Vite)
 **Audit mode:** Final repository and implementation review
-**Current readiness:** Ready with minor refinements
+**Current readiness:** Ready
 
 ## 1. Executive assessment
 
@@ -13,7 +13,7 @@ The behaviours that were previously misleading are now honest. The contact form 
 
 Documentation is the strongest part of the repository. The README describes the executed model file by file, lists every `localStorage` key the implementation writes, states which of them nothing reads back, records that the deployment is manual and that no CI exists, and declines to claim anything it cannot support.
 
-What remains is dependency hygiene, not a user-facing defect. Three development dependencies carry high-severity advisories with no runtime exposure. They do not block release, deployment or portfolio presentation.
+No unresolved P0, P1 or P2 finding remains. The development-dependency advisories identified by the original audit were removed through a compatible transitive lockfile refresh and the smallest supported direct `sharp` upgrade, without changing the Vite major version or application behaviour.
 
 ## 2. Audit scope and verification
 
@@ -33,10 +33,10 @@ What remains is dependency hygiene, not a user-facing defect. Three development 
 
 - `node scripts/qa/check-css-vars.js` (`npm run qa:css-vars`) — executed and passed; 971 `var()` usages against 77 definitions across 11 source files, exit code 0
 - `node --check` across every tracked JavaScript file including `public/sw.js`, `vite.config.js` and `optimize-images.js` — executed and passed; syntax only, no behavioural verification
-- `npm audit` — executed; three high-severity advisories reported, all in development dependencies (see [P2-01])
+- `npm audit` — initially reported three high-severity advisories in development dependencies; re-executed after the dependency-remediation follow-up on 2026-08-11 and reported zero vulnerabilities across all severities
 - `git status`, `git log`, `git ls-files`, working-tree comparison of `dist/` against its sources — executed
 - Static inspection of every file listed above, including cross-referencing each `window.*` publication against its consumers, each documented README claim against its implementation, and each finding of the previous audit against the current source
-- `npm run test:smoke` — **executed and passed on the project owner's machine on 2026-08-10, not re-executed during this audit.** The supplied run reports 29 of 29 tests passing. `playwright.config.js:19-24` starts the suite with `npm run build && npm run preview`, so the run exercised the built `dist/` artifact rather than the development server. This audit reports that result as supplied evidence and does not independently assert it.
+- `npm run test:smoke` — **executed and passed on the project owner's machine on 2026-08-10, not re-executed during the original audit.** The supplied run reports 29 of 29 tests passing. `playwright.config.js:19-24` starts the suite with `npm run build && npm run preview`, so the run exercised the built `dist/` artifact rather than the development server. A dependency-remediation follow-up on 2026-08-11 independently ran the current production build and passed the expanded suite with 32 of 32 tests.
 
 ### Verification limitations
 
@@ -73,15 +73,7 @@ None detected.
 
 ## 6. P2 — Minor refinements
 
-### [P2-01] Three development dependencies carry high-severity advisories, two of them fixable within the current major versions
-
-- **Classification:** Security exposure
-- **Affected area:** Dependency configuration
-- **Evidence:** `npm audit` output; `package.json` — `devDependencies`; `package-lock.json`
-- **Current behavior:** `npm audit` reports three high-severity advisories, all in the development tree: `nanoid` at or below 3.3.16 and `postcss` at or below 8.5.22, both transitive under Vite, and `sharp` below 0.35.0 for inherited libvips issues. The audit reports the first two as fixable without breaking changes and `sharp` as requiring a major upgrade to 0.35.3.
-- **Impact:** No runtime exposure — nothing from these packages ships to the browser, the PostCSS advisory needs an attacker-controlled `sourceMappingURL` in processed CSS while all CSS here is first-party, and `sharp` processes two first-party source images. The practical cost is that a reviewer running `npm audit` on a portfolio project sees three unresolved high-severity findings and has to reason this through themselves.
-- **Recommended direction:** Take the non-breaking updates for the transitive advisories, and evaluate the `sharp` major upgrade separately since it affects only the explicit image-generation command.
-- **Verification criteria:** `npm audit` reports no high-severity advisory, or each remaining one is recorded in the repository with its reason for being accepted.
+None detected.
 
 ## 7. Extra quality improvements
 
@@ -101,11 +93,11 @@ None detected.
 
 ## 8. Current readiness conclusion
 
-**Status:** Ready with minor refinements
+**Status:** Ready
 
 No critical or important finding remains. Every defect from the previous audit was closed at the source rather than documented away: the duplicate page-rendering path was deleted, the application shell gained a `main` landmark, drawer semantics became viewport-conditional, the shell breakpoints were unified, the offline queue was replaced with an honest rejection, the contact form became a real submission path reconciled with the privacy policy, unsupported public claims were reframed, the unreachable error page was restored by removing the SPA catch-all, collapsed accordion panels were hidden from assistive technology, the undefined design token was resolved, and repository hygiene was put under `.gitignore` and `.gitattributes`. All three previously optional improvements — the offline fallback document, the build-derived runtime-asset precache and the extended CSP — were implemented.
 
-What is left is one contained refinement: development-dependency advisories with no runtime exposure. It does not affect a user-facing behaviour, a build, a deployment or an accessibility contract, and it does not need to be resolved before this is presented, deployed or handed over. The remaining verification limits are contrast, assistive technology, cross-browser behaviour and the live environment, none of which this audit could exercise.
+No unresolved P0, P1 or P2 finding remains. The remaining verification limits are contrast, assistive-technology behaviour, cross-browser behaviour and the live environment; these limits remain reasons not to overstate the project's assurance level, but they are not active implementation findings.
 
 ## 9. Senior rating
 
@@ -113,4 +105,4 @@ What is left is one contained refinement: development-dependency advisories with
 
 Judged as a vanilla, frontend-only portfolio SaaS demo, this is now a strong implementation with an unusually disciplined relationship between its code, its tests and its documentation. The architecture has one owner for every concern: one document per public route, one module graph behind one entry, one CSS source tree, one service-worker source whose precache is generated from the build that produced the assets and which fails the build when the two disagree. The interface no longer claims anything the implementation cannot do — disabled controls say why, offline rejections say the change was not saved, public figures are marked illustrative, and the contact form confirms only what the provider accepted while keeping a working no-JavaScript path. The README describes the executed system precisely enough to audit against, including the parts that are inert.
 
-The rating stops at 8 rather than higher for reasons of verification and dependency hygiene, not correctness. Contrast and assistive-technology behaviour remain unevidenced, and the deployment is recorded in documentation rather than verified here. The audit's original 29-test suite evidence was supplied from the project owner's machine rather than executed during the audit; the post-audit service-worker reliability correction was verified separately and does not change the rating.
+The rating stops at 8 rather than higher for reasons of verification, not correctness. Contrast and assistive-technology behaviour remain unevidenced, and the deployment is recorded in documentation rather than verified here. The audit's original 29-test suite evidence was supplied from the project owner's machine rather than executed during the audit; the later 32-test dependency-remediation run and the post-audit service-worker reliability correction were verified separately and do not by themselves change the rating.
