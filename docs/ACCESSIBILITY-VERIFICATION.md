@@ -2,9 +2,9 @@
 
 **Verification date:** 2026-08-11
 
-**Scope:** representative rendered contrast, keyboard operation, focus management, and browser-observable accessibility semantics
+**Scope:** representative rendered contrast, keyboard operation, focus management, and browser-observable accessibility semantics, plus a limited manual NVDA smoke check
 
-**Environment:** Windows; Node.js 22.14.0; npm 10.9.2; Playwright 1.60.0 `Desktop Chrome` using the bundled Chromium headless shell (revision 1223)
+**Automated environment:** Windows; Node.js 22.14.0; npm 10.9.2; Playwright 1.60.0 `Desktop Chrome` using the bundled Chromium headless shell (revision 1223)
 
 **Themes:** light and dark
 
@@ -12,7 +12,9 @@
 
 This record is evidence for the representative checks described below. It is not a declaration of formal WCAG conformance, an accessibility certification, or proof of behavior in every browser and component state.
 
-The browser checks inspect rendered styles, keyboard behavior, focus, roles, accessible names, ARIA states and relationships, and live-region DOM updates. No real screen reader or other external assistive technology was executed during this verification. Manual AT verification therefore remains pending and must identify the actual tool, version, browser, operating system, and observed announcements when it is performed.
+The browser checks inspect rendered styles, keyboard behavior, focus, roles, accessible names, ARIA states and relationships, and live-region DOM updates. No real screen reader or other external assistive technology was executed during that automated/browser pass itself.
+
+A separate manual screen-reader smoke check has since been performed by the project owner with NVDA on Windows 11 in Google Chrome; its confirmed environment, scope, and observations are recorded in [Manual assistive-technology verification](#manual-assistive-technology-verification). That check was a limited sanity pass, not a comprehensive assistive-technology audit, so it does not establish announcement behavior for every component or scenario, for every screen reader, or for every browser.
 
 ## Method
 
@@ -82,7 +84,24 @@ The maintained contrast test covers 48 rendered evidence rows. Set `FLEETOPS_ACC
 - **Toasts:** stable polite `role="status"` and assertive `role="alert"` regions expose `aria-live` and `aria-atomic`; representative success and permission-denial updates reach the correct region.
 - **Focus visibility:** the representative primary action retained a solid 2 px computed outline; its light/dark contrast is recorded above.
 
-These observations establish browser/DOM behavior only. They do not prove that a particular screen reader announces the content with specific wording or timing.
+These observations establish browser/DOM behavior only. They do not prove that a particular screen reader announces the content with specific wording or timing. Separately observed real screen-reader output is recorded below and is kept distinct from this automated evidence.
+
+## Manual assistive-technology verification
+
+**Type:** manual NVDA smoke check (limited scope), performed by the project owner
+
+**Environment:** Windows 11; NVDA (version not recorded); Google Chrome
+
+**Result:** Pass for the exercised smoke-check scope only.
+
+Observed during the session:
+
+- NVDA read FleetOps page content; general page reading worked throughout the check.
+- Application route announcements were audibly exposed by NVDA; the confirmed examples were `Widok: Zlecenia` and `Widok: Flota`.
+- Speech could sometimes continue finishing previously started content when moving quickly to another element, producing a short perceived delay. This was observed as normal screen-reader speech-queue behavior during the session and was not confirmed as a FleetOps defect.
+- No blocking accessibility failure was observed during this check.
+
+Scope actually exercised: general page reading and application route announcements. This was a sanity/smoke check rather than a systematic audit — it did not systematically cover all toast variants, form error announcements, modal or drawer entry and exit announcements, accordion state wording, skip-link announcements, or every interactive component. The result covers NVDA with Google Chrome on Windows 11 only, and because the NVDA version was not recorded it is not tied to a specific NVDA release.
 
 ## Confirmed corrections
 
@@ -106,6 +125,10 @@ No confirmed accessibility defect is intentionally left unresolved by this pass.
 - Final `npm run test:smoke`: 39/39 passed against a fresh production build.
 - Final `git diff --check`: passed.
 
-## Remaining manual step
+## Additional assurance opportunities
 
-Run a separate real assistive-technology pass, for example with the project owner's chosen screen reader, against the same representative flows. Record the actual AT/browser/OS versions and observed output for route announcements, polite and assertive toasts, field errors, modal/drawer entry and exit, accordion state, and skip-link navigation. Until that happens, real AT verification remains pending.
+Basic real assistive-technology verification is no longer outstanding: the manual NVDA smoke check recorded above passed for the scope it exercised, and no confirmed accessibility defect follows from it. The items below are optional ways to widen assistive-technology assurance, not unresolved defects.
+
+- Extend the same NVDA/Chrome pass across the remaining representative flows — polite and assertive toasts, field errors, modal and drawer entry and exit, accordion state, and skip-link navigation — and record the observed output for each.
+- Record the NVDA version used, so a future result can be tied to a specific release.
+- Repeat a comparable manual pass with other screen reader, browser, and operating-system combinations, which the current evidence does not cover.

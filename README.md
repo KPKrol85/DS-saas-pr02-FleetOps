@@ -187,7 +187,7 @@ W kodzie zaimplementowano konkretne elementy dostępności:
 - powiązanie pól formularzy z błędami przez `aria-describedby` i `aria-invalid`;
 - uwzględnienie `prefers-reduced-motion` przy przewijaniu i wybranych animacjach.
 
-Reprezentatywne pomiary renderowanego kontrastu w obu motywach oraz przeglądarkowa weryfikacja klawiatury, fokusu i ARIA są zapisane w [`docs/ACCESSIBILITY-VERIFICATION.md`](docs/ACCESSIBILITY-VERIFICATION.md). Rekord wyraźnie oddziela te dowody od testów prawdziwą technologią asystującą: podczas tego przebiegu nie uruchomiono czytnika ekranu, więc manualna weryfikacja AT pozostaje do wykonania przez właściciela projektu.
+Reprezentatywne pomiary renderowanego kontrastu w obu motywach oraz przeglądarkowa weryfikacja klawiatury, fokusu i ARIA są zapisane w [`docs/ACCESSIBILITY-VERIFICATION.md`](docs/ACCESSIBILITY-VERIFICATION.md). Rekord wyraźnie oddziela te dowody od testów prawdziwą technologią asystującą. Właściciel projektu wykonał dodatkowo ograniczony manualny smoke check z czytnikiem ekranu NVDA (Windows 11, Google Chrome, wersja NVDA nieodnotowana), który zakończył się wynikiem pozytywnym dla sprawdzonego zakresu: ogólnego odczytu strony oraz komunikatów o zmianie widoku aplikacji. Nie było to pełne badanie technologią asystującą — szersze scenariusze AT pozostają opcjonalnym rozszerzeniem dowodów, a szczegóły zakresu i obserwacji zawiera powyższy rekord.
 
 Repozytorium nie deklaruje formalnej zgodności WCAG, certyfikacji dostępności ani pełnej zgodności.
 
@@ -448,7 +448,7 @@ The code implements specific accessibility elements:
 - form fields associated with errors through `aria-describedby` and `aria-invalid`;
 - `prefers-reduced-motion` support for scrolling and selected animations.
 
-Representative rendered-contrast measurements in both themes and browser verification of keyboard, focus, and ARIA behavior are recorded in [`docs/ACCESSIBILITY-VERIFICATION.md`](docs/ACCESSIBILITY-VERIFICATION.md). The record explicitly separates that evidence from real assistive-technology testing: no screen reader was executed during this pass, so manual AT verification remains for the project owner.
+Representative rendered-contrast measurements in both themes and browser verification of keyboard, focus, and ARIA behavior are recorded in [`docs/ACCESSIBILITY-VERIFICATION.md`](docs/ACCESSIBILITY-VERIFICATION.md). The record explicitly separates that evidence from real assistive-technology testing. The project owner additionally performed a limited manual NVDA smoke check (Windows 11, Google Chrome, NVDA version not recorded), which passed for the scope it exercised: general page reading and application route announcements. It was not a full assistive-technology audit — broader AT scenarios remain an optional extension of the evidence, and the record above states the exact scope and observations.
 
 The repository does not declare formal WCAG compliance, accessibility certification, or full conformance.
 
