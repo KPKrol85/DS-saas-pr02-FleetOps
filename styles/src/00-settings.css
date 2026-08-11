@@ -23,13 +23,13 @@
   /* borders */
   --border: #e4e7ed;
   /* accents */
-  --accent: #2563eb;
-  --accent-strong: #1d4ed8;
+  --accent: #1d4ed8;
+  --accent-strong: #1e40af;
   --accent-ghost: rgba(37, 99, 235, 0.1);
   /* states */
   --success: #34d399;
   --warning: #fcd34d;
-  --danger: #f87171;
+  --danger: #dc2626;
 
   /* shadows */
   --shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
@@ -131,6 +131,7 @@
   --accent: #7dd3fc;
   --accent-strong: #22d3ee;
   --accent-ghost: rgba(34, 211, 238, 0.12);
+  --danger: #f87171;
   /* shadows */
   --shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
   --shadow-elev-1: 0 10px 22px rgba(0, 0, 0, 0.24);

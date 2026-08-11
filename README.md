@@ -82,7 +82,10 @@ Tooling:
 │   ├── robots.txt
 │   └── sitemap.xml
 ├── assets/img-src/             # źródła obrazów (wejście builda obrazów, poza dist/)
-├── tests/smoke.spec.js         # testy Playwright
+├── docs/ACCESSIBILITY-VERIFICATION.md # utrzymywany rekord weryfikacji dostępności
+├── tests/
+│   ├── smoke.spec.js           # testy Playwright istniejących kontraktów
+│   └── accessibility.spec.js   # kontrast oraz przepływy klawiatury/ARIA
 ├── vite.config.js              # konfiguracja Vite: wejścia MPA, porty, dist/
 ├── optimize-images.js          # pipeline optymalizacji obrazów
 ├── playwright.config.js        # konfiguracja testów
@@ -154,7 +157,7 @@ npm run test:smoke
 npm run qa:css-vars
 ```
 
-- Testy smoke są w `tests/smoke.spec.js` i uruchamiane przez Playwright.
+- Testy smoke są w `tests/smoke.spec.js`, a skupiona weryfikacja kontrastu i brakujących przepływów klawiatury/ARIA w `tests/accessibility.spec.js`; oba pliki uruchamia Playwright.
 - `playwright.config.js` używa projektu `Desktop Chrome`, `baseURL` `http://127.0.0.1:8182`, domyślnie blokuje service workery w testach i startuje serwer komendą `npm run build && npm run preview`, więc testy smoke sprawdzają zbudowany artefakt produkcyjny.
 - `scripts/qa/check-css-vars.js` analizuje statycznie pliki w `styles/src/` pod kątem zdefiniowanych i używanych zmiennych CSS.
 
@@ -184,7 +187,9 @@ W kodzie zaimplementowano konkretne elementy dostępności:
 - powiązanie pól formularzy z błędami przez `aria-describedby` i `aria-invalid`;
 - uwzględnienie `prefers-reduced-motion` przy przewijaniu i wybranych animacjach.
 
-Repozytorium nie deklaruje formalnej zgodności WCAG.
+Reprezentatywne pomiary renderowanego kontrastu w obu motywach oraz przeglądarkowa weryfikacja klawiatury, fokusu i ARIA są zapisane w [`docs/ACCESSIBILITY-VERIFICATION.md`](docs/ACCESSIBILITY-VERIFICATION.md). Rekord wyraźnie oddziela te dowody od testów prawdziwą technologią asystującą: podczas tego przebiegu nie uruchomiono czytnika ekranu, więc manualna weryfikacja AT pozostaje do wykonania przez właściciela projektu.
+
+Repozytorium nie deklaruje formalnej zgodności WCAG, certyfikacji dostępności ani pełnej zgodności.
 
 ### SEO
 
@@ -338,7 +343,10 @@ Tooling:
 │   ├── robots.txt
 │   └── sitemap.xml
 ├── assets/img-src/             # image sources (build input, excluded from dist/)
-├── tests/smoke.spec.js         # Playwright tests
+├── docs/ACCESSIBILITY-VERIFICATION.md # maintained accessibility verification record
+├── tests/
+│   ├── smoke.spec.js           # Playwright coverage of existing contracts
+│   └── accessibility.spec.js   # contrast and keyboard/ARIA flows
 ├── vite.config.js              # Vite configuration: MPA entries, ports, dist/
 ├── optimize-images.js          # image optimization pipeline
 ├── playwright.config.js        # test configuration
@@ -410,7 +418,7 @@ npm run test:smoke
 npm run qa:css-vars
 ```
 
-- Smoke tests live in `tests/smoke.spec.js` and run through Playwright.
+- Smoke tests live in `tests/smoke.spec.js`, while focused contrast and missing keyboard/ARIA verification lives in `tests/accessibility.spec.js`; Playwright runs both files.
 - `playwright.config.js` uses the `Desktop Chrome` project, `baseURL` `http://127.0.0.1:8182`, blocks service workers during tests by default, and starts the server with `npm run build && npm run preview`, so the smoke suite exercises the built production artifact.
 - `scripts/qa/check-css-vars.js` statically analyzes the files in `styles/src/` for defined and used CSS custom properties.
 
@@ -440,7 +448,9 @@ The code implements specific accessibility elements:
 - form fields associated with errors through `aria-describedby` and `aria-invalid`;
 - `prefers-reduced-motion` support for scrolling and selected animations.
 
-The repository does not declare formal WCAG compliance.
+Representative rendered-contrast measurements in both themes and browser verification of keyboard, focus, and ARIA behavior are recorded in [`docs/ACCESSIBILITY-VERIFICATION.md`](docs/ACCESSIBILITY-VERIFICATION.md). The record explicitly separates that evidence from real assistive-technology testing: no screen reader was executed during this pass, so manual AT verification remains for the project owner.
+
+The repository does not declare formal WCAG compliance, accessibility certification, or full conformance.
 
 ### SEO
 

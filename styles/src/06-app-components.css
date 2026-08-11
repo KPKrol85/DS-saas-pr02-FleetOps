@@ -751,7 +751,7 @@ html[data-theme="dark"] .setting-card:has(input, select, textarea, button, a):fo
 .search input {
   width: 100%;
   background: var(--surface);
-  border: 1px solid var(--border);
+  border: 1px solid color-mix(in srgb, var(--text-muted) 68%, var(--surface) 32%);
   border-radius: var(--radius);
   padding: var(--space-2) var(--space-3);
   color: var(--text);

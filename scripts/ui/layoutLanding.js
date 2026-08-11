@@ -70,6 +70,11 @@ function initResourcesMenu() {
 }
 
 function initLandingShell() {
+  const mainContent = document.getElementById("main-content");
+  if (mainContent && !mainContent.hasAttribute("tabindex")) {
+    mainContent.setAttribute("tabindex", "-1");
+  }
+
   const logoCleanup = FleetUI.bindLogoScroll("home");
   CleanupRegistry.add(logoCleanup);
 

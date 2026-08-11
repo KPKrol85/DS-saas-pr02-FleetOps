@@ -25,7 +25,7 @@ No unresolved P0, P1 or P2 finding remains. The development-dependency advisorie
 - Build and tooling: `vite.config.js` including the `fleetopsServiceWorkerPrecache` plugin, `package.json` scripts, `package-lock.json`, `optimize-images.js`
 - Service worker and PWA contract: `public/sw.js`, the emitted `dist/sw.js`, `public/assets/favicon/site.webmanifest`, registration in `scripts/main.js`, `offline.html`
 - Deployment, security and SEO configuration: `public/_headers`, `public/_redirects`, `public/robots.txt`, `public/sitemap.xml`, canonical and social metadata across all documents
-- Testing: `playwright.config.js`, `tests/smoke.spec.js`
+- Testing: `playwright.config.js`, `tests/smoke.spec.js`, `tests/accessibility.spec.js`
 - Documentation, licensing and repository state: `README.md`, `CHANGELOG.md`, `docs/archive/plans/PLAN-2026-08-10.md`, `LICENSE`, `.gitignore`, `.gitattributes`, tracked file set, working tree, commit history
 - The `dist/` artifact present in the working tree, including the emitted bundle and the generated service worker
 
@@ -37,12 +37,13 @@ No unresolved P0, P1 or P2 finding remains. The development-dependency advisorie
 - `git status`, `git log`, `git ls-files`, working-tree comparison of `dist/` against its sources — executed
 - Static inspection of every file listed above, including cross-referencing each `window.*` publication against its consumers, each documented README claim against its implementation, and each finding of the previous audit against the current source
 - `npm run test:smoke` — **executed and passed on the project owner's machine on 2026-08-10, not re-executed during the original audit.** The supplied run reports 29 of 29 tests passing. `playwright.config.js:19-24` starts the suite with `npm run build && npm run preview`, so the run exercised the built `dist/` artifact rather than the development server. A dependency-remediation follow-up on 2026-08-11 independently ran the current production build and passed the expanded suite with 32 of 32 tests.
+- Accessibility verification follow-up on 2026-08-11 — executed in Playwright 1.60.0 `Desktop Chrome` against the built artifact. It measured 48 representative computed-style contrast combinations across both themes, exercised the public skip link, mobile navigation and accordion with the keyboard, and verified route-region updates and modal focus containment/return. The focused file passed 3 of 3 tests after the confirmed local corrections, and the complete fresh-build suite passed 39 of 39; full evidence and its limits are recorded in `docs/ACCESSIBILITY-VERIFICATION.md`.
 
 ### Verification limitations
 
-- The smoke suite and the production build were not executed by this audit. The `dist/` artifact inspected here was produced by the owner's run; its timestamps are newer than every source file, and `dist/sw.js:40` carries the real hashed URLs of the emitted bundle, which is consistent with a current build. That is artifact inspection, not an executed build.
-- No browser or assistive-technology environment was available to this audit. Responsive behaviour, focus order, live-region announcement, service-worker runtime behaviour and offline navigation were **not executed here**; several of them are covered by the supplied Playwright run.
-- Contrast compliance was not fully verified because reliable computed-style analysis was not available.
+- The original audit did not execute its own smoke suite or production build. Subsequent repository follow-ups did execute the current production build and browser suite; those later results are evidence for the current source, not a retroactive change to what the original audit executed.
+- The 2026-08-11 accessibility follow-up verified representative contrast, keyboard behavior, focus, roles, ARIA state/relationships and live-region DOM updates in Playwright Chromium. It did not execute a real screen reader or other external assistive technology, so actual AT announcements remain pending manual confirmation.
+- The accessibility browser pass used the configured `Desktop Chrome` environment only. It is not evidence of cross-browser accessibility coverage or exhaustive coverage of every possible component state.
 - No live URL was supplied to this audit and no deployed environment was inspected. `README.md` and `CHANGELOG.md` record a manual Netlify CLI deployment and provider-side form verification performed by the project owner; that is repository documentation, and this audit neither confirms nor contradicts it.
 - Third-party availability and delivery guarantees for the contact form provider are outside the scope of a repository audit.
 
@@ -77,12 +78,7 @@ None detected.
 
 ## 7. Extra quality improvements
 
-### Record a contrast and assistive-technology verification pass
-
-- **Relevant area:** Accessibility verification (`styles/src/00-settings.css` token definitions; the accessibility section of `README.md`).
-- **Current evidence:** The implementation covers the mechanisms a source audit can confirm — landmarks, live regions, focus management, viewport-conditional drawer semantics, 31 `:focus-visible` rules and 13 `prefers-reduced-motion` blocks — but colour contrast and actual screen-reader announcement are the two areas neither this audit nor the smoke suite can establish.
-- **Potential value:** It would close the one remaining gap between what the project implements and what it can evidence, without changing the README's correct refusal to claim formal conformance.
-- **Scope boundary:** Optional, and it is a verification activity rather than a code change.
+None currently recorded. The former contrast and assistive-technology verification improvement is closed by the maintained browser/contrast record in `docs/ACCESSIBILITY-VERIFICATION.md`, which explicitly preserves real manual AT testing as a pending limitation rather than claiming it was completed.
 
 ## 8. Current readiness conclusion
 
@@ -90,7 +86,7 @@ None detected.
 
 No critical or important finding remains. Every defect from the previous audit was closed at the source rather than documented away: the duplicate page-rendering path was deleted, the application shell gained a `main` landmark, drawer semantics became viewport-conditional, the shell breakpoints were unified, the offline queue was replaced with an honest rejection, the contact form became a real submission path reconciled with the privacy policy, unsupported public claims were reframed, the unreachable error page was restored by removing the SPA catch-all, collapsed accordion panels were hidden from assistive technology, the undefined design token was resolved, and repository hygiene was put under `.gitignore` and `.gitattributes`. All three previously optional improvements — the offline fallback document, the build-derived runtime-asset precache and the extended CSP — were implemented.
 
-No unresolved P0, P1 or P2 finding remains. The remaining verification limits are contrast, assistive-technology behaviour, cross-browser behaviour and the live environment; these limits remain reasons not to overstate the project's assurance level, but they are not active implementation findings.
+No unresolved P0, P1 or P2 finding remains. Representative contrast and browser-observable accessibility behavior now have repository evidence. Real manual assistive-technology behavior, cross-browser behavior and the live environment remain verification limits and reasons not to overstate the project's assurance level, but they are not active implementation findings.
 
 ## 9. Senior rating
 
@@ -98,4 +94,4 @@ No unresolved P0, P1 or P2 finding remains. The remaining verification limits ar
 
 Judged as a vanilla, frontend-only portfolio SaaS demo, this is now a strong implementation with an unusually disciplined relationship between its code, its tests and its documentation. The architecture has one owner for every concern: one document per public route, one module graph behind one entry, one CSS source tree, one service-worker source whose precache is generated from the build that produced the assets and which fails the build when the two disagree. The interface no longer claims anything the implementation cannot do — disabled controls say why, offline rejections say the change was not saved, public figures are marked illustrative, and the contact form confirms only what the provider accepted while keeping a working no-JavaScript path. The README describes the executed system precisely enough to audit against, including the parts that are inert.
 
-The rating stops at 8 rather than higher for reasons of verification, not correctness. Contrast and assistive-technology behaviour remain unevidenced, and the deployment is recorded in documentation rather than verified here. The audit's original 29-test suite evidence was supplied from the project owner's machine rather than executed during the audit; the later 32-test dependency-remediation run and the post-audit service-worker reliability correction were verified separately and do not by themselves change the rating.
+The rating stops at 8 rather than higher for reasons of assurance breadth, not an unresolved implementation finding. Representative contrast and browser-observable accessibility behavior are now evidenced, but real manual assistive-technology behavior, cross-browser coverage and the live deployment are not. The audit's original 29-test suite evidence was supplied from the project owner's machine rather than executed during the audit; later verified follow-ups do not by themselves change the rating.
