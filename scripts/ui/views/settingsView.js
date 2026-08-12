@@ -79,23 +79,29 @@ function settingsView() {
   `;
   grid.appendChild(rangeCard);
 
+  // Alert preferences have no state field, no persistence and no consumer, so
+  // these checks never configured anything - every render rebuilt them checked.
+  // They stay visible as demo chrome but are natively disabled with an
+  // explanatory title, the same honest treatment the topbar alerts button and
+  // the orders CSV export use. Nothing is written, so nothing claims a save.
   const alertsCard = dom.h("div", "setting-card");
+  const alertsUnavailableNote = "Konfiguracja alertów jest niedostępna w wersji demo";
   alertsCard.innerHTML = `
     <h3 class="setting-card__title">Alerty operacyjne</h3>
-    <p class="setting-card__description">Kontroluj typy komunikatów w widoku demo</p>
+    <p class="setting-card__description">${alertsUnavailableNote}</p>
     <div class="setting-card__checks">
-      <label class="setting-card__check">
-        <input class="setting-card__check-input" type="checkbox" checked />
+      <label class="setting-card__check" title="${alertsUnavailableNote}">
+        <input class="setting-card__check-input" type="checkbox" checked disabled />
         <span class="setting-card__check-control" aria-hidden="true"></span>
         <span class="setting-card__check-text">Opóźnienia</span>
       </label>
-      <label class="setting-card__check">
-        <input class="setting-card__check-input" type="checkbox" checked />
+      <label class="setting-card__check" title="${alertsUnavailableNote}">
+        <input class="setting-card__check-input" type="checkbox" checked disabled />
         <span class="setting-card__check-control" aria-hidden="true"></span>
         <span class="setting-card__check-text">Serwis floty</span>
       </label>
-      <label class="setting-card__check">
-        <input class="setting-card__check-input" type="checkbox" checked />
+      <label class="setting-card__check" title="${alertsUnavailableNote}">
+        <input class="setting-card__check-input" type="checkbox" checked disabled />
         <span class="setting-card__check-control" aria-hidden="true"></span>
         <span class="setting-card__check-text">Pilne zlecenia</span>
       </label>
@@ -198,12 +204,6 @@ function settingsView() {
 
       Toast.show(`Zakres przeglądu ustawiony na ${dashboardRangeDays} dni`, "success");
       window.location.hash = "#/app";
-    });
-  });
-
-  alertsCard.querySelectorAll("input").forEach((input) => {
-    input.addEventListener("change", () => {
-      Toast.show("Ustawienia alertów zapisane w demo", "success");
     });
   });
 

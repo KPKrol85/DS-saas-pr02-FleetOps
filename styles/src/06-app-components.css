@@ -418,8 +418,22 @@ html[data-theme="dark"] .setting-card:has(input, select, textarea, button, a):fo
   outline-offset: 3px;
 }
 
-.setting-card__check:hover .setting-card__check-control {
+.setting-card__check:not(:has(.setting-card__check-input:disabled)):hover .setting-card__check-control {
   border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
+}
+
+/* The check input is visually hidden, so a native `disabled` state would leave no
+   mark on the styled control. Demo-locked checks get the same affordance the
+   disabled topbar search uses, and the hover cue above is scoped away from them
+   so nothing suggests the control can still be changed. Pointer events stay on
+   so the explanatory `title` remains hoverable. */
+.setting-card__check:has(.setting-card__check-input:disabled) {
+  cursor: not-allowed;
+  color: var(--text-muted);
+}
+
+.setting-card__check-input:disabled + .setting-card__check-control {
+  opacity: 0.6;
 }
 
 .setting-card__details {
