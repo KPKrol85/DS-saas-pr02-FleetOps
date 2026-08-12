@@ -1589,9 +1589,9 @@ test("a persisted dark theme reaches the logo and hero on first render and follo
   });
 });
 
-// The two generated hero variants do not share pixel dimensions, so the rendered
-// box has to come from the declared ratio rather than from whichever resource the
-// current theme loaded.
+// The rendered box has to come from the declared ratio rather than from whichever
+// resource the current theme loaded, so both generated hero variants are pinned to
+// the intrinsic width the maintained assets ship with.
 test("the hero box keeps one aspect ratio across both theme variants", async ({ page }) => {
   await openFresh(page, "/");
 
@@ -1603,7 +1603,7 @@ test("the hero box keeps one aspect ratio across both theme variants", async ({ 
   const lightBox = await layoutBox();
 
   await page.locator("#themeToggleLanding").click();
-  await expect(hero).toHaveJSProperty("naturalWidth", 1446);
+  await expect(hero).toHaveJSProperty("naturalWidth", 1440);
   const darkBox = await layoutBox();
 
   expect(darkBox).toEqual(lightBox);

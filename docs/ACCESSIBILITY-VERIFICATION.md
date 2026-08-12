@@ -122,7 +122,7 @@ No confirmed accessibility defect is intentionally left unresolved by this pass.
 - JavaScript syntax checks for the changed runtime and test files: passed.
 - Final `npm run build`: passed; Vite 7.3.6 transformed 41 modules.
 - Final `npm run qa:css-vars`: passed; 973 usages, 77 definitions, 11 source files.
-- Final `npm run test:smoke`: 39/39 passed against a fresh production build.
+- Final `npm run test:smoke`: 41/41 passed against a fresh production build, re-executed on 2026-08-12 after the hero regression test was corrected to the intrinsic width the maintained hero assets now ship.
 - Final `git diff --check`: passed.
 
 ## Additional assurance opportunities
