@@ -5,7 +5,7 @@
   "private": true,
   "main": "index.html",
   "directories": {
-    "doc": "doc"
+    "doc": "docs"
   },
   "scripts": {
     "dev": "vite",
