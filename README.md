@@ -161,7 +161,7 @@ npm run qa:css-vars
 - `playwright.config.js` używa projektu `Desktop Chrome`, `baseURL` `http://127.0.0.1:8182`, domyślnie blokuje service workery w testach i startuje serwer komendą `npm run build && npm run preview`, więc testy smoke sprawdzają zbudowany artefakt produkcyjny.
 - `scripts/qa/check-css-vars.js` analizuje statycznie pliki w `styles/src/` pod kątem zdefiniowanych i używanych zmiennych CSS.
 
-Repozytorium nie zawiera zapisanych wyników przebiegów testów.
+Wyniki wykonanych przebiegów weryfikacji są zapisane w utrzymywanym rekordzie [`docs/ACCESSIBILITY-VERIFICATION.md`](docs/ACCESSIBILITY-VERIFICATION.md). Repozytorium nie zawiera natomiast generowanych artefaktów Playwright — katalogi `playwright-report/` i `test-results/` są celowo wykluczone w `.gitignore`.
 
 ### Wdrożenie
 
@@ -422,7 +422,7 @@ npm run qa:css-vars
 - `playwright.config.js` uses the `Desktop Chrome` project, `baseURL` `http://127.0.0.1:8182`, blocks service workers during tests by default, and starts the server with `npm run build && npm run preview`, so the smoke suite exercises the built production artifact.
 - `scripts/qa/check-css-vars.js` statically analyzes the files in `styles/src/` for defined and used CSS custom properties.
 
-The repository does not contain recorded test run results.
+Results of executed verification runs are recorded in the maintained [`docs/ACCESSIBILITY-VERIFICATION.md`](docs/ACCESSIBILITY-VERIFICATION.md) record. The repository does not, however, contain generated Playwright artifacts — the `playwright-report/` and `test-results/` directories are intentionally excluded in `.gitignore`.
 
 ### Deployment
 
