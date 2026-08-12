@@ -246,7 +246,7 @@ function dashboardView() {
 
   root.appendChild(columns);
 
-  // ===== INIT dropdown/events (MUSI być po renderze widoku) =====
+  // Initialize dropdown events after rendering the dashboard view.
   initAlertsRulesDropdown(root);
 
   return root;
