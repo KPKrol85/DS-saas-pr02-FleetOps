@@ -3,7 +3,15 @@
 **Audit date:** 2026-08-10
 **Project type:** Static multi-page front-end site with a hash-routed, browser-local demo application (vanilla HTML/CSS/JS as an ES module graph, no UI framework, built with Vite)
 **Audit mode:** Final repository and implementation review
-**Current readiness:** Ready
+**Audit baseline:** `d6d69ff583958a463b00c24e461ed2f9abb25c6f` (2026-08-10)
+**Latest documented follow-up:** 2026-08-11
+**Readiness at latest documented follow-up:** Ready
+
+### Record scope and chronology
+
+The original final-audit record was added in baseline commit `d6d69ff583958a463b00c24e461ed2f9abb25c6f`. Unless an entry expressly identifies a later dated follow-up, its findings, source descriptions, file/line citations, counts and conclusions describe that audit snapshot. Later dated follow-ups in this record describe the repository state examined at the time of those follow-ups; they do not retroactively change the original audit evidence or assert that later revisions of `HEAD` are unchanged.
+
+File/line citations are preserved as snapshot evidence rather than maintained as offsets into later source revisions. When source moves, use the referenced file, function or component context to locate the audited behavior. Verification totals are run-specific historical results, not a rolling test-inventory count: 29/29 (owner-supplied run, 2026-08-10), 32/32 (dependency-remediation follow-up, 2026-08-11), and 39/39 (accessibility follow-up, 2026-08-11). A later 41/41 smoke result is separately maintained in `docs/ACCESSIBILITY-VERIFICATION.md` for 2026-08-12; it is not substituted for any earlier result here.
 
 ## 1. Executive assessment
 
@@ -37,7 +45,7 @@ No unresolved P0, P1 or P2 finding remains. The development-dependency advisorie
 - `git status`, `git log`, `git ls-files`, working-tree comparison of `dist/` against its sources — executed
 - Static inspection of every file listed above, including cross-referencing each `window.*` publication against its consumers, each documented README claim against its implementation, and each finding of the previous audit against the current source
 - `npm run test:smoke` — **executed and passed on the project owner's machine on 2026-08-10, not re-executed during the original audit.** The supplied run reports 29 of 29 tests passing. `playwright.config.js:19-24` starts the suite with `npm run build && npm run preview`, so the run exercised the built `dist/` artifact rather than the development server. A dependency-remediation follow-up on 2026-08-11 independently ran the current production build and passed the expanded suite with 32 of 32 tests.
-- Accessibility verification follow-up on 2026-08-11 — executed in Playwright 1.60.0 `Desktop Chrome` against the built artifact. It measured 48 representative computed-style contrast combinations across both themes, exercised the public skip link, mobile navigation and accordion with the keyboard, and verified route-region updates and modal focus containment/return. The focused file passed 3 of 3 tests after the confirmed local corrections, and the complete fresh-build suite passed 39 of 39; full evidence and its limits are recorded in `docs/ACCESSIBILITY-VERIFICATION.md`.
+- Accessibility verification follow-up on 2026-08-11 — executed in Playwright 1.60.0 `Desktop Chrome` against the built artifact. It measured 48 representative computed-style contrast combinations across both themes, exercised the public skip link, mobile navigation and accordion with the keyboard, and verified route-region updates and modal focus containment/return. The focused file passed 3 of 3 tests after the confirmed local corrections, and the complete fresh-build suite passed 39 of 39 at the time; full evidence and its limits are recorded in `docs/ACCESSIBILITY-VERIFICATION.md`.
 
 ### Verification limitations
 
@@ -80,7 +88,7 @@ None detected.
 
 None currently recorded. The former contrast and assistive-technology verification improvement is closed by the maintained browser/contrast record in `docs/ACCESSIBILITY-VERIFICATION.md`, which now also records a limited manual NVDA smoke check and keeps broader manual AT scenario coverage as an explicit assurance limitation rather than claiming it was completed.
 
-## 8. Current readiness conclusion
+## 8. Readiness conclusion at latest documented follow-up
 
 **Status:** Ready
 
