@@ -1100,7 +1100,7 @@ test("demo reset runs only after an explicit confirmation that names the reset s
   await expect(confirmDialog).toContainText("historia aktywności");
   await expect(confirmDialog).toContainText("filtry oraz preferencje list i tabel");
   await expect(confirmDialog).toContainText("motyw i tryb kompaktowy");
-  await expect(confirmDialog).toContainText("zakres raportów");
+  await expect(confirmDialog).toContainText("zakres przeglądu");
   await expect(confirmDialog).toContainText("Bez zmian pozostaną aktualna sesja i wybrana rola");
 
   // Cancelling is a no-op: no reset, no success toast, no redirect.

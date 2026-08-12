@@ -69,8 +69,8 @@ function settingsView() {
 
   const rangeCard = dom.h("div", "setting-card");
   rangeCard.innerHTML = `
-    <h3 class="setting-card__title">Zakres raportów</h3>
-    <p class="setting-card__description">Ustaw domyślny zakres danych w raportach</p>
+    <h3 class="setting-card__title">Zakres przeglądu</h3>
+    <p class="setting-card__description">Ustaw domyślny zakres danych w przeglądzie KPI</p>
     <div class="setting-card__actions">
       <button class="button setting-card__button ${currentRangeDays === 7 ? "setting-card__button--active" : ""}" type="button" data-range-days="7" aria-pressed="${currentRangeDays === 7}">7 dni</button>
       <button class="button setting-card__button ${currentRangeDays === 30 ? "setting-card__button--active" : ""}" type="button" data-range-days="30" aria-pressed="${currentRangeDays === 30}">30 dni</button>
@@ -196,8 +196,8 @@ function settingsView() {
         });
       }
 
-      Toast.show(`Zakres raportów ustawiony na ${dashboardRangeDays} dni`, "success");
-      window.location.hash = "#/app/reports";
+      Toast.show(`Zakres przeglądu ustawiony na ${dashboardRangeDays} dni`, "success");
+      window.location.hash = "#/app";
     });
   });
 
@@ -236,7 +236,7 @@ function settingsView() {
         <li>historia aktywności</li>
         <li>filtry oraz preferencje list i tabel</li>
         <li>motyw i tryb kompaktowy</li>
-        <li>zakres raportów</li>
+        <li>zakres przeglądu</li>
       </ul>
       <p>Bez zmian pozostaną aktualna sesja i wybrana rola.</p>
       <div class="modal-actions modal-actions--confirm">
