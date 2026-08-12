@@ -199,10 +199,12 @@ Projekt zawiera:
 - canonical URL dla publicznych podstron;
 - Open Graph i Twitter Card metadata;
 - JSON-LD na stronie głównej;
-- `robots.txt` z regułami `Disallow` dla tras panelu;
+- `robots.txt` z wpisami `Disallow` na poziomie ścieżek (`/app`, `/dashboard`, `/settings`, `/admin`);
 - `sitemap.xml`;
 - `noindex, follow` dla strony `404.html`;
 - favicony, Apple touch icon i manifest aplikacji.
+
+Wpisy `Disallow` w `robots.txt` są wykluczeniami na poziomie ścieżek serwerowych i mają charakter defensywny — projekt nie serwuje dokumentów pod tymi adresami. Panel demo nie jest osobną ścieżką serwerową: działa w fragmencie URL (`#/app` i `#/app/*`) w obrębie `/index.html`, a fragmenty nie są wysyłane do serwera i nie podlegają regułom `robots.txt`.
 
 ### PWA i obsługa offline
 
@@ -460,10 +462,12 @@ The project includes:
 - canonical URLs for public subpages;
 - Open Graph and Twitter Card metadata;
 - JSON-LD on the homepage;
-- `robots.txt` with `Disallow` rules for dashboard routes;
+- `robots.txt` with path-level `Disallow` entries (`/app`, `/dashboard`, `/settings`, `/admin`);
 - `sitemap.xml`;
 - `noindex, follow` for `404.html`;
 - favicons, Apple touch icon, and app manifest.
+
+The `Disallow` entries in `robots.txt` are server path-level exclusions and are defensive in nature — the project serves no documents at those addresses. The demo dashboard is not a separate server path: it runs in the URL fragment (`#/app` and `#/app/*`) within `/index.html`, and fragments are not sent to the server and are not subject to `robots.txt` rules.
 
 ### PWA and Offline Support
 
