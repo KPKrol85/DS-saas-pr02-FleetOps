@@ -27,7 +27,7 @@
     "portfolio"
   ],
   "author": "Kamil Król — KP_Code Digital Studio",
-  "license": "SEE LICENSE IN LICENSE",
+  "license": "SEE LICENSE IN LICENSE.md",
   "devDependencies": {
     "@playwright/test": "^1.60.0",
     "sharp": "^0.35.3",

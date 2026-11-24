@@ -90,7 +90,7 @@ Tooling:
 ├── optimize-images.js          # pipeline optymalizacji obrazów
 ├── playwright.config.js        # konfiguracja testów
 ├── CHANGELOG.md
-└── LICENSE
+└── LICENSE.md
 ```
 
 ### Instalacja
@@ -261,7 +261,7 @@ Repozytorium nie zawiera zmierzonych wyników wydajności.
 
 ### Licencja
 
-Projekt jest objęty Własnościową Licencją Projektu KP_CODE (wersja 1.0). Pełne i wiążące warunki znajdują się w pliku [`LICENSE`](LICENSE), do którego odsyła również pole `license` w `package.json`. Kod jest własnościowy, zastrzeżony dla Kamil Król — KP_Code, i udostępniony do celów portfolio, referencyjnych oraz code review. Licencja projektu nie zastępuje odrębnych licencji materiałów zewnętrznych (bibliotek, zależności, fontów, ikon, grafik).
+Projekt jest objęty Własnościową Licencją Projektu KP_CODE (wersja 1.0). Pełne i wiążące warunki znajdują się w pliku [`LICENSE.md`](LICENSE.md), do którego odsyła również pole `license` w `package.json`. Kod jest własnościowy, zastrzeżony dla Kamil Król — KP_Code, i udostępniony do celów portfolio, referencyjnych oraz code review. Licencja projektu nie zastępuje odrębnych licencji materiałów zewnętrznych (bibliotek, zależności, fontów, ikon, grafik).
 
 ## EN
 
@@ -353,7 +353,7 @@ Tooling:
 ├── optimize-images.js          # image optimization pipeline
 ├── playwright.config.js        # test configuration
 ├── CHANGELOG.md
-└── LICENSE
+└── LICENSE.md
 ```
 
 ### Installation
@@ -524,4 +524,4 @@ The repository does not contain measured performance scores.
 
 ### License
 
-The project is covered by the KP_CODE Proprietary Project License (version 1.0). The full and binding terms are in the [`LICENSE`](LICENSE) file, which the `license` field in `package.json` also points to. The code is proprietary, reserved for Kamil Król — KP_Code, and provided for portfolio, reference, and code review purposes. The project license does not replace the separate licenses of third-party materials (libraries, dependencies, fonts, icons, graphics).
+The project is covered by the KP_CODE Proprietary Project License (version 1.0). The full and binding terms are in the [`LICENSE.md`](LICENSE.md) file, which the `license` field in `package.json` also points to. The code is proprietary, reserved for Kamil Król — KP_Code, and provided for portfolio, reference, and code review purposes. The project license does not replace the separate licenses of third-party materials (libraries, dependencies, fonts, icons, graphics).
